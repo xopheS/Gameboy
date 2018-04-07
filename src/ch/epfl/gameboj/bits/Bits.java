@@ -71,8 +71,7 @@ public final class Bits {
     }
     
     /**
-     * Remplace le bit d'index donné d'un entier par une nouvelle valeur (0 ou
-     * 1)
+     * Remplace le bit d'index donné d'un entier par une nouvelle valeur (0 ou 1)
      * 
      * @param bits
      *            entier à modifier
@@ -96,8 +95,7 @@ public final class Bits {
 
         return bits;
     }
-    
-    
+     
     /**
      * Extrait de l'entier 'bits' donné ses 'size' bits de poids faible et les
      * retournent sous forme d'un entier  

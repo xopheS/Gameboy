@@ -78,7 +78,7 @@ public class GameBoy {
      * si le cycle à atteindre est strictement inférieur au cycle actuel
      */
     public void runUntil(long cycle) {
-    	Preconditions.checkArgument(cycle < cycles);
+    	Preconditions.checkArgument(cycles <= cycle);
         while(cycles <= cycle) {         
             timer.cycle(cycles);
             cpu.cycle(cycles);
