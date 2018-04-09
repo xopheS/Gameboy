@@ -2,6 +2,7 @@ package ch.epfl.gameboj.component.cartridge;
 
 import java.util.Objects;
 
+import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
 
@@ -36,7 +37,7 @@ public class MBC0 implements Component {
     
     @Override
     public int read(int address) {
-        if(address < 0 || address >= 32768) {
+        if(Preconditions.checkBits16(address) < 0 || address >= 32768) {
             return NO_DATA;
         }
         return rom.read(address);
@@ -44,6 +45,8 @@ public class MBC0 implements Component {
 
     @Override
     public void write(int address, int data) {
+    	Preconditions.checkBits16(address);
+    	Preconditions.checkBits8(data);
         //Impossible to alter a ROM
     }  
 }

@@ -112,18 +112,19 @@ public final class Timer implements Component, Clocked {
      */
     @Override
     public void write(int address, int data) {
+    	Preconditions.checkBits8(data);
         switch(Preconditions.checkBits16(address)) {
         case AddressMap.REG_DIV:
-            change(() -> {Preconditions.checkBits8(data); regDIV = 0;}); 
+            change(() -> {regDIV = 0;}); 
             break;
         case AddressMap.REG_TIMA:
-            regTIMA = Preconditions.checkBits8(data);
+            regTIMA = data;
             break;
         case AddressMap.REG_TMA:
-            regTMA = Preconditions.checkBits8(data);
+            regTMA = data;
             break;
         case AddressMap.REG_TAC:
-            change(() -> regTAC = Preconditions.checkBits8(data));
+            change(() -> regTAC = data);
             break;
         }        
     }

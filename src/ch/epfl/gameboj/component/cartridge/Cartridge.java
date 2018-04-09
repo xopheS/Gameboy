@@ -2,6 +2,7 @@ package ch.epfl.gameboj.component.cartridge;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
@@ -24,11 +25,12 @@ public final class Cartridge implements Component {
      * 
      * @param romFile
      * Le fichier ROM (read-only memory) dont les contenus sont copiés
+     * @throws FileNotFoundException 
      * 
      * @throws IOException
      * si un problème de lecture intervient
      */
-    public static Cartridge ofFile(File romFile) { 
+    public static Cartridge ofFile(File romFile) throws FileNotFoundException, IOException { 
     	
     	try(FileInputStream fis = new FileInputStream(romFile)) {
             byte[] fileBytes = fis.readAllBytes();
@@ -39,11 +41,6 @@ public final class Cartridge implements Component {
             
             return new Cartridge(new MBC0(new Rom(fileBytes)));
         }
-        catch(IOException e) {
-            System.err.println(e.getMessage());
-        }
-    	
-    	return null;
     }
     
     @Override
