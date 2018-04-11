@@ -16,11 +16,30 @@ public interface Preconditions {
      * 
      * @param b
      *            expression booléenne
+     *            
      * @throws IllegalArgumentException
      *             si l'argument est faux
+     *             
+     * @see #checkArgument(boolean, String)
      */
     public static void checkArgument(boolean b) {
         if (!b) throw new IllegalArgumentException();
+    }
+    
+    /**
+     * Vérifie la validité de l'expression booléenne donnée en argument, et affiche le message d'erreur en cas d'exception
+     * 
+     * @param b
+     * L'expression booléenne à tester
+     * 
+     * @param msg
+     * Le message à afficher en cas d'exception
+     * 
+     * @throws IllegalArgumentException
+     * Si l'évaluation de b retourne false
+     */
+    public static void checkArgument(boolean b, String msg) {
+    	if (!b) throw new IllegalArgumentException(msg);
     }
     
     /**

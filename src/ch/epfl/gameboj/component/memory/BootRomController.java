@@ -7,14 +7,15 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 
-/**Cette classe modélise l'équivalent d'un {@link RamController} pour une mémoire de démarrage (Boot ROM), cela permet notamment à la Gameboy d'effectuer des 
+/**
+ * Cette classe modélise l'équivalent d'un {@link RamController} pour une mémoire de démarrage (Boot ROM), cela permet notamment à la Gameboy d'effectuer des 
  * actions lors du démarrage, avant l'exécution du programme de la cartouche, comme par exemple: 
  * <ul>
  *     <li>d'initialiser les composants du système</li>
  *     <li>d'afficher une animation Nintendo</li>
  * </ul>
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  */
@@ -23,7 +24,8 @@ public final class BootRomController implements Component {
     private final Cartridge cartridge;
     private boolean isActivated = true;
 
-    /**Ce constructeur construit un contrôleur de mémoire de démarrage à partir d'une cartouche
+    /**
+     * Ce constructeur construit un contrôleur de mémoire de démarrage à partir d'une cartouche
      * 
      * @param cartridge
      * La cartouche à utiliser
@@ -35,7 +37,8 @@ public final class BootRomController implements Component {
         this.cartridge = Objects.requireNonNull(cartridge, "The cartridge cannot be null.");
     }
     
-    /**Cette méthode lit dans la mémoire de démarrage ou dans la cartouche, si celle-ci est désactivée
+    /**
+     * Cette méthode lit dans la mémoire de démarrage ou dans la cartouche, si celle-ci est désactivée
      * 
      * @param address
      * L'adresse à laquelle il faut lire
@@ -53,7 +56,8 @@ public final class BootRomController implements Component {
         return cartridge.read(address);    
     }
 
-    /**Cette méthode écrit dans la cartouche, si la mémoire de démarrage est désactivée
+    /**
+     * Cette méthode écrit dans la cartouche, si la mémoire de démarrage est désactivée
      * 
      * @param address
      * L'addresse d'écriture

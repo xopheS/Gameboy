@@ -8,9 +8,10 @@ import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
-/**Cette classe modélise le timer de la Gameboy, qui possède et actualise deux compteurs, un principal et un secondaire
+/**
+ * Cette classe modélise le timer de la Gameboy, qui possède et actualise deux compteurs, un principal et un secondaire
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  */
@@ -20,7 +21,8 @@ public final class Timer implements Component, Clocked {
     private final Cpu cpu;
     private int regDIV = 0, regTIMA = 0, regTMA = 0, regTAC = 0;
 
-    /**Constructeur qui initialise un timer en spécifiant le processeur avec lequel il va interagir
+    /**
+     * Constructeur qui initialise un timer en spécifiant le processeur avec lequel il va interagir
      * 
      * @param cpu
      * Le processeur auquel le timer va solliciter les interruptions
@@ -63,7 +65,8 @@ public final class Timer implements Component, Clocked {
         }
     }
     
-    /**Cette méthode actualise les compteurs
+    /**
+     * Cette méthode actualise les compteurs
      * 
      * @param cycle
      * Le cycle actuel de la Gameboy
@@ -73,7 +76,8 @@ public final class Timer implements Component, Clocked {
     	change(() -> regDIV = Bits.clip(16, regDIV + unitsPerCycle));
     }
 
-    /**Cette méthode permet d'accéder aux registres du timer (qui stockent notamment la valeur des compteurs) par le bus
+    /**
+     * Cette méthode permet d'accéder aux registres du timer (qui stockent notamment la valeur des compteurs) par le bus
      * 
      * @param address
      * L'adresse de lecture
@@ -99,7 +103,8 @@ public final class Timer implements Component, Clocked {
         }
     }
 
-    /**Cette méthode permet d'écrire dans les registres du timer en tenant compte de l'incrémentation des compteurs qui peut en découler
+    /**
+     * Cette méthode permet d'écrire dans les registres du timer en tenant compte de l'incrémentation des compteurs qui peut en découler
      * 
      * @param address
      * L'adresse d'écriture

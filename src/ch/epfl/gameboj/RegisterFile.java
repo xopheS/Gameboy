@@ -3,9 +3,10 @@ package ch.epfl.gameboj;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
-/**Cette classe modélise un "banc de registres", i.e. un groupe cohérent de registres
+/**
+ * Cette classe modélise un "banc de registres", i.e. un groupe cohérent de registres
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  * @param <E> 
@@ -15,7 +16,8 @@ public final class RegisterFile<E extends Register> {
     
     private int[] registerFile;
             
-    /**Constructeur qui initialise le banc avec plusieurs registres
+    /**
+     * Constructeur qui initialise le banc avec plusieurs registres
      * 
      * @param allRegs
      * Les registres à appartenir au banc de registres
@@ -25,7 +27,8 @@ public final class RegisterFile<E extends Register> {
         registerFile = new int[allRegs.length];
     }
     
-    /**Getter de la valeur d'un registre du banc
+    /**
+     * Getter de la valeur d'un registre du banc
      * 
      * @param reg
      * Registre dont la valeur est à obtenir
@@ -36,7 +39,8 @@ public final class RegisterFile<E extends Register> {
         return registerFile[reg.index()];
     }
     
-    /**Setter de la valeur d'un registre du banc
+    /**
+     * Setter de la valeur d'un registre du banc
      * 
      * @param reg
      * Le registre dont la valeur est à modifier
@@ -52,7 +56,8 @@ public final class RegisterFile<E extends Register> {
         registerFile[reg.index()] = Preconditions.checkBits8(newValue);
     }
     
-    /**Teste l'état d'un bit donné du registre spécifié
+    /**
+     * Teste l'état d'un bit donné du registre spécifié
      * 
      * @param reg
      * Le registre à examiner
@@ -66,7 +71,8 @@ public final class RegisterFile<E extends Register> {
         return Bits.test(get(reg), b.index());
     }
     
-    /**Modifie l'état d'un bit donné du registre spécifié
+    /**
+     * Modifie l'état d'un bit donné du registre spécifié
      * 
      * @param reg
      * Le registre à modifier

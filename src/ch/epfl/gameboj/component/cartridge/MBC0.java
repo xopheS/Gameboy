@@ -6,9 +6,10 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
 
-/**Cette classe simule une cartouche de type MBC0, le type le plus basique
+/**
+ * Cette classe simule une cartouche de type MBC0, le type le plus basique
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  */
@@ -16,7 +17,8 @@ public class MBC0 implements Component {
 
     private final Rom rom;
     
-    /**Ceci est le constructeur publique de MBC0, qui effectue l'empaquetage d'une ROM dans une cartouche de type MBC0
+    /**
+     * Ceci est le constructeur publique de MBC0, qui effectue l'empaquetage d'une ROM dans une cartouche de type MBC0
      * 
      * @param rom
      * La ROM (read-only memory) utilisée comme base du MBC0

@@ -7,9 +7,10 @@ import java.io.IOException;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
 
-/**Cette classe simule une cartouche de Gameboy
+/**
+ * Cette classe simule une cartouche de Gameboy
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  */
@@ -21,7 +22,8 @@ public final class Cartridge implements Component {
         this.mbc = mbc;
     }
     
-    /**Ceci est le constructeur public de Cartridge, il y met dedans les contenus d'un fichier ROM
+    /**
+     * Ceci est le constructeur public de Cartridge, il y met dedans les contenus d'un fichier ROM
      * 
      * @param romFile
      * Le fichier ROM (read-only memory) dont les contenus sont copiés

@@ -9,9 +9,10 @@ import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 
-/**Cette classe modélise la Gameboy en entier, avec tous ses composants fonctionnant ensemble
+/**
+ * Cette classe modélise la Gameboy en entier, avec tous ses composants fonctionnant ensemble
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  */
@@ -26,7 +27,8 @@ public class GameBoy {
     
     private long cycles;
     
-    /**Constructeur qui initialise une Gameboy avec une cartouche donnée
+    /**
+     * Constructeur qui initialise une Gameboy avec une cartouche donnée
      * 
      * @param cartridge
      * La cartouche que la Gameboy va exécuter
@@ -53,7 +55,8 @@ public class GameBoy {
         timer.attachTo(bus);
     }
     
-    /**Getter du bus
+    /**
+     * Getter du bus
      * 
      * @return le bus de la Gameboy
      */
@@ -61,7 +64,8 @@ public class GameBoy {
         return bus;
     }
     
-    /**Getter du cpu
+    /**
+     * Getter du cpu
      * 
      * @return le processeur de la Gameboy
      */
@@ -69,7 +73,8 @@ public class GameBoy {
         return cpu;
     }
     
-    /**Cette méthode dit à la Gameboy de continuer à fonctionner jusqu'à atteindre un certain cycle
+    /**
+     * Cette méthode dit à la Gameboy de continuer à fonctionner jusqu'à atteindre un certain cycle
      * 
      * @param cycle
      * Le cycle maximal à atteindre
@@ -86,7 +91,8 @@ public class GameBoy {
         } 
     }
     
-    /**Getter du cycle actuel
+    /**
+     * Getter du cycle actuel
      * 
      * @return le cycle actuel
      */
@@ -94,7 +100,8 @@ public class GameBoy {
         return cycles;
     }
     
-    /**Getter du timer
+    /**
+     * Getter du timer
      * 
      * @return le timer de la Gameboy
      */

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.Bus;
-import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Assembler.Program;
 

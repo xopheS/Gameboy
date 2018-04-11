@@ -6,9 +6,10 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
-/**Cette classe simule l'unité logique et arithmétique (UAL ou ALU en anglais) du processeur de la Gameboy
+/**
+ * Cette classe simule l'unité logique et arithmétique (UAL ou ALU en anglais) du processeur de la Gameboy
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  */
@@ -16,7 +17,8 @@ public final class Alu {
 	private final static int valueStart = 8;
 	private final static int valueBits = 16;
     
-	/**Cette énumération représente les bits dans l'ordre (du LSB au MSB) de l'octet qui stocke les fanions dans un entier:
+	/**
+	 * Cette énumération représente les bits dans l'ordre (du LSB au MSB) de l'octet qui stocke les fanions dans un entier:
 	 * Z est vrai si le résultat d'une opération est nul, 
 	 * N est vrai si l'opération effectuée est une soustraction, 
 	 * H est vrai si l'opération produit un carry pour les 4 premiers bits (LSBs), 
@@ -24,7 +26,8 @@ public final class Alu {
 	 */
     public enum Flag implements Bit { UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, C, H, N, Z };
     
-    /**Cette énumération représente les deux directions possibles de rotation, gauche et droite
+    /**
+     * Cette énumération représente les deux directions possibles de rotation, gauche et droite
      * 
      */
     public enum RotDir { LEFT, RIGHT };
@@ -37,7 +40,8 @@ public final class Alu {
         return Bits.fuseInts((v << valueStart), maskZNHC(Z, N, H, C));
     }
     
-    /**Cette méthode met les fanions stockés dans un entier aux valeurs données
+    /**
+     * Cette méthode met les fanions stockés dans un entier aux valeurs données
      * 
      * @param Z
      * La valeur à donner au fanion Z
@@ -57,7 +61,8 @@ public final class Alu {
         return Bits.fuseInts((Z ? Flag.Z.mask() : 0), (N ? Flag.N.mask() : 0), (H ? Flag.H.mask() : 0), (C ? Flag.C.mask() : 0));
     }
     
-    /**Cette méthode extrait la valeur stockée dans un entier
+    /**
+     * Cette méthode extrait la valeur stockée dans un entier
      * 
      * @param valueFlags
      * L'entier à utiliser pour l'extraction
@@ -68,7 +73,8 @@ public final class Alu {
         return Bits.extract(valueFlags, valueStart, valueBits);
     }
     
-    /**Cette méthode extrait la valeur des fanions stockés dans un entier
+    /**
+     * Cette méthode extrait la valeur des fanions stockés dans un entier
      * 
      * @param valueFlags
      * L'entier à utiliser pour l'extraction
@@ -79,7 +85,8 @@ public final class Alu {
         return Bits.clip(valueStart, valueFlags);
     }
     
-    /**Cette méthode donne le résultat de l'addition de deux entiers de 8 bits et d'un bit de carry initial
+    /**
+     * Cette méthode donne le résultat de l'addition de deux entiers de 8 bits et d'un bit de carry initial
      * 
      * @param l
      * Le premier entier à ajouter
@@ -105,7 +112,8 @@ public final class Alu {
         return packValueZNHC(result, result == 0, false, Bits.clip(4, l) + Bits.clip(4, r) + initialCarry > 0xF, javaSum > 0xFF);
     }
     
-    /**Cette méthode fait la même chose que la méthode {@link #add(int, int, boolean)}, sans carry initial
+    /**
+     * Cette méthode fait la même chose que la méthode {@link #add(int, int, boolean)}, sans carry initial
      * 
      * @param l
      * Le premier entier à ajouter
@@ -125,7 +133,8 @@ public final class Alu {
         return add(l, r, false);
     }
     
-    /**Cette méthode effectue l'addition de deux entiers de 16 bits, avec les fanions de l'addition des 8 LSBs
+    /**
+     * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les fanions de l'addition des 8 LSBs
      * 
      * @param l
      * Le premier entier à ajouter
@@ -145,7 +154,8 @@ public final class Alu {
         return packValueZNHC(Bits.clip(16, l + r), false, false, Bits.test(lAdd, Flag.H.index()), Bits.test(lAdd, Flag.C.index()));
     }
     
-    /**Cette méthode effectue l'addition de deux entiers de 16 bits, avec les fanions de l'addition des 8 MSBs
+    /**
+     * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les fanions de l'addition des 8 MSBs
      * 
      * @param l
      * Le premier entier à ajouter
@@ -166,7 +176,8 @@ public final class Alu {
         return packValueZNHC(Bits.clip(16, l + r), false, false, Bits.test(hAdd, 5), Bits.test(hAdd, 4));
     }
     
-    /**Cette méthode donne le résultat de la soustraction de deux entiers de 8 bits et d'un bit de borrow initial
+    /**
+     * Cette méthode donne le résultat de la soustraction de deux entiers de 8 bits et d'un bit de borrow initial
      * 
      * @param l
      * Le premier entier (le <em>minuend</em>)
@@ -189,7 +200,8 @@ public final class Alu {
         return packValueZNHC(result, result == 0, true, Bits.clip(4, l) < Bits.clip(4, r) + initialBorrow, l < r + initialBorrow);
     }
     
-    /**Cette méthode fait la même chose que la méthode {@link #sub(int, int, boolean)}, sans borrow initial
+    /**
+     * Cette méthode fait la même chose que la méthode {@link #sub(int, int, boolean)}, sans borrow initial
      * 
      * @param l
      * Le premier entier (le <em>minuend</em>)
@@ -206,7 +218,8 @@ public final class Alu {
         return sub(l, r, false);
     }
     
-    /**Cette méthode ajuste une valeur codée en décimal binaire (DCB ou BCD en anglais) résultant d'une opération arithmétique
+    /**
+     * Cette méthode ajuste une valeur codée en décimal binaire (DCB ou BCD en anglais) résultant d'une opération arithmétique
      * 
      * @param v
      * La valeur à ajuster
@@ -233,7 +246,8 @@ public final class Alu {
         return packValueZNHC(adjustedValue, adjustedValue == 0, n, false, fixH);
     }
     
-    /**Cette méthode donne le résultat d'un <em>et</em> bit à bit entre deux entiers sur 8 bits
+    /**
+     * Cette méthode donne le résultat d'un <em>et</em> bit à bit entre deux entiers sur 8 bits
      * 
      * @param l
      * Le premier entier
@@ -251,7 +265,8 @@ public final class Alu {
         return packValueZNHC(result, result == 0, false, true, false);
     }
     
-    /**Cette méthode donne le résultat d'un <em>ou inclusif</em> bit à bit entre deux entiers sur 8 bits
+    /**
+     * Cette méthode donne le résultat d'un <em>ou inclusif</em> bit à bit entre deux entiers sur 8 bits
      * 
      * @param l
      * Le premier entier
@@ -269,7 +284,8 @@ public final class Alu {
         return packValueZNHC(result, result == 0, false, false, false);
     }
     
-    /**Cette méthode donne le résultat d'un <em>ou exclusif</em> bit à bit entre deux entiers sur 8 bits
+    /**
+     * Cette méthode donne le résultat d'un <em>ou exclusif</em> bit à bit entre deux entiers sur 8 bits
      * 
      * @param l
      * Le premier entier
@@ -287,7 +303,8 @@ public final class Alu {
         return packValueZNHC(result, result == 0, false, false, false);
     }
     
-    /**Cette méthode effectue un décalage de 1 bit vers la gauche de l'entier donné
+    /**
+     * Cette méthode effectue un décalage de 1 bit vers la gauche de l'entier donné
      * 
      * @param v
      * L'entier à utiliser pour effectuer la rotation
@@ -303,7 +320,8 @@ public final class Alu {
         return packValueZNHC(result, result == 0, false, false, Bits.test(v, 7));
     }
     
-    /**Cette méthode effectue un décalage arithmétique <dd>(<b>Définition</b>: un décalage arithmétique tient compte du MSB, qui représente le signe, et le copie)</dd>
+    /**
+     * Cette méthode effectue un décalage arithmétique <dd>(<b>Définition</b>: un décalage arithmétique tient compte du MSB, qui représente le signe, et le copie)</dd>
      * de 1 bit vers la droite de l'entier donné
      * 
      * @param v
@@ -321,7 +339,8 @@ public final class Alu {
         return packValueZNHC(shiftedInt, shiftedInt == 0, false, false, Bits.test(v, 0));
     }
     
-    /**Cette méthode effectue un décalage logique <dd>(<b>Définition</b>: un décalage logique introduit des 0 à gauche)</dd>
+    /**
+     * Cette méthode effectue un décalage logique <dd>(<b>Définition</b>: un décalage logique introduit des 0 à gauche)</dd>
      * de 1 bit vers la droite de l'entier donné
      * 
      * @param v
@@ -339,7 +358,8 @@ public final class Alu {
         return packValueZNHC(shiftedInt, shiftedInt == 0, false, false, Bits.test(v, 0));
     }
     
-    /**Cette méthode effectue la rotation d'un entier d'un bit dans la direction donnée
+    /**
+     * Cette méthode effectue la rotation d'un entier d'un bit dans la direction donnée
      * 
      * @param d
      * La direction de rotation
@@ -358,7 +378,8 @@ public final class Alu {
         return packValueZNHC(rotatedInt, rotatedInt == 0, false, false, distance == 1 ? Bits.test(v, 7) : Bits.test(v, 0));
     }
     
-    /**Cette méthode effectue la rotation d'un entier d'un bit dans la direction donnée, à travers la retenue
+    /**
+     * Cette méthode effectue la rotation d'un entier d'un bit dans la direction donnée, à travers la retenue
      * 
      * @param d
      * La direction de rotation
@@ -384,7 +405,8 @@ public final class Alu {
         return packValueZNHC(rotatedValue, rotatedValue == 0, false, false, Bits.test(rotatedInt, 8));
     }
     
-    /**Cette méthode inverse les positions des bits d'un entier
+    /**
+     * Cette méthode inverse les positions des bits d'un entier
      *  
      * @param v
      * L'entier dont les bits sont à inverser entre eux
@@ -399,7 +421,8 @@ public final class Alu {
         return packValueZNHC(swappedInt, swappedInt == 0, false, false, false);
     }
     
-    /**Cette méthode teste la valeur du bit d'index donné d'un entier
+    /**
+     * Cette méthode teste la valeur du bit d'index donné d'un entier
      * 
      * @param v
      * L'entier à tester

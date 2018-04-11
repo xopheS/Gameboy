@@ -13,9 +13,10 @@ import ch.epfl.gameboj.component.cpu.Alu.Flag;
 import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 import ch.epfl.gameboj.component.memory.Ram;
 
-/**Cette classe modélise le processeur de la Gameboy
+/**
+ * Cette classe modélise le processeur de la Gameboy
  * 
- * @author Cristophe Saad (282557)
+ * @author Christophe Saad (282557)
  * @author David Cian (287967)
  *
  */
@@ -52,7 +53,8 @@ public final class Cpu implements Component, Clocked {
     
     private enum FlagSrc { V0, V1, ALU, CPU };
     
-    /**Cette énumération donne les interruptions possibles du processeur, dans l'ordre dans lequel elles apparaissent dans les registres IF et IE
+    /**
+     * Cette énumération donne les interruptions possibles du processeur, dans l'ordre dans lequel elles apparaissent dans les registres IF et IE
      *
      */
     public enum Interrupt implements Bit {
@@ -63,7 +65,8 @@ public final class Cpu implements Component, Clocked {
     
     private long nextNonIdleCycle;
     
-    /**Constructeur public de Cpu, il ne fait rien
+    /**
+     * Constructeur public de Cpu, il ne fait rien
      * 
      */
     public Cpu() {
@@ -123,7 +126,8 @@ public final class Cpu implements Component, Clocked {
         nextNonIdleCycle += 5;
     }
     
-    /**Cette méthode s'occupe du fonctionnement du processeur à un très haut niveau, elle décide si celui-ci doit faire quelquechose ou pas, et appelle la 
+    /**
+     * Cette méthode s'occupe du fonctionnement du processeur à un très haut niveau, elle décide si celui-ci doit faire quelquechose ou pas, et appelle la 
      * méthode {@link #reallyCycle()} si oui
      * 
      * @param cycle
@@ -142,7 +146,8 @@ public final class Cpu implements Component, Clocked {
         }
     }
     
-    /**Cette méthode entreprend un cycle de travail du processeur, qui peut donc traiter une interruption ou initier une instruction si il n'y a pas 
+    /**
+     * Cette méthode entreprend un cycle de travail du processeur, qui peut donc traiter une interruption ou initier une instruction si il n'y a pas 
      * d'interruptions à traiter, i.e. appeler la méthode {@link #dispatch(Opcode)} avec l'opcode indiqué par le PC (program counter)
      * 
      */
@@ -157,7 +162,8 @@ public final class Cpu implements Component, Clocked {
         }
     }
     
-    /**Cette méthode effectue une instruction codée par l'opcode qui lui est fourni
+    /**
+     * Cette méthode effectue une instruction codée par l'opcode qui lui est fourni
      * 
      * @param opcode
      * L'opcode qui indique l'instruction à effectuer
@@ -715,7 +721,8 @@ public final class Cpu implements Component, Clocked {
         }
     }
     
-    /**Cette méthode permet d'accéder aux registres IE et IF sur le bus, ainsi qu'au RAM du processeur (high RAM)
+    /**
+     * Cette méthode permet d'accéder aux registres IE et IF sur le bus, ainsi qu'au RAM du processeur (high RAM)
      * 
      * @param address
      * L'adresse à laquelle la lecture doit être effectuée
@@ -738,7 +745,8 @@ public final class Cpu implements Component, Clocked {
         return NO_DATA;
     }
 
-    /**Cette méthode permet d'écrire sur le bus dans les registres IE et IF, ainsi que dans le RAM du processeur
+    /**
+     * Cette méthode permet d'écrire sur le bus dans les registres IE et IF, ainsi que dans le RAM du processeur
      * 
      * @param address
      * L'adresse à laquelle l'écriture doit être effectuée
@@ -761,7 +769,8 @@ public final class Cpu implements Component, Clocked {
         }
     }
 
-    /**Méthode de déboguage, permet d'obtenir la valeur des registres
+    /**
+     * Méthode de déboguage, permet d'obtenir la valeur des registres
      * 
      * @return un tableau contenant les valeurs des registres
      */
