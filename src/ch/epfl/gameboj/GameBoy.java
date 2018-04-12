@@ -84,7 +84,7 @@ public class GameBoy {
      */
     public void runUntil(long cycle) {
     	Preconditions.checkArgument(cycles <= cycle);
-        while(cycles <= cycle) {         
+        while(cycles < cycle) {         
             timer.cycle(cycles);
             cpu.cycle(cycles);
             cycles++;
