@@ -5,5 +5,5 @@ run-junit-tests:
     - shared
   stage: test
   script: 
-    - java ./test/gitlab/ci/CIJupiterRunner.class
+    - java test/gitlab/ci/CIJupiterRunner.class
     
