@@ -1,4 +1,6 @@
 run-junit-tests:
+  tags:
+    - java
   stage: test
   script: 
     - java CIJupiterRunner
