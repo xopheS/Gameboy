@@ -1,6 +1,8 @@
 run-junit-tests:
   tags:
     - java
+    - openjdk
+    - shared
   stage: test
   script: 
     - java CIJupiterRunner
