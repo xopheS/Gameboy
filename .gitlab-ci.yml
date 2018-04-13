@@ -7,6 +7,9 @@ run-junit-tests:
   script: 
     - cd test/gitlab/ci
     - ls
+    - rm -rf CIJupiterRunner.class
+    - ls
     - javac CIJupiterRunner.java
+    - ls
     - java CIJupiterRunner
     
