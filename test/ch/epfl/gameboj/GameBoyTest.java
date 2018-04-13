@@ -5,8 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled
-class GameBoyTest {
+public class GameBoyTest {
     @Test
     void workRamIsProperlyMapped() {
         Bus b = new GameBoy(null).bus();

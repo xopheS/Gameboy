@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.component.Component;
 
-class BusTest {
+public class BusTest {
     private static SimpleComponent[] newComponents(int n) {
         SimpleComponent[] cs = new SimpleComponent[n];
         for (int i = 0; i < cs.length; ++i) {

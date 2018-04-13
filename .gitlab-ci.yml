@@ -1,0 +1,5 @@
+run-junit-tests:
+  stage: test
+  script: 
+    - java CIJupiterRunner
+    
