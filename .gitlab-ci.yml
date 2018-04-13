@@ -7,4 +7,5 @@ run-junit-tests:
   script: 
     - cd test/gitlab/ci
     - ls
+    - java CIJupiterRunner
     
