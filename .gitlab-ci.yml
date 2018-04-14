@@ -5,8 +5,7 @@ build-project:
     - shared
   stage: build
   script:
-    - cd test
-    - javac gitlab/ci/CIJupiterRunner.java
+    - echo "Building project"
 
 run-junit-tests:
   tags:
@@ -16,6 +15,7 @@ run-junit-tests:
   stage: test
   script: 
     - cd test
+    - javac gitlab/ci/CIJupiterRunner.java
     - java gitlab/ci/CIJupiterRunner
     
 pages:
