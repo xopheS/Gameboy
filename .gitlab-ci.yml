@@ -1,3 +1,13 @@
+build-project:
+  tags:
+    - java
+    - openjdk
+    - shared
+  stage: build
+  script:
+    - cd test
+    - javac gitlab/ci/CIJupiterRunner.java
+
 run-junit-tests:
   tags:
     - java
@@ -6,8 +16,19 @@ run-junit-tests:
   stage: test
   script: 
     - cd test
-    - ls
-    - javac gitlab/ci/CIJupiterRunner.java
-    - ls
     - java gitlab/ci/CIJupiterRunner
+    
+pages:
+  tags:
+    - java
+    - openjdk
+    - shared
+  stage: deploy
+  script:
+    - echo "Generating gameboj website"
+  artifacts:
+    paths: 
+    - website/html
+    - website/css
+    - website/js
     
