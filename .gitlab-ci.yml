@@ -18,17 +18,3 @@ run-junit-tests:
     - javac gitlab/ci/CIJupiterRunner.java
     - java gitlab/ci/CIJupiterRunner
     
-pages:
-  tags:
-    - java
-    - openjdk
-    - shared
-  stage: deploy
-  script:
-    - echo "Generating gameboj website"
-  artifacts:
-    paths: 
-    - website/html
-    - website/css
-    - website/js
-    
