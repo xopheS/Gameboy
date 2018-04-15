@@ -1,1 +1,1 @@
-For additional information, check out our website: https://davidcian.gitlab.io/gameboj_website
+For additional information, check out our website: https://dave_and_chris.gitlab.io/gameboj/
