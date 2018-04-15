@@ -1,20 +1,29 @@
+image: openjdk
+
 build-project:
   tags:
-    - java
-    - openjdk
-    - shared
+    - gitlab-org
   stage: build
   script:
     - echo "Building project"
 
 run-junit-tests:
   tags:
-    - java
-    - openjdk
-    - shared
+    - gitlab-org
   stage: test
   script: 
     - cd test
     - javac gitlab/ci/CIJupiterRunner.java
     - java gitlab/ci/CIJupiterRunner
-    
+  
+pages:
+  tags:
+    - gitlab-org
+  stage: deploy
+  script:  
+    - echo "Deploying website"
+  artifacts:
+    paths:
+    - public
+  only: 
+  - master
