@@ -25,24 +25,37 @@ public final class BitVector {
 	
 	
 	private BitVector extract(int start, int size, boolean methodZeroExtended) {
-	    int[] extractedBits = new int[size];
-	    
-	    return null;
+	    int[] extractedInts = new int[size];
+	    for (int i = 0; i < size; i++) {
+	        extractedInts[i] = intExtract(start + 32*i, methodZeroExtended);
+	    }
+	    return new BitVector(extractedInts);
 	}
 	
 	
-	//Pour extraire chaque int puis les coller dans extract
-	//Tu prends la premiere partie du 1er puis la 2eme du 2eme et tu les "or" ensemble
-	private int intExtract(int start, int size, boolean methodZeroExtended) {
+	private int intExtract(int start, boolean methodZeroExtended) {
+	   
+	   if(Math.floorMod(start, 32) == 0) {
+	       if(!methodZeroExtended) return bitVector[Math.floorDiv((Math.floorMod(start, size())), 32)];
+	       else return (start > size() | start < 0) ? 0 : bitVector[Math.floorDiv(start, 32)];
+	   }
 	   
 	   if(!methodZeroExtended) {
-	       int startIntIndex = (Math.floorMod(start, 32*size())) / 32;
+	       int startIntIndex = Math.floorDiv((Math.floorMod(start, size())), 32);
 	       int startPosition = Math.floorMod(start, 32);              
-	       return (bitVector[startIntIndex] >>> startPosition) | (bitVector[startIntIndex + 1] << Integer.SIZE - startPosition);  
+	       return (bitVector[startIntIndex] >>> startPosition) | (bitVector[(startIntIndex + 1) % bitVector.length] << Integer.SIZE - startPosition);  
 	   }
-	   else {
-	       
+	   else if(methodZeroExtended) {
+	       if(start > size() | start < -Integer.SIZE) return 0;
+	       else {
+	           int startIntIndex = Math.floorDiv(start, 32);
+	           if(startIntIndex == bitVector.length - 1) return bitVector[startIntIndex] >>> start | 0;
+	           if(startIntIndex ==0) return bitVector[startIntIndex] << start | 0;
+	           else return bitVector[startIntIndex] >>> start | bitVector[(startIntIndex + 1)] << Integer.SIZE - start;
+	       }
 	   }
+	   
+	   return 0;
 	}
 	
 //	private boolean testBitExtract(int index, boolean methodZeroExtended) {
@@ -128,7 +141,7 @@ public final class BitVector {
 	}
 	
 	public BitVector shift(int distance) {
-		return null;
+		return extractZeroExtended(distance, size());
 	}
 	
 	@Override
@@ -143,6 +156,6 @@ public final class BitVector {
 	
 	@Override
 	public String toString() {
-		return null;
+		return bitVector.toString();
 	}
 }
