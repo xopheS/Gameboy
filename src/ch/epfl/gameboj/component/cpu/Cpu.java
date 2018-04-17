@@ -125,13 +125,14 @@ public final class Cpu implements Component, Clocked {
         PC = 0x40 + 8*i;
         nextNonIdleCycle += 5;
     }
-    
+
     /**
-     * Cette méthode s'occupe du fonctionnement du processeur à un très haut niveau, elle décide si celui-ci doit faire quelquechose ou pas, et appelle la 
-     * méthode {@link #reallyCycle()} si oui
+     * Cette méthode s'occupe du fonctionnement du processeur à un très haut
+     * niveau, elle décide si celui-ci doit faire quelquechose ou pas, et
+     * appelle la méthode {@link #reallyCycle()} si oui
      * 
      * @param cycle
-     * C'est le cycle actuel, au moment de l'appel de la fonction
+     *            C'est le cycle actuel, au moment de l'appel de la fonction
      */
     public void cycle(long cycle) {
         if(nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
@@ -147,8 +148,11 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Cette méthode entreprend un cycle de travail du processeur, qui peut donc traiter une interruption ou initier une instruction si il n'y a pas 
-     * d'interruptions à traiter, i.e. appeler la méthode {@link #dispatch(Opcode)} avec l'opcode indiqué par le PC (program counter)
+     * Cette méthode entreprend un cycle de travail du processeur, qui peut donc
+     * traiter une interruption ou initier une instruction si il n'y a pas
+     * d'interruptions à traiter, i.e. appeler la méthode
+     * {@link #dispatch(Opcode)} avec l'opcode indiqué par le PC (program
+     * counter)
      * 
      */
     private void reallyCycle() {    
@@ -163,10 +167,11 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Cette méthode effectue une instruction codée par l'opcode qui lui est fourni
+     * Cette méthode effectue une instruction codée par l'opcode qui lui est
+     * fourni
      * 
      * @param opcode
-     * L'opcode qui indique l'instruction à effectuer
+     *            L'opcode qui indique l'instruction à effectuer
      */
     private void dispatch(Opcode opcode) {          
         int nextPC = PC + opcode.totalBytes;
@@ -549,7 +554,9 @@ public final class Cpu implements Component, Clocked {
         nextNonIdleCycle += opcode.cycles + (instructionDone ? opcode.additionalCycles : 0);   
     }
     
-    /**Cette méthode est une redéfinition de attachTo qui permet de connaître le bus auquel le processeur a été attaché
+    /**
+     * Cette méthode est une redéfinition de attachTo qui permet de connaître le
+     * bus auquel le processeur a été attaché
      * 
      */
     public void attachTo(Bus bus) {
@@ -557,10 +564,11 @@ public final class Cpu implements Component, Clocked {
         bus.attach(this);
     }
     
-    /**Cette méthode permet de demander au processeur d'initier une interruption
+    /**
+     * Cette méthode permet de demander au processeur d'initier une interruption
      * 
      * @param i
-     * Le type de l'interruption à initier
+     *            Le type de l'interruption à initier
      */
     public void requestInterrupt(Interrupt i) { 
         IF = Bits.set(IF, i.index(), true);
@@ -722,15 +730,16 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Cette méthode permet d'accéder aux registres IE et IF sur le bus, ainsi qu'au RAM du processeur (high RAM)
+     * Cette méthode permet d'accéder aux registres IE et IF sur le bus, ainsi
+     * qu'au RAM du processeur (high RAM)
      * 
      * @param address
-     * L'adresse à laquelle la lecture doit être effectuée
+     *            L'adresse à laquelle la lecture doit être effectuée
      * 
      * @return la valeur lue à l'adresse en question
      * 
      * @throws IllegalArgumentException
-     * si l'adresse n'est pas un entier sur 16 bits
+     *             si l'adresse n'est pas un entier sur 16 bits
      */
     public int read(int address) {       
         if(Preconditions.checkBits16(address) == AddressMap.REG_IE) {
@@ -746,16 +755,18 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * Cette méthode permet d'écrire sur le bus dans les registres IE et IF, ainsi que dans le RAM du processeur
+     * Cette méthode permet d'écrire sur le bus dans les registres IE et IF,
+     * ainsi que dans le RAM du processeur
      * 
      * @param address
-     * L'adresse à laquelle l'écriture doit être effectuée
+     *            L'adresse à laquelle l'écriture doit être effectuée
      * 
      * @param data
-     * La valeur à écrire à l'endroit respectif
+     *            La valeur à écrire à l'endroit respectif
      * 
      * @throws IllegalArgumentException
-     * si l'adresse n'est pas sur 16 bits ou la valeur à y écrire n'est pas sur 8 bits
+     *             si l'adresse n'est pas sur 16 bits ou la valeur à y écrire
+     *             n'est pas sur 8 bits
      */
     public void write(int address, int data) {
         if(Preconditions.checkBits16(address) == AddressMap.REG_IE) {

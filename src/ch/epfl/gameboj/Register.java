@@ -1,7 +1,8 @@
 package ch.epfl.gameboj;
 
 /**
- * Cette classe modélise un registre individuel, i.e. un espace de stockage pour une seule valeur
+ * Cette classe modélise un registre individuel, i.e. un espace de stockage pour
+ * une seule valeur
  * 
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -9,11 +10,11 @@ package ch.epfl.gameboj;
  */
 public interface Register {
     
-	/**
-	 * Index d'un registre
-	 * 
-	 * @return l'index du registre
-	 */
+    /**
+     * Index d'un registre
+     * 
+     * @return l'index du registre
+     */
     public int ordinal();
 
     /**

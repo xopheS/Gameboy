@@ -7,7 +7,8 @@ import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
 /**
- * Cette classe simule l'unité logique et arithmétique (UAL ou ALU en anglais) du processeur de la Gameboy
+ * Cette classe simule l'unité logique et arithmétique (UAL ou ALU en anglais)
+ * du processeur de la Gameboy
  * 
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -27,7 +28,8 @@ public final class Alu {
     public enum Flag implements Bit { UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, C, H, N, Z };
     
     /**
-     * Cette énumération représente les deux directions possibles de rotation, gauche et droite
+     * Cette énumération représente les deux directions possibles de rotation,
+     * gauche et droite
      * 
      */
     public enum RotDir { LEFT, RIGHT };
@@ -44,16 +46,16 @@ public final class Alu {
      * Cette méthode met les fanions stockés dans un entier aux valeurs données
      * 
      * @param Z
-     * La valeur à donner au fanion Z
+     *            La valeur à donner au fanion Z
      * 
      * @param N
-     * La valeur à donner au fanion N
+     *            La valeur à donner au fanion N
      * 
      * @param H
-     * La valeur à donner au fanion H
+     *            La valeur à donner au fanion H
      * 
      * @param C
-     * La valeur à donner au fanion C
+     *            La valeur à donner au fanion C
      * 
      * @return l'entier avec les fanions aux valeurs fournies
      */
@@ -65,7 +67,7 @@ public final class Alu {
      * Cette méthode extrait la valeur stockée dans un entier
      * 
      * @param valueFlags
-     * L'entier à utiliser pour l'extraction
+     *            L'entier à utiliser pour l'extraction
      * 
      * @return la valeur stockée dans l'entier
      */
@@ -77,7 +79,7 @@ public final class Alu {
      * Cette méthode extrait la valeur des fanions stockés dans un entier
      * 
      * @param valueFlags
-     * L'entier à utiliser pour l'extraction
+     *            L'entier à utiliser pour l'extraction
      * 
      * @return la valeur des fanions stockée dans l'entier
      */
@@ -86,21 +88,22 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode donne le résultat de l'addition de deux entiers de 8 bits et d'un bit de carry initial
+     * Cette méthode donne le résultat de l'addition de deux entiers de 8 bits
+     * et d'un bit de carry initial
      * 
      * @param l
-     * Le premier entier à ajouter
+     *            Le premier entier à ajouter
      * 
      * @param r
-     * Le deuxième entier à ajouter
+     *            Le deuxième entier à ajouter
      * 
      * @param c0
-     * La valeur du bit de carry initial (0 ou 1)
+     *            La valeur du bit de carry initial (0 ou 1)
      * 
      * @return le résultat de l'addition
      * 
      * @throws IllegalArgumentException
-     * si l'une des deux opérandes n'est pas une valeur de 8 bits
+     *             si l'une des deux opérandes n'est pas une valeur de 8 bits
      * 
      * @see #add16H(int, int)
      * @see #add16L(int, int)
@@ -111,20 +114,21 @@ public final class Alu {
         int result = Bits.clip(8, javaSum);
         return packValueZNHC(result, result == 0, false, Bits.clip(4, l) + Bits.clip(4, r) + initialCarry > 0xF, javaSum > 0xFF);
     }
-    
+
     /**
-     * Cette méthode fait la même chose que la méthode {@link #add(int, int, boolean)}, sans carry initial
+     * Cette méthode fait la même chose que la méthode
+     * {@link #add(int, int, boolean)}, sans carry initial
      * 
      * @param l
-     * Le premier entier à ajouter
+     *            Le premier entier à ajouter
      * 
      * @param r
-     * Le deuxième entier à ajouter
+     *            Le deuxième entier à ajouter
      * 
      * @return le résultat de l'addition
      * 
      * @throws IllegalArgumentException
-     * si l'une des deux opérandes n'est pas une valeur de 8 bits
+     *             si l'une des deux opérandes n'est pas une valeur de 8 bits
      * 
      * @see #add16H(int, int)
      * @see #add16L(int, int)
@@ -134,18 +138,20 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les fanions de l'addition des 8 LSBs
+     * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les
+     * fanions de l'addition des 8 LSBs
      * 
      * @param l
-     * Le premier entier à ajouter
+     *            Le premier entier à ajouter
      * 
      * @param r
-     * Le deuxième entier à ajouter
+     *            Le deuxième entier à ajouter
      * 
-     * @return le résultat de l'addition, avec les fanions H et C provenant de l'addition des 8 LSBs
+     * @return le résultat de l'addition, avec les fanions H et C provenant de
+     *         l'addition des 8 LSBs
      * 
      * @throws IllegalArgumentException
-     * si l'une des deux opérandes n'est pas une valeur de 16 bits
+     *             si l'une des deux opérandes n'est pas une valeur de 16 bits
      * 
      * @see #add16H(int, int)
      */
@@ -155,18 +161,20 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les fanions de l'addition des 8 MSBs
+     * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les
+     * fanions de l'addition des 8 MSBs
      * 
      * @param l
-     * Le premier entier à ajouter
+     *            Le premier entier à ajouter
      * 
      * @param r
-     * Le deuxième entier à ajouter
+     *            Le deuxième entier à ajouter
      * 
-     * @return le résultat de l'addition, avec les fanions H et C provenant de l'addition des 8 MSBs
+     * @return le résultat de l'addition, avec les fanions H et C provenant de
+     *         l'addition des 8 MSBs
      * 
      * @throws IllegalArgumentException
-     * si l'une des deux opérandes n'est pas une valeur de 16 bits
+     *             si l'une des deux opérandes n'est pas une valeur de 16 bits
      * 
      * @see {@link #add16L(int, int)}
      */
@@ -177,21 +185,22 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode donne le résultat de la soustraction de deux entiers de 8 bits et d'un bit de borrow initial
+     * Cette méthode donne le résultat de la soustraction de deux entiers de 8
+     * bits et d'un bit de borrow initial
      * 
      * @param l
-     * Le premier entier (le <em>minuend</em>)
+     *            Le premier entier (le <em>minuend</em>)
      * 
      * @param r
-     * Le deuxième entier (le <em>subtrahend</em>)
+     *            Le deuxième entier (le <em>subtrahend</em>)
      * 
      * @param c0
-     * La valeur du bit de borrow initial (0 ou 1)
+     *            La valeur du bit de borrow initial (0 ou 1)
      * 
      * @return le résultat de la soustraction
      * 
      * @throws IllegalArgumentException
-     * si l'une des deux opérandes n'est pas une valeur de 8 bits
+     *             si l'une des deux opérandes n'est pas une valeur de 8 bits
      */
     public static int sub(int l, int r, boolean b0) {       
         int initialBorrow = b0 ? 1 : 0;
@@ -201,42 +210,45 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode fait la même chose que la méthode {@link #sub(int, int, boolean)}, sans borrow initial
+     * Cette méthode fait la même chose que la méthode
+     * {@link #sub(int, int, boolean)}, sans borrow initial
      * 
      * @param l
-     * Le premier entier (le <em>minuend</em>)
+     *            Le premier entier (le <em>minuend</em>)
      * 
      * @param r
-     * Le deuxième entier (le <em>subtrahend</em>)
+     *            Le deuxième entier (le <em>subtrahend</em>)
      * 
      * @return le résultat de la soustraction
      * 
      * @throws IllegalArgumentException
-     * si l'une des deux opérandes n'est pas une valeur de 8 bits
+     *             si l'une des deux opérandes n'est pas une valeur de 8 bits
      */
     public static int sub(int l, int r) {
         return sub(l, r, false);
     }
     
     /**
-     * Cette méthode ajuste une valeur codée en décimal binaire (DCB ou BCD en anglais) résultant d'une opération arithmétique
+     * Cette méthode ajuste une valeur codée en décimal binaire (DCB ou BCD en
+     * anglais) résultant d'une opération arithmétique
      * 
      * @param v
-     * La valeur à ajuster
+     *            La valeur à ajuster
      * 
      * @param n
-     * La valeur du fanion N
+     *            La valeur du fanion N
      * 
      * @param h
-     * La valeur du fanion H
+     *            La valeur du fanion H
      * 
      * @param c
-     * La valeur du fanion C
+     *            La valeur du fanion C
      * 
-     * @return la valeur ajustée pour être correcte d'un point de vue mathématique
+     * @return la valeur ajustée pour être correcte d'un point de vue
+     *         mathématique
      * 
      * @throws IllegalArgumentException
-     * si la valeur fournie n'est pas une valeur sur 8 bits
+     *             si la valeur fournie n'est pas une valeur sur 8 bits
      */
     public static int bcdAdjust(int v, boolean n, boolean h, boolean c) {
         boolean fixL = h || (!n && Bits.clip(4, Preconditions.checkBits8(v)) > 9);
@@ -247,18 +259,19 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode donne le résultat d'un <em>et</em> bit à bit entre deux entiers sur 8 bits
+     * Cette méthode donne le résultat d'un <em>et</em> bit à bit entre deux
+     * entiers sur 8 bits
      * 
      * @param l
-     * Le premier entier
+     *            Le premier entier
      * 
      * @param r
-     * Le deuxième entier
+     *            Le deuxième entier
      * 
      * @return la valeur de l AND r
      * 
      * @throws IllegalArgumentException
-     * si l'un des deux entiers n'est pas un entier sur 8 bits
+     *             si l'un des deux entiers n'est pas un entier sur 8 bits
      */
     public static int and(int l, int r) {
         int result = Preconditions.checkBits8(l) & Preconditions.checkBits8(r);
@@ -266,18 +279,19 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode donne le résultat d'un <em>ou inclusif</em> bit à bit entre deux entiers sur 8 bits
+     * Cette méthode donne le résultat d'un <em>ou inclusif</em> bit à bit entre
+     * deux entiers sur 8 bits
      * 
      * @param l
-     * Le premier entier
+     *            Le premier entier
      * 
      * @param r
-     * Le deuxième entier
+     *            Le deuxième entier
      * 
      * @return la valeur de l OR r
      * 
      * @throws IllegalArgumentException
-     * si l'un des deux entiers n'est pas un entier sur 8 bits
+     *             si l'un des deux entiers n'est pas un entier sur 8 bits
      */
     public static int or(int l, int r) {
         int result = Preconditions.checkBits8(l) | Preconditions.checkBits8(r);
@@ -285,18 +299,19 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode donne le résultat d'un <em>ou exclusif</em> bit à bit entre deux entiers sur 8 bits
+     * Cette méthode donne le résultat d'un <em>ou exclusif</em> bit à bit entre
+     * deux entiers sur 8 bits
      * 
      * @param l
-     * Le premier entier
+     *            Le premier entier
      * 
      * @param r
-     * Le deuxième entier
+     *            Le deuxième entier
      * 
      * @return la valeur de l XOR r
      * 
      * @throws IllegalArgumentException
-     * si l'un des deux entiers n'est pas un entier sur 8 bits
+     *             si l'un des deux entiers n'est pas un entier sur 8 bits
      */
     public static int xor(int l, int r) {
         int result = Preconditions.checkBits8(l) ^ Preconditions.checkBits8(r);
@@ -304,15 +319,16 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode effectue un décalage de 1 bit vers la gauche de l'entier donné
+     * Cette méthode effectue un décalage de 1 bit vers la gauche de l'entier
+     * donné
      * 
      * @param v
-     * L'entier à utiliser pour effectuer la rotation
+     *            L'entier à utiliser pour effectuer la rotation
      * 
      * @return l'entier "shifté" vers la gauche
      * 
      * @throws IllegalArgumentException
-     * si l'entier fourni n'est pas un entier sur 8 bits
+     *             si l'entier fourni n'est pas un entier sur 8 bits
      */
     public static int shiftLeft(int v) {
         int shiftedInt = Preconditions.checkBits8(v) << 1;
@@ -321,16 +337,18 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode effectue un décalage arithmétique <dd>(<b>Définition</b>: un décalage arithmétique tient compte du MSB, qui représente le signe, et le copie)</dd>
-     * de 1 bit vers la droite de l'entier donné
+     * Cette méthode effectue un décalage arithmétique
+     * <dd>(<b>Définition</b>: un décalage arithmétique tient compte du MSB, qui
+     * représente le signe, et le copie)</dd> de 1 bit vers la droite de
+     * l'entier donné
      * 
      * @param v
-     * L'entier à utiliser pour effectuer la rotation
+     *            L'entier à utiliser pour effectuer la rotation
      * 
      * @return l'entier "shifté" vers la droite
      * 
      * @throws IllegalArgumentException
-     * si l'entier fourni n'est pas un entier sur 8 bits
+     *             si l'entier fourni n'est pas un entier sur 8 bits
      * 
      * @see #shiftRightL(int)
      */
@@ -340,16 +358,17 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode effectue un décalage logique <dd>(<b>Définition</b>: un décalage logique introduit des 0 à gauche)</dd>
-     * de 1 bit vers la droite de l'entier donné
+     * Cette méthode effectue un décalage logique
+     * <dd>(<b>Définition</b>: un décalage logique introduit des 0 à
+     * gauche)</dd> de 1 bit vers la droite de l'entier donné
      * 
      * @param v
-     * L'entier à utiliser pour effectuer la rotation
+     *            L'entier à utiliser pour effectuer la rotation
      * 
      * @return l'entier "shifté" vers la droite
      * 
      * @throws IllegalArgumentException
-     * si l'entier fourni n'est pas un entier sur 8 bits
+     *             si l'entier fourni n'est pas un entier sur 8 bits
      * 
      * @see #shiftRightA(int)
      */
@@ -359,18 +378,19 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode effectue la rotation d'un entier d'un bit dans la direction donnée
+     * Cette méthode effectue la rotation d'un entier d'un bit dans la direction
+     * donnée
      * 
      * @param d
-     * La direction de rotation
+     *            La direction de rotation
      * 
      * @param v
-     * L'entier sur lequel la rotation est à effectuer
+     *            L'entier sur lequel la rotation est à effectuer
      * 
      * @return l'entier avec la rotation effectuée
      * 
      * @throws IllegalArgumentException
-     * si l'entier n'est pas un entier sur 8 bits
+     *             si l'entier n'est pas un entier sur 8 bits
      */
     public static int rotate(RotDir d, int v) {
         int distance = (d == RotDir.LEFT) ? 1 : -1;
@@ -379,21 +399,22 @@ public final class Alu {
     }
     
     /**
-     * Cette méthode effectue la rotation d'un entier d'un bit dans la direction donnée, à travers la retenue
+     * Cette méthode effectue la rotation d'un entier d'un bit dans la direction
+     * donnée, à travers la retenue
      * 
      * @param d
-     * La direction de rotation
+     *            La direction de rotation
      * 
      * @param v
-     * L'entier sur lequel la rotation est à effectuer
+     *            L'entier sur lequel la rotation est à effectuer
      * 
      * @param c
-     * La valeur de la retenue (0 ou 1)
+     *            La valeur de la retenue (0 ou 1)
      * 
      * @return l'entier avec la rotation effectuée
      * 
      * @throws IllegalArgumentException
-     * si l'entier n'est pas un entier sur 8 bits
+     *             si l'entier n'est pas un entier sur 8 bits
      * 
      * @see #rotate(RotDir, int)
      */
@@ -407,14 +428,14 @@ public final class Alu {
     
     /**
      * Cette méthode inverse les positions des bits d'un entier
-     *  
+     * 
      * @param v
-     * L'entier dont les bits sont à inverser entre eux
+     *            L'entier dont les bits sont à inverser entre eux
      * 
      * @return l'entier "swappé"
      * 
      * @throws IllegalArgumentException
-     * si l'entier n'est pas un entier sur 8 bits
+     *             si l'entier n'est pas un entier sur 8 bits
      */
     public static int swap(int v) {
         int swappedInt = (Bits.clip(4, Preconditions.checkBits8(v)) << 4) | Bits.extract(v, 4, 4);
@@ -425,13 +446,12 @@ public final class Alu {
      * Cette méthode teste la valeur du bit d'index donné d'un entier
      * 
      * @param v
-     * L'entier à tester
+     *            L'entier à tester
      * 
      * @param bitIndex
-     * L'index du bit à tester
+     *            L'index du bit à tester
      * 
-     * @return
-     * vrai si le bit est à 1, faux si il est à 0
+     * @return vrai si le bit est à 1, faux si il est à 0
      */
     public static int testBit(int v, int bitIndex) {
         return packValueZNHC(0, !Bits.test(Preconditions.checkBits8(v), Objects.checkIndex(bitIndex, 8)), false, true, false);

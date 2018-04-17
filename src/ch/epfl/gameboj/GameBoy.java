@@ -10,7 +10,8 @@ import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 
 /**
- * Cette classe modélise la Gameboy en entier, avec tous ses composants fonctionnant ensemble
+ * Cette classe modélise la Gameboy en entier, avec tous ses composants
+ * fonctionnant ensemble
  * 
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -31,10 +32,10 @@ public class GameBoy {
      * Constructeur qui initialise une Gameboy avec une cartouche donnée
      * 
      * @param cartridge
-     * La cartouche que la Gameboy va exécuter
+     *            La cartouche que la Gameboy va exécuter
      * 
-     * @throws NullPointerException 
-     * si la cartouche est null
+     * @throws NullPointerException
+     *             si la cartouche est null
      */
     public GameBoy(Cartridge cartridge) {        
         workRam = new Ram(AddressMap.WORK_RAM_SIZE);
@@ -74,13 +75,15 @@ public class GameBoy {
     }
     
     /**
-     * Cette méthode dit à la Gameboy de continuer à fonctionner jusqu'à atteindre un certain cycle
+     * Cette méthode dit à la Gameboy de continuer à fonctionner jusqu'à
+     * atteindre un certain cycle
      * 
      * @param cycle
-     * Le cycle maximal à atteindre
+     *            Le cycle maximal à atteindre
      * 
      * @throws IllegalArgumentException
-     * si le cycle à atteindre est strictement inférieur au cycle actuel
+     *             si le cycle à atteindre est strictement inférieur au cycle
+     *             actuel
      */
     public void runUntil(long cycle) {
     	Preconditions.checkArgument(cycles <= cycle);
