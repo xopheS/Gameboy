@@ -22,16 +22,92 @@ public final class Timer implements Component, Clocked {
     private int regDIV = 0, regTIMA = 0, regTMA = 0, regTAC = 0;
 
     /**
-     * Constructeur qui initialise un timer en spécifiant le processeur avec lequel il va interagir
+     * Constructeur qui initialise un timer en spécifiant le processeur avec
+     * lequel il va interagir
      * 
      * @param cpu
-     * Le processeur auquel le timer va solliciter les interruptions
+     *            Le processeur auquel le timer va solliciter les interruptions
      * 
      * @throws NullPointerException
-     * si le Cpu fourni est null
+     *             si le Cpu fourni est null
      */
     public Timer(Cpu cpu) {       
         this.cpu = Objects.requireNonNull(cpu, "The provided cpu cannot be null.");      
+    }
+    
+    
+    /**
+     * Cette méthode actualise les compteurs
+     * 
+     * @param cycle
+     *            Le cycle actuel de la Gameboy
+     */
+    @Override
+    public void cycle(long cycle) {   
+    	change(() -> regDIV = Bits.clip(16, regDIV + unitsPerCycle));
+    }
+
+    
+    /**
+     * Cette méthode permet d'accéder aux registres du timer (qui stockent
+     * notamment la valeur des compteurs) par le bus
+     * 
+     * @param address
+     *            L'adresse de lecture
+     * 
+     * @return la valeur du registre en question
+     * 
+     * @throws IllegalArgumentException
+     *             si l'adresse n'est pas sur 16 bits
+     */
+    @Override
+    public int read(int address) {
+        switch(Preconditions.checkBits16(address)) {
+        case AddressMap.REG_DIV:
+            return Bits.extract(regDIV, 8, 8);
+        case AddressMap.REG_TIMA:
+            return regTIMA;
+        case AddressMap.REG_TMA:
+            return regTMA;
+        case AddressMap.REG_TAC:
+            return regTAC;
+        default:
+            return NO_DATA;
+        }
+    }
+
+    
+    /**
+     * Cette méthode permet d'écrire dans les registres du timer en tenant
+     * compte de l'incrémentation des compteurs qui peut en découler
+     * 
+     * @param address
+     *            L'adresse d'écriture
+     * 
+     * @param data
+     *            Les données à écrire
+     * 
+     * @throws IllegalArgumentException
+     *             si l'adresse n'est pas sur 16 bits ou les données ne sont pas
+     *             sur 8 bits
+     */
+    @Override
+    public void write(int address, int data) {
+    	Preconditions.checkBits8(data);
+        switch(Preconditions.checkBits16(address)) {
+        case AddressMap.REG_DIV:
+            change(() -> {regDIV = 0;}); 
+            break;
+        case AddressMap.REG_TIMA:
+            regTIMA = data;
+            break;
+        case AddressMap.REG_TMA:
+            regTMA = data;
+            break;
+        case AddressMap.REG_TAC:
+            change(() -> regTAC = data);
+            break;
+        }        
     }
     
     private boolean state() {
@@ -55,6 +131,12 @@ public final class Timer implements Component, Clocked {
         return Bits.test(regTAC, 2) && Bits.test(regDIV, divBitIndex);
     }
     
+    private void change(Runnable r) {
+        boolean s0 = state();
+        r.run();
+        incIfChange(s0);
+    }
+    
     private void incIfChange(boolean previousState) {
         if(previousState && !state()) {
             if(regTIMA == maxSecondaryCounter) {
@@ -63,80 +145,5 @@ public final class Timer implements Component, Clocked {
             }
             else regTIMA++;
         }
-    }
-    
-    /**
-     * Cette méthode actualise les compteurs
-     * 
-     * @param cycle
-     * Le cycle actuel de la Gameboy
-     */
-    @Override
-    public void cycle(long cycle) {   
-    	change(() -> regDIV = Bits.clip(16, regDIV + unitsPerCycle));
-    }
-
-    /**
-     * Cette méthode permet d'accéder aux registres du timer (qui stockent notamment la valeur des compteurs) par le bus
-     * 
-     * @param address
-     * L'adresse de lecture
-     * 
-     * @return la valeur du registre en question
-     * 
-     * @throws IllegalArgumentException
-     * si l'adresse n'est pas sur 16 bits
-     */
-    @Override
-    public int read(int address) {
-        switch(Preconditions.checkBits16(address)) {
-        case AddressMap.REG_DIV:
-            return Bits.extract(regDIV, 8, 8);
-        case AddressMap.REG_TIMA:
-            return regTIMA;
-        case AddressMap.REG_TMA:
-            return regTMA;
-        case AddressMap.REG_TAC:
-            return regTAC;
-        default:
-            return NO_DATA;
-        }
-    }
-
-    /**
-     * Cette méthode permet d'écrire dans les registres du timer en tenant compte de l'incrémentation des compteurs qui peut en découler
-     * 
-     * @param address
-     * L'adresse d'écriture
-     * 
-     * @param data
-     * Les données à écrire
-     * 
-     * @throws IllegalArgumentException 
-     * si l'adresse n'est pas sur 16 bits ou les données ne sont pas sur 8 bits
-     */
-    @Override
-    public void write(int address, int data) {
-    	Preconditions.checkBits8(data);
-        switch(Preconditions.checkBits16(address)) {
-        case AddressMap.REG_DIV:
-            change(() -> {regDIV = 0;}); 
-            break;
-        case AddressMap.REG_TIMA:
-            regTIMA = data;
-            break;
-        case AddressMap.REG_TMA:
-            regTMA = data;
-            break;
-        case AddressMap.REG_TAC:
-            change(() -> regTAC = data);
-            break;
-        }        
-    }
-    
-    private void change(Runnable r) {
-        boolean s0 = state();
-        r.run();
-        incIfChange(s0);
     }
 }

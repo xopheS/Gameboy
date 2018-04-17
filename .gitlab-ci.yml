@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 image: openjdk
 
 build-project:
@@ -27,3 +28,20 @@ pages:
     - public
   only: 
   - master
+=======
+run-junit-tests:
+  tags:
+    - java
+    - openjdk
+    - shared
+  stage: test
+  script: 
+    - cd test/gitlab/ci
+    - ls
+    - rm -rf CIJupiterRunner.class
+    - ls
+    - javac CIJupiterRunner.java
+    - ls
+    - java CIJupiterRunner
+    
+>>>>>>> branch 'master' of git@gitlab.com:dave_and_chris/gameboj.git

@@ -23,14 +23,16 @@ public final class Cartridge implements Component {
     }
     
     /**
-     * Ceci est le constructeur public de Cartridge, il y met dedans les contenus d'un fichier ROM
+     * Ceci est le constructeur public de Cartridge, il y met dedans les
+     * contenus d'un fichier ROM
      * 
      * @param romFile
-     * Le fichier ROM (read-only memory) dont les contenus sont copiés
-     * @throws FileNotFoundException 
+     *            Le fichier ROM (read-only memory) dont les contenus sont
+     *            copiés
+     * @throws FileNotFoundException
      * 
      * @throws IOException
-     * si un problème de lecture intervient
+     *             si un problème de lecture intervient
      */
     public static Cartridge ofFile(File romFile) throws FileNotFoundException, IOException { 
     	
@@ -45,14 +47,20 @@ public final class Cartridge implements Component {
         }
     }
     
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#read(int)
+     */
     @Override
     public int read(int address) {
         return mbc.read(address);
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#write(int, int)
+     */
     @Override
     public void write(int address, int data) {
-        mbc.write(address, data);      
+        mbc.write(address, data);
     }
 
 }
