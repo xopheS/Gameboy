@@ -11,23 +11,25 @@ import ch.epfl.gameboj.Preconditions;
  * @author David Cian (287967)
  *
  */
+
 public final class BitVector {
 	//must be immutable
 	
 	private final int[] bitVector;
 	
 	private static int[] bitVector(int size, boolean initialValue) {
-	    Preconditions.checkArgument(size%32 == 0 && size >= 0);
-	    int[] bitVector = new int[size];
-	    Arrays.fill(bitVector, initialValue ? 1 : 0);
+	    Preconditions.checkArgument(size%Integer.SIZE == 0 && size > 0);
+	    int[] bitVector = new int[size/Integer.SIZE];
+	    Arrays.fill(bitVector, initialValue ? -1 : 0);
 	    return bitVector;
 	}
 	
 	
 	private BitVector extract(int start, int size, boolean methodZeroExtended) {
-	    int[] extractedInts = new int[size];
-	    for (int i = 0; i < size; i++) {
-	        extractedInts[i] = intExtract(start + 32*i, methodZeroExtended);
+	    Preconditions.checkArgument(size%Integer.SIZE == 0 && size > 0);
+	    int[] extractedInts = new int[size/Integer.SIZE];
+	    for (int i = 0; i < size/Integer.SIZE; i++) {
+	        extractedInts[i] = intExtract(start + Integer.SIZE*i, methodZeroExtended);
 	    }
 	    return new BitVector(extractedInts);
 	}
@@ -35,39 +37,29 @@ public final class BitVector {
 	
 	private int intExtract(int start, boolean methodZeroExtended) {
 	   
-	   if(Math.floorMod(start, 32) == 0) {
-	       if(!methodZeroExtended) return bitVector[Math.floorDiv((Math.floorMod(start, size())), 32)];
-	       else return (start > size() | start < 0) ? 0 : bitVector[Math.floorDiv(start, 32)];
+	   if(Math.floorMod(start, Integer.SIZE) == 0) {
+	       if(!methodZeroExtended) return bitVector[Math.floorDiv((Math.floorMod(start, size())), Integer.SIZE)];
+	       else return (start > size() | start < 0) ? 0 : bitVector[Math.floorDiv(start, Integer.SIZE)];
 	   }
 	   
 	   if(!methodZeroExtended) {
-	       int startIntIndex = Math.floorDiv((Math.floorMod(start, size())), 32);
-	       int startPosition = Math.floorMod(start, 32);              
-	       return (bitVector[startIntIndex] >>> startPosition) | (bitVector[(startIntIndex + 1) % bitVector.length] << Integer.SIZE - startPosition);  
+	       int startIntIndex = Math.floorDiv((Math.floorMod(start, size())), Integer.SIZE);
+	       int startPosition = Math.floorMod(start, Integer.SIZE);              
+	       return (bitVector[startIntIndex] >>> startPosition) | (bitVector[(startIntIndex + 1) % bitVector.length] << (Integer.SIZE - startPosition));  
 	   }
 	   else if(methodZeroExtended) {
-	       if(start > size() | start < -Integer.SIZE) return 0;
+	       int startIntIndex = Math.floorDiv(start, Integer.SIZE);
+	       if(startIntIndex >= bitVector.length || startIntIndex < -1) return 0;
 	       else {
-	           int startIntIndex = Math.floorDiv(start, 32);
-	           if(startIntIndex == bitVector.length - 1) return bitVector[startIntIndex] >>> start | 0;
-	           if(startIntIndex ==0) return bitVector[startIntIndex] << start | 0;
-	           else return bitVector[startIntIndex] >>> start | bitVector[(startIntIndex + 1)] << Integer.SIZE - start;
+	           int startPosition = Math.floorMod(start, Integer.SIZE);
+	           if(startIntIndex == bitVector.length - 1) return bitVector[startIntIndex] >>> startPosition;
+	           if(startIntIndex == -1) return (bitVector[startIntIndex + 1] << (Integer.SIZE - startPosition));
+	           else return (bitVector[startIntIndex] >>> startPosition) | (bitVector[(startIntIndex + 1)] << (Integer.SIZE - startPosition));
 	       }
 	   }
 	   
 	   return 0;
 	}
-	
-//	private boolean testBitExtract(int index, boolean methodZeroExtended) {
-//        
-//	    if(index >= 0 && index < size()) return testBit(index);
-//	    else {
-//	        if(methodZeroExtended) return false;
-//	        else {
-//	            return testBit(index % size());
-//	        }
-//	    }
-//    }
 	
 	//Constructeur privé
 	private BitVector(int[] bitVector) {
@@ -75,7 +67,7 @@ public final class BitVector {
 	}
 	
 	public BitVector(int size, boolean initialValue) {
-		this(bitVector(size, initialValue));
+        this(bitVector(size, initialValue));
 	}
 	
 	public BitVector(int size) {
@@ -91,9 +83,7 @@ public final class BitVector {
 	}
 	
 	public boolean testBit(int index) {
-	    //CHECK INDEX??
-	    Preconditions.checkArgument(index >= 0 && index < size());
-		return Bits.test(Objects.checkIndex(index, bitVector.length) / Integer.SIZE, index % Integer.SIZE);
+		return Bits.test(bitVector[Math.floorDiv(Objects.checkIndex(index, size()), Integer.SIZE)], index % Integer.SIZE);
 	}
 	
 	public BitVector not() {
@@ -107,7 +97,7 @@ public final class BitVector {
 	}
 	
 	public BitVector and(BitVector otherVector) {
-		Preconditions.checkArgument(bitVector.length == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
+		Preconditions.checkArgument(size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
 				"Two bit vectors of different sizes cannot be compared.");
 		
 		int[] andVector = new int[bitVector.length];
@@ -120,7 +110,7 @@ public final class BitVector {
 	}
 	
 	public BitVector or(BitVector otherVector) {
-		Preconditions.checkArgument(bitVector.length == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(), 
+		Preconditions.checkArgument(size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(), 
 				"Two bit vectors of different sizes cannot be compared.");
 		
 		int[] orVector = new int[bitVector.length];
@@ -141,7 +131,7 @@ public final class BitVector {
 	}
 	
 	public BitVector shift(int distance) {
-		return extractZeroExtended(distance, size());
+		return extractZeroExtended(-distance, size());
 	}
 	
 	@Override
@@ -156,6 +146,34 @@ public final class BitVector {
 	
 	@Override
 	public String toString() {
-		return bitVector.toString();
+		StringBuilder b = new StringBuilder();
+		for(int i = size() - 1; i >= 0; --i) {
+		    b.append(testBit(i) ? 1 : 0);
+		}
+		return b.toString();
+	}
+	
+	
+	public final static class Builder {
+	    
+	    private int[] vector;
+	    
+	    public Builder(int size) {
+	        vector = bitVector(size, false);
+	    }
+	    
+	    public Builder setByte(int index, int b) {
+	        if(vector == null) throw new IllegalStateException();
+	        Preconditions.checkBits8(b);
+	        if(!(index >= 0 && index < vector.length*Integer.SIZE/Byte.SIZE)) throw new IndexOutOfBoundsException();
+	        vector[Math.floorDiv(Byte.SIZE*index , Integer.SIZE)] |= b << Math.floorMod(Byte.SIZE*index, Integer.SIZE);
+	        return this;
+	    }
+	    public BitVector build() {
+	        if(vector == null) throw new IllegalStateException();
+	        BitVector builded = new BitVector(vector);
+	        vector = null;
+	        return builded;
+	    }
 	}
 }
