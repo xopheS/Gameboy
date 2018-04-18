@@ -1,0 +1,20 @@
+*.css		text
+*.html		text
+*.java		text
+*.js		text
+*.txt		text
+*.yml		text
+*.class		binary
+*.jar		binary
+Blargg[[:space:]]ROM[[:space:]]files/04-op[[:space:]]r,imm.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/06-ld[[:space:]]r,r.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/07-jr,jp,call,ret,rst.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/10-bit[[:space:]]ops.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/01-special.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/02-interrupts.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/08-misc[[:space:]]instrs.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/09-op[[:space:]]r,r.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/11-op[[:space:]]a,(hl).gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/instr_timing.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/03-op[[:space:]]sp,hl.gb filter=lfs diff=lfs merge=lfs -text
+Blargg[[:space:]]ROM[[:space:]]files/05-op[[:space:]]rp.gb filter=lfs diff=lfs merge=lfs -text
