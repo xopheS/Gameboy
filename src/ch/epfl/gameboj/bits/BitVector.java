@@ -16,7 +16,6 @@ public final class BitVector {
 	//must be immutable
 	
 	//DON'T FORGET TO LINK COMMITS TO ISSUES WITH Ref. #xxx where xxx is the issue number 
-	//Use Feature-driven development (FDD) and branch then create merge request for new functionality
 	
 	private final int[] bitVector;
 	
