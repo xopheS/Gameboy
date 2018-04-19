@@ -169,7 +169,10 @@ public final class BitVector {
 	        if(vector == null) throw new IllegalStateException();
 	        Preconditions.checkBits8(b);
 	        if(!(index >= 0 && index < vector.length*Integer.SIZE/Byte.SIZE)) throw new IndexOutOfBoundsException();
-	        vector[Math.floorDiv(Byte.SIZE*index , Integer.SIZE)] |= b << Math.floorMod(Byte.SIZE*index, Integer.SIZE);
+	        int startPosition =  Math.floorMod(Byte.SIZE*index, Integer.SIZE);
+	        int intIndex = Math.floorDiv(Byte.SIZE*index , Integer.SIZE);
+	        vector[intIndex] &= ~(0b1111_1111 << startPosition);
+	        vector[intIndex] |= b << startPosition;
 	        return this;
 	    }
 	    public BitVector build() {
