@@ -15,7 +15,7 @@ import ch.epfl.gameboj.component.memory.Ram;
 
 class BitVectorTest {
 
-    BitVector v1, v2;
+    BitVector v1, v2, v3;
     
     @BeforeEach
     void initAll() {
@@ -33,7 +33,14 @@ class BitVectorTest {
                 .setByte(3, 0b1101_1110)
                 .setByte(6, 0b0011_0110)
                 .build();
-      //0000000000110110000000000000000011011110000000001000100011011100    
+      //0000000000110110000000000000000011011110000000001000100011011100  
+        
+        v3 = new BitVector.Builder(64)
+                .setByte(0, 0b1101_1100)
+                .setByte(1, 0b1000_1000)
+                .setByte(3, 0b1101_1110)
+                .setByte(6, 0b0011_0110)
+                .build();
     }
     
     @Test
@@ -112,6 +119,16 @@ class BitVectorTest {
                 .setByte(3, 0b1100_1100)
                 .build();
         assertEquals("11001100000000001010101011110000" , v.toString());
+    }
+    
+    @Test
+    void hashWorks() {
+        assertEquals(v2.hashCode(), v3.hashCode());      
+    }
+    
+    @Test
+    void equalsWorks() {
+        assertTrue(v2.equals(v3));      
     }
     
  // TESTS EXTRACTZEROEXTENDED
