@@ -1,0 +1,35 @@
+<project name="gameboj" basedir="." default="main">
+	<description>
+		Ant complete build file for the gameboj project.
+	</description>
+	
+	<attribute name="src.dir" value="src"/>
+	
+	<attribute name="build.dir" value="build"/>
+	
+	<target name="build">
+		<javac srcdir="${src.dir}" destdir="${build.dir}"/>
+	</target>
+		
+	<target name="test" depends="build">
+		
+	</target>
+		
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+	</target>
+		
+	<target name="main" depends="build,test">
+		
+	</target>
+	
+	<!-- Internal utility targets -->
+	
+	<target name="init">
+	
+	</target>
+	
+	<target name="compile">
+	
+	</target>
+</project>
