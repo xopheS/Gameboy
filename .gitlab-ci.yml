@@ -6,7 +6,6 @@ pages:
   stage: deploy
   script:  
     - echo "Deploying website"
-    - mv coverage/ public/
   artifacts:
     paths:
       - public
