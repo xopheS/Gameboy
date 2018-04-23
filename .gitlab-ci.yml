@@ -6,6 +6,8 @@ build-project:
   stage: build
   script:
     - echo "Building project"
+  except: 
+    - pages
 
 run-junit-tests:
   tags:
@@ -15,6 +17,16 @@ run-junit-tests:
     - cd test
     - javac gitlab/ci/CIJupiterRunner.java
     - java gitlab/ci/CIJupiterRunner
+ 
+test-coverage:
+  tags:
+    - gitlab-org
+  stage: test
+  script:
+    - echo "Test coverage"
+  artifacts:
+    paths:
+      - coverage/
   
 pages:
   tags:
@@ -22,8 +34,9 @@ pages:
   stage: deploy
   script:  
     - echo "Deploying website"
+    - mv coverage/ public/
   artifacts:
     paths:
-    - public
+      - public
   only: 
-  - master
+    - pages
