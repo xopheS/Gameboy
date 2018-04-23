@@ -6,8 +6,6 @@ build-project:
   stage: build
   script:
     - echo "Building project"
-  except: 
-    - pages
 
 run-junit-tests:
   tags:
@@ -28,15 +26,3 @@ test-coverage:
     paths:
       - coverage/
   
-pages:
-  tags:
-    - gitlab-org
-  stage: deploy
-  script:  
-    - echo "Deploying website"
-    - mv coverage/ public/
-  artifacts:
-    paths:
-      - public
-  only: 
-    - pages
