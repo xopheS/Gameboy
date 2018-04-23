@@ -1,0 +1,46 @@
+image: openjdk
+
+build-project:
+  tags:
+    - gitlab-org
+  stage: build
+  script:
+    - echo "Building project"
+  except: 
+    - pages
+
+run-junit-tests:
+  tags:
+    - gitlab-org
+  stage: test
+  script: 
+    - cd test
+    - javac gitlab/ci/CIJupiterRunner.java
+    - java gitlab/ci/CIJupiterRunner
+  except: 
+    - pages
+ 
+test-coverage:
+  tags:
+    - gitlab-org
+  stage: test
+  script:
+    - echo "Test coverage"
+  artifacts:
+    paths:
+      - coverage/
+  except: 
+    - pages
+  
+pages:
+  tags:
+    - gitlab-org
+  stage: deploy
+  script:  
+    - echo "Deploying website"
+    - mv coverage/ public/
+  artifacts:
+    paths:
+      - public
+  only: 
+    - pages
