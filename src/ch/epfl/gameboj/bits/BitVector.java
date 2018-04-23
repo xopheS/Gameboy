@@ -20,6 +20,17 @@ public final class BitVector {
 	
 	private final int[] bitVector;
 	
+	//TEST FUNCTION////////////////////////////////////////////
+	public static BitVector rand() {
+        int[] val = {-1, -8,2839, 7};
+        return new BitVector(val);
+    }
+	
+	public BitVector(BitVector b) {
+       this(b.bitVector);
+	}
+    //////////////////////////////////////////////////////////
+    
 	private static int[] bitVector(int size, boolean initialValue) {
 	    Preconditions.checkArgument(size%Integer.SIZE == 0 && size > 0);
 	    int[] bitVector = new int[size/Integer.SIZE];
@@ -144,7 +155,7 @@ public final class BitVector {
 	
 	@Override
 	public int hashCode() {
-		return bitVector.hashCode();
+		return Arrays.hashCode(bitVector);
 	}
 	
 	@Override
@@ -175,6 +186,7 @@ public final class BitVector {
 	        vector[intIndex] |= b << startPosition;
 	        return this;
 	    }
+	    
 	    public BitVector build() {
 	        if(vector == null) throw new IllegalStateException();
 	        BitVector builded = new BitVector(vector);
