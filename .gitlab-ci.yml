@@ -26,3 +26,22 @@ test-coverage:
     paths:
       - coverage/
   
+deploy_review:
+  tags:
+    - gitlab-org
+  stage: deploy
+  script:
+    - echo "Deploying to review environment"
+  environment:
+    name: review
+    url: https://dave_and_chris.gitlab.io/gameboj/review.html
+
+deploy_production:
+  tags:
+    - gitlab-org
+  stage: deploy
+  script:
+    - echo "Deploying to review environment"
+  environment:
+    name: production
+    url: https://dave_and_chris.gitlab.io/gameboj/production.html
