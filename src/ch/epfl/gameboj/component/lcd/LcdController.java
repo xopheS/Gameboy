@@ -1,5 +1,6 @@
 package ch.epfl.gameboj.component.lcd;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -11,31 +12,38 @@ import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.Bits;
-
 
 public final class LcdController implements Component, Clocked {
 
     public final static int LCD_WIDTH = 160;
     public final static int LCD_HEIGHT = 144;
-    private Ram videoRam;
-    private Ram oamRam;
-    private Cpu cpu;
+    private LcdImage displayedImage;
+    private final Ram videoRam;
+    private final Ram oamRam;
+    private final Cpu cpu;
     private long nextNonIdleCycle = 0;
     private Map<Integer, Integer> registers; // <Addresse, Valeur>
     
     //J'ai stocker les registres dans une map et j'ai créer une interface avec leurs addresses pour les magic values
     //La map c'est ultra pratique pour acceder aux elements selon les addresses
     //La fonction changeMode elle sert à faire les changement lors du changement de mode
-    //La fonction modifyLYorLYC modifie LY ou LYC et fait les checks et les interruptions necessaires
-    
+    //La fonction modifyLYorLYC modifie LY ou LYC et fait les checks et les interruptions necessaires    
     
     public LcdController(Cpu cpu) {
         
-        Objects.requireNonNull(cpu);
-        this.cpu = cpu;
+        this.cpu = Objects.requireNonNull(cpu);
         videoRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
         oamRam = new Ram(AddressMap.OAM_RAM_SIZE);
+        
+        ArrayList<LcdImageLine> imgLines = new ArrayList<>(LCD_HEIGHT);
+        
+        for(int i = 0; i < LCD_HEIGHT; ++i) {
+        	imgLines.add(new LcdImageLine(new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH)));
+        }
+        
+        displayedImage = new LcdImage(LCD_WIDTH, LCD_HEIGHT, new ArrayList<LcdImageLine>(0));
         
         registers = new HashMap<>();
         registers.put(RegAddress.LCDC, 0);
@@ -53,9 +61,8 @@ public final class LcdController implements Component, Clocked {
         
     }
     
-    public LcdImage currentImage() {
-        
-        return null;
+    public LcdImage currentImage() {  
+        return Objects.requireNonNull(displayedImage, "fatal: attempt to display a null image");
     }
 
     private void reallyCycle(long cycle) {
