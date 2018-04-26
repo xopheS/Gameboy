@@ -16,11 +16,10 @@ public class LcdImageLine {
 
     public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
 
-        Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == lsb.size());
+        Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(), "The three BitVectors must have the same length");
         this.LSB = lsb;
         this.MSB = msb;
         this.opacity = opacity;
-
     }
 
     public int size() {
@@ -102,24 +101,22 @@ public class LcdImageLine {
         }
 
         return new LcdImageLine(msbCopy, lsbCopy, opacity);
-
     }
 
     // other & opacity | this & notOpacity
     public LcdImageLine below(LcdImageLine other) {
         
-        Preconditions.checkArgument(other.size() == size());
+        Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
         
         BitVector newOpacity = opacity.or(other.opacity);
         BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
         BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
         return new LcdImageLine(newMSB ,newLSB ,newOpacity);
-    }
-    
+    } 
 
     public LcdImageLine below(LcdImageLine other, BitVector opacity) {
         
-        Preconditions.checkArgument(other.size() == size() && opacity.size() == size());
+        Preconditions.checkArgument(other.size() == size() && opacity.size() == size(), "The line and the opacity vector must have the same length");
         
         return new LcdImageLine(other.MSB.and(opacity).or(MSB.and(opacity.not())),
                 other.LSB.and(opacity).or(LSB.and(opacity.not())),
@@ -135,9 +132,7 @@ public class LcdImageLine {
         BitVector opacityModified = ((opacity.shift(size-n)).extractWrapped(-n, size)).or(other.opacity.extractZeroExtended(n, size).shift(n));
         
         return new LcdImageLine(msbModified, lsbModified, opacityModified);
-    }
-
-    
+    }    
     
     @Override
     public boolean equals(Object o) {
@@ -173,7 +168,5 @@ public class LcdImageLine {
             BitVector msb = msbBuilder.build();           
             return new LcdImageLine(lsb, msb, lsb.and(msb));
         }
-
     }
-
 }

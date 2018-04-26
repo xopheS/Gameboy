@@ -1,4 +1,4 @@
-package ch.epfl.gameboj;
+package ch.epfl.gameboj.bits;
 
 import static org.junit.jupiter.api.Assertions.*;
 

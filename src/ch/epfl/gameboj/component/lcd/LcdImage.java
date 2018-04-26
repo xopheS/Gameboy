@@ -18,9 +18,7 @@ public class LcdImage {
     public LcdImage(int width, int height, List<LcdImageLine> list) {
        this.width = width;
        this.height = height;
-       //imageLines = new ArrayList<>(list.size());
-       imageLines = list;
-       //Collections.copy(imageLines, list);    
+       imageLines = Collections.unmodifiableList(new ArrayList<>(list));   
     }
     
     public int getWidth() {
@@ -32,7 +30,7 @@ public class LcdImage {
     }
     
     public int get(int x, int y) {
-        Preconditions.checkArgument(x < width && x >= 0 && y < height && y >= 0);
+        Preconditions.checkArgument(x < width && x >= 0 && y < height && y >= 0, "Pixel coordinates must be within the bounds of the screen");
         int lsb = imageLines.get(y).getLsb().testBit(x) ? 1 : 0;
         int msb = (imageLines.get(y).getMsb().testBit(x) ? 1 : 0) << 1;
         return (lsb | msb);
@@ -40,18 +38,20 @@ public class LcdImage {
     
     @Override
     public boolean equals(Object o) {
+    	for(int i = 0; i < height; ++i) {
+    		if(!imageLines.get(i).equals(((LcdImage) o).imageLines.get(i))) return false;
+    	}
+    	
         return (o instanceof LcdImage)
                 && height == (((LcdImage) o).height)
-                && width == (((LcdImage) o).width)
-                && imageLines.equals(((LcdImage) o).imageLines);
+                && width == (((LcdImage) o).width);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(height, width, imageLines);
     }
-    
-    
+       
     public static final class Builder {
         int height;
         int width;
@@ -72,7 +72,6 @@ public class LcdImage {
         
         public LcdImage build() {
             return new LcdImage(width, height, imageLines);
-        }
-  
+        } 
     }
 }

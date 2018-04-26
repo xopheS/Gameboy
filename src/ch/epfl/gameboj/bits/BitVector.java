@@ -37,41 +37,60 @@ public final class BitVector {
 	    return bitVector;
 	}
 	
-	
+	private static class FloorEuclideanDiv {
+		int div, mod;
+		
+		public FloorEuclideanDiv(int dividend, int divisor) {
+			div = Math.floorDiv(dividend, divisor);
+			mod = Math.floorMod(dividend, divisor);
+		}
+	}
+		
 	private BitVector extract(int start, int size, boolean methodZeroExtended) {
 	    Preconditions.checkArgument(size%Integer.SIZE == 0 && size > 0);
 	    int[] extractedInts = new int[size/Integer.SIZE];
-	    for (int i = 0; i < size/Integer.SIZE; i++) {
-	        extractedInts[i] = intExtract(start + Integer.SIZE*i, methodZeroExtended);
+	    FloorEuclideanDiv d = new FloorEuclideanDiv(start, Integer.SIZE);
+	    
+	    if(methodZeroExtended) {
+	    	if(Math.floorMod(start, Integer.SIZE) == 0) {
+	    		for (int i = 0; i < size/Integer.SIZE; i++) {
+	    	        extractedInts[i] = (i < -d.div || i >= d.div + bitVector.length) ? 
+	    	        		0 : bitVector[i + d.div];
+	    	    }
+	    	} else {
+	    		for (int i = 0; i < size/Integer.SIZE; i++) {
+	    	        extractedInts[i] = intExtZeroExtended(start + Integer.SIZE*i);
+	    	    }
+	    	}
+	    } else {
+	    	if(Math.floorMod(start, Integer.SIZE) == 0) {
+	    		for (int i = 0; i < size/Integer.SIZE; i++) {
+	    	        extractedInts[i] = bitVector[Math.floorMod(i + d.div, bitVector.length)];
+	    	    }
+	    	} else {
+	    		for (int i = 0; i < size/Integer.SIZE; i++) {
+	    	        extractedInts[i] = intExtWrapped(start + Integer.SIZE*i);
+	    	    }
+	    	}
 	    }
 	    return new BitVector(extractedInts);
 	}
+		
+	private int intExtZeroExtended(int start) {
+		FloorEuclideanDiv f = new FloorEuclideanDiv(start, Integer.SIZE);
+	    if(f.div >= bitVector.length || f.div < -1) {
+	    	return 0;
+	    } else {
+	    	if(f.div == bitVector.length - 1) return bitVector[f.div] >>> f.mod;
+	    	if(f.div == -1) return (bitVector[f.div + 1] << (Integer.SIZE - f.mod));
+	    	else return (bitVector[f.div] >>> f.mod) | (bitVector[(f.div + 1)] << (Integer.SIZE - f.mod));
+	    }
+	}
 	
-	
-	private int intExtract(int start, boolean methodZeroExtended) {
-	   
-	   if(Math.floorMod(start, Integer.SIZE) == 0) {
-	       if(!methodZeroExtended) return bitVector[Math.floorDiv((Math.floorMod(start, size())), Integer.SIZE)];
-	       else return (start > size() | start < 0) ? 0 : bitVector[Math.floorDiv(start, Integer.SIZE)];
-	   }
-	   
-	   if(!methodZeroExtended) {
-	       int startIntIndex = Math.floorDiv((Math.floorMod(start, size())), Integer.SIZE);
-	       int startPosition = Math.floorMod(start, Integer.SIZE);              
-	       return (bitVector[startIntIndex] >>> startPosition) | (bitVector[(startIntIndex + 1) % bitVector.length] << (Integer.SIZE - startPosition));  
-	   }
-	   else if(methodZeroExtended) {
-	       int startIntIndex = Math.floorDiv(start, Integer.SIZE);
-	       if(startIntIndex >= bitVector.length || startIntIndex < -1) return 0;
-	       else {
-	           int startPosition = Math.floorMod(start, Integer.SIZE);
-	           if(startIntIndex == bitVector.length - 1) return bitVector[startIntIndex] >>> startPosition;
-	           if(startIntIndex == -1) return (bitVector[startIntIndex + 1] << (Integer.SIZE - startPosition));
-	           else return (bitVector[startIntIndex] >>> startPosition) | (bitVector[(startIntIndex + 1)] << (Integer.SIZE - startPosition));
-	       }
-	   }
-	   
-	   return 0;
+	private int intExtWrapped(int start) {
+		FloorEuclideanDiv f = new FloorEuclideanDiv(start, Integer.SIZE);
+		int startIntIndex = Math.floorDiv((Math.floorMod(start, size())), Integer.SIZE);             
+		return (bitVector[startIntIndex] >>> f.mod) | (bitVector[Math.floorMod((startIntIndex + 1), bitVector.length)] << (Integer.SIZE - f.mod));  
 	}
 	
 	//Constructeur privé
@@ -165,8 +184,7 @@ public final class BitVector {
 		}
 		return b.toString();
 	}
-	
-	
+		
 	public final static class Builder {
 	    
 	    private int[] vector;
@@ -177,20 +195,19 @@ public final class BitVector {
 	    
 	    public Builder setByte(int index, int b) {
 	        if(vector == null) throw new IllegalStateException();
-	        Preconditions.checkBits8(b);
 	        if(!(index >= 0 && index < vector.length*Integer.SIZE/Byte.SIZE)) throw new IndexOutOfBoundsException();
 	        int startPosition =  Math.floorMod(Byte.SIZE*index, Integer.SIZE);
 	        int intIndex = Math.floorDiv(Byte.SIZE*index , Integer.SIZE);
 	        vector[intIndex] &= ~(0b1111_1111 << startPosition);
-	        vector[intIndex] |= b << startPosition;
+	        vector[intIndex] |= Preconditions.checkBits8(b) << startPosition;
 	        return this;
 	    }
 	    
 	    public BitVector build() {
 	        if(vector == null) throw new IllegalStateException();
-	        BitVector builded = new BitVector(vector);
+	        BitVector built = new BitVector(vector);
 	        vector = null;
-	        return builded;
+	        return built;
 	    }
 	}
 }
