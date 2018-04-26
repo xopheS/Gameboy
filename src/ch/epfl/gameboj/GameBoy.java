@@ -5,6 +5,7 @@ import java.util.Objects;
 import ch.epfl.gameboj.component.Timer;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
+import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
@@ -25,6 +26,7 @@ public class GameBoy {
     private final BootRomController bootRomController;
     private final Timer timer;
     private final Cpu cpu;
+    private LcdController lcdController;
     
     private long cycles;
     
@@ -54,25 +56,11 @@ public class GameBoy {
         
         timer = new Timer(cpu);
         timer.attachTo(bus);
+        
+        lcdController = new LcdController(cpu);
+        lcdController.attachTo(bus);
     }
     
-    /**
-     * Getter du bus
-     * 
-     * @return le bus de la Gameboy
-     */
-    public Bus bus() {
-        return bus;
-    }
-    
-    /**
-     * Getter du cpu
-     * 
-     * @return le processeur de la Gameboy
-     */
-    public Cpu cpu() {
-        return cpu;
-    }
     
     /**
      * Cette méthode dit à la Gameboy de continuer à fonctionner jusqu'à
@@ -90,6 +78,7 @@ public class GameBoy {
         while(cycles < cycle) {         
             timer.cycle(cycles);
             cpu.cycle(cycles);
+            lcdController.cycle(cycles);
             cycles++;
         } 
     }
@@ -111,4 +100,33 @@ public class GameBoy {
     public Timer timer() {
         return timer;
     }
+    
+    /**
+     * Getter du bus
+     * 
+     * @return le bus de la Gameboy
+     */
+    public Bus bus() {
+        return bus;
+    }
+    
+    /**
+     * Getter du cpu
+     * 
+     * @return le processeur de la Gameboy
+     */
+    public Cpu cpu() {
+        return cpu;
+    }
+    
+    
+    /**
+     * Getter de LcdController
+     * 
+     * @return le LcdController de la Gameboy
+     */
+    public LcdController lcdController() {
+        return lcdController;
+    }
+    
 }

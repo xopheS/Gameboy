@@ -58,6 +58,12 @@ public final class LcdController implements Component, Clocked {
         return null;
     }
 
+    private void reallyCycle(long cycle) {
+        
+        
+    }
+    
+    
     @Override
     public void cycle(long cycle) {
         // TODO Auto-generated method stub
