@@ -31,6 +31,7 @@ public final class LcdController implements Component, Clocked {
     private final Ram oamRam;
     private final Cpu cpu;
     private long nextNonIdleCycle = 0, lcdOnCycle = 0;
+    private LcdImage.Builder nextImageBuilder;
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     
     //La fonction changeMode elle sert à faire les changement lors du changement de mode
@@ -49,6 +50,8 @@ public final class LcdController implements Component, Clocked {
         }
         
         displayedImage = new LcdImage(LCD_WIDTH, LCD_HEIGHT, new ArrayList<LcdImageLine>(0));
+        
+        nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
     }
     
     public LcdImage currentImage() {  
@@ -87,7 +90,7 @@ public final class LcdController implements Component, Clocked {
         
     	Preconditions.checkBits8(data);
     	
-        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.HIGH_RAM_END) 
+        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) 
             videoRam.write(address - AddressMap.VIDEO_RAM_START, Preconditions.checkBits8(data));
         
         if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
