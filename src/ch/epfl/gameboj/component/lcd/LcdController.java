@@ -31,6 +31,8 @@ public final class LcdController implements Component, Clocked {
     private final Ram oamRam;
     private final Cpu cpu;
     private long nextNonIdleCycle = 0, lcdOnCycle = 0;
+    private long timeFromImageStart = 0, timeFromLineStart = 0, timeFromImageEnd = 0;
+    private int currentDrawIndex = 0;
     private LcdImage.Builder nextImageBuilder;
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     
@@ -49,7 +51,7 @@ public final class LcdController implements Component, Clocked {
         	imgLines.add(new LcdImageLine(new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH)));
         }
         
-        displayedImage = new LcdImage(LCD_WIDTH, LCD_HEIGHT, new ArrayList<LcdImageLine>(0));
+        displayedImage = new LcdImage(LCD_WIDTH, LCD_HEIGHT, imgLines);
         
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
     }
@@ -73,8 +75,80 @@ public final class LcdController implements Component, Clocked {
     }
 
     private void reallyCycle(long cycle) {
-                
-    }  
+    	int mode0 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE0) ? 1 : 0;
+    	int mode1 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE1) ? 1 : 0;
+    	int mode = mode0 | (mode1 << 1);
+    	
+    	if(currentDrawIndex == 143) {
+    		modifyLYorLYC(LCDReg.LY, 0);
+    		displayedImage = nextImageBuilder.build();
+    		setMode(1);
+    	}
+    	
+    	if (mode == 2 && cycle - timeFromLineStart == 20) {
+    		nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(lcdRegs.get(LCDReg.LY)));
+    		setMode(3);
+    	} else if (mode == 3 && cycle - timeFromLineStart == 63) {
+    		setMode(0);
+    	} else if (mode == 0 && cycle - timeFromLineStart == 114) {
+    		modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
+    		setMode(2);
+    	}
+    	
+    	if (mode == 1 && timeFromImageEnd == 1140) {
+    		nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_WIDTH);
+    		setMode(2);
+    	}
+    }
+    
+    private void setMode(int mode) {
+    	Preconditions.checkArgument(mode >= 0 && mode < 4, "The mode must be between 0 and 3");
+    	lcdRegs.setBit(LCDReg.STAT, STAT.MODE0, Bits.test(mode, 0));
+    	lcdRegs.setBit(LCDReg.STAT, STAT.MODE1, Bits.test(mode, 1));
+    	
+    	switch(mode) {
+    	case 0:
+    		if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE0)) cpu.requestInterrupt(Interrupt.LCD_STAT);
+    		break;
+    	case 1:
+    		if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) cpu.requestInterrupt(Interrupt.LCD_STAT);
+    		cpu.requestInterrupt(Interrupt.VBLANK);
+    		break;
+    	case 2:
+    		if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE2)) cpu.requestInterrupt(Interrupt.LCD_STAT);
+    		break;
+    	}
+    }
+    
+    private LcdImageLine computeLine(int index) {
+    	LcdImageLine.Builder nextLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
+    	
+    	if(lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA)) {
+    		//2eme plage bg
+    	} else {
+    		//1ere plage bg
+    	}
+    	
+    	if(lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
+    		//2eme plage fen
+    	} else {
+    		//1ere plage fen
+    	}
+    	
+    	if(lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
+    		//256 premieres tuiles (80-FF, 0-7F)
+    	} else {
+    		//256 dernieres tuiles (0-7F, 80-FF)
+    	}
+    	
+    	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
+    		//background visible
+    	} else {
+    		//background invisible
+    	}
+    	
+    	return null;
+    } 
 
     @Override
     public int read(int address) throws IllegalArgumentException {
@@ -114,7 +188,7 @@ public final class LcdController implements Component, Clocked {
             }
         }       
     }
-    
+        
     private void modifyLYorLYC(LCDReg reg, int data) {
     	Preconditions.checkArgument(reg == LCDReg.LY || reg == LCDReg.LYC);
     	
@@ -130,37 +204,5 @@ public final class LcdController implements Component, Clocked {
         	cpu.requestInterrupt(Interrupt.LCD_STAT);
         }             
     }
-    
-    
-    /*private void changeMode(int nextMode) {
-        
-        switch(nextMode) {
-        case 0 : {
-            if(Bits.test(registers.get(RegAddress.STAT), 3)) cpu.requestInterrupt(Interrupt.LCD_STAT);
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 0, false));
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 1, false));
-          } break;
-        
-        case 1 : {
-            if(Bits.test(registers.get(RegAddress.STAT), 4)) cpu.requestInterrupt(Interrupt.LCD_STAT);
-            cpu.requestInterrupt(Interrupt.VBLANK);
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 0, true));
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 1, false));
-          } break;
-        
-        case 2 : {
-            if(Bits.test(registers.get(RegAddress.STAT), 3)) cpu.requestInterrupt(Interrupt.LCD_STAT);
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 0, false));
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 1, true));
-          } break;
-        
-        case 3 : {
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 0, true));
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 1, true));
-          } break;
-        
-        }
-    }*/
-
 }
 
