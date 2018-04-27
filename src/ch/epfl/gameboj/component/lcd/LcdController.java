@@ -147,6 +147,10 @@ public final class LcdController implements Component, Clocked {
     		//background invisible
     	}
     	
+    	for (int i = 0; i < LCD_WIDTH/Byte.SIZE; ++i) {
+    		
+    	}
+    	
     	return null;
     } 
 
