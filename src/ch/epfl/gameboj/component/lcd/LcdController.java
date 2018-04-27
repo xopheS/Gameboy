@@ -11,6 +11,7 @@ import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 import ch.epfl.gameboj.component.memory.Ram;
+import ch.epfl.gameboj.component.memory.RamController;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
@@ -31,13 +32,10 @@ public final class LcdController implements Component, Clocked {
     private final Ram oamRam;
     private final Cpu cpu;
     private long nextNonIdleCycle = 0, lcdOnCycle = 0;
-    private long timeFromImageStart = 0, timeFromLineStart = 0, timeFromImageEnd = 0;
+    private long imageStartT = 0, lineStartT = 0, imageEndT = 0;
     private int currentDrawIndex = 0;
     private LcdImage.Builder nextImageBuilder;
-    private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
-    
-    //La fonction changeMode elle sert à faire les changement lors du changement de mode
-    //La fonction modifyLYorLYC modifie LY ou LYC et fait les checks et les interruptions necessaires    
+    private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values()); 
     
     public LcdController(Cpu cpu) {
         
@@ -62,10 +60,10 @@ public final class LcdController implements Component, Clocked {
     
     @Override
     public void cycle(long cycle) {
+    	//System.out.println("sss");
     	if(nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
     		lcdRegs.setBit(LCDReg.LCDC, LCDC.LCD_STATUS, true);
     		lcdOnCycle = cycle;
-    		reallyCycle(cycle);
     	}
         if(cycle == nextNonIdleCycle) {
         	reallyCycle(cycle);
@@ -79,26 +77,31 @@ public final class LcdController implements Component, Clocked {
     	int mode1 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE1) ? 1 : 0;
     	int mode = mode0 | (mode1 << 1);
     	
-    	if(currentDrawIndex == 143) {
+    	if(lcdRegs.get(LCDReg.LY) == 143) {
     		modifyLYorLYC(LCDReg.LY, 0);
     		displayedImage = nextImageBuilder.build();
+    		imageEndT = cycle;
     		setMode(1);
     	}
     	
-    	if (mode == 2 && cycle - timeFromLineStart == 20) {
+    	if (mode == 2 && cycle - lineStartT == 20) {
     		nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(lcdRegs.get(LCDReg.LY)));
     		setMode(3);
-    	} else if (mode == 3 && cycle - timeFromLineStart == 63) {
+    	} else if (mode == 3 && cycle - lineStartT == 63) {
     		setMode(0);
-    	} else if (mode == 0 && cycle - timeFromLineStart == 114) {
+    	} else if (mode == 0 && cycle - lineStartT == 114) {
     		modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
+    		lineStartT = cycle;
     		setMode(2);
     	}
     	
-    	if (mode == 1 && timeFromImageEnd == 1140) {
+    	if (mode == 1 && cycle - imageEndT == 1140) {
     		nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_WIDTH);
+    		imageStartT = cycle;
     		setMode(2);
     	}
+    	
+    	nextNonIdleCycle++;
     }
     
     private void setMode(int mode) {
@@ -123,24 +126,6 @@ public final class LcdController implements Component, Clocked {
     private LcdImageLine computeLine(int index) {
     	LcdImageLine.Builder nextLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
     	
-    	if(lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA)) {
-    		//2eme plage bg
-    	} else {
-    		//1ere plage bg
-    	}
-    	
-    	if(lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
-    		//2eme plage fen
-    	} else {
-    		//1ere plage fen
-    	}
-    	
-    	if(lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
-    		//256 premieres tuiles (80-FF, 0-7F)
-    	} else {
-    		//256 dernieres tuiles (0-7F, 80-FF)
-    	}
-    	
     	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
     		//background visible
     	} else {
@@ -148,15 +133,39 @@ public final class LcdController implements Component, Clocked {
     	}
     	
     	for (int i = 0; i < LCD_WIDTH/Byte.SIZE; ++i) {
+    		int bg_address;
     		
+    		if(lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA)) {
+    			bg_address = AddressMap.BG_DISPLAY_DATA[0] + (lcdRegs.get(LCDReg.LY) + lcdRegs.get(LCDReg.SCY)) * LCD_WIDTH + lcdRegs.get(LCDReg.SCX) + i; //2eme plage bg
+        	} else {
+        		bg_address = AddressMap.BG_DISPLAY_DATA[0] + (lcdRegs.get(LCDReg.LY) + lcdRegs.get(LCDReg.SCY)) * LCD_WIDTH + lcdRegs.get(LCDReg.SCX) + i; //1ere plage
+        	}
+        	
+        	if(lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
+        		//2eme plage fen
+        	} else {
+        		//1ere plage fen
+        	}
+        	
+    		if(lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
+        		//256 premieres tuiles (80-FF, 0-7F)
+        	} else {
+        		//256 dernieres tuiles (0-7F, 80-FF)
+        	} 
+    		
+    		int bg_type = AddressMap.TILE_SOURCE[0] + bg_address;
+    		
+    		System.out.println(read(AddressMap.TILE_SOURCE[0] + 10000));
+    		
+    		nextLineBuilder.setBytes(i, read(AddressMap.TILE_SOURCE[0] + 10000) - 100, read(AddressMap.TILE_SOURCE[0])); //++bg_type
     	}
     	
-    	return null;
+    	return nextLineBuilder.build();
     } 
 
     @Override
     public int read(int address) throws IllegalArgumentException {
-        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.HIGH_RAM_END) return videoRam.read(address - AddressMap.VIDEO_RAM_START);
+        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) return videoRam.read(address - AddressMap.VIDEO_RAM_START);
         if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) { 
         	return lcdRegs.get(address - AddressMap.REGS_LCDC_START);
         }
