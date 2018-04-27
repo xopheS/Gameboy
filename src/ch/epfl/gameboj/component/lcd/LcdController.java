@@ -12,10 +12,17 @@ import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.Register;
+import ch.epfl.gameboj.RegisterFile;
+import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.Bits;
 
 public final class LcdController implements Component, Clocked {
+	
+	private enum LCDReg implements Register { LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX }
+    private enum LCDC implements Bit { BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS }
+    private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED }
 
     public final static int LCD_WIDTH = 160;
     public final static int LCD_HEIGHT = 144;
@@ -23,11 +30,9 @@ public final class LcdController implements Component, Clocked {
     private final Ram videoRam;
     private final Ram oamRam;
     private final Cpu cpu;
-    private long nextNonIdleCycle = 0;
-    private Map<Integer, Integer> registers; // <Addresse, Valeur>
+    private long nextNonIdleCycle = 0, lcdOnCycle = 0;
+    private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     
-    //J'ai stocker les registres dans une map et j'ai créer une interface avec leurs addresses pour les magic values
-    //La map c'est ultra pratique pour acceder aux elements selon les addresses
     //La fonction changeMode elle sert à faire les changement lors du changement de mode
     //La fonction modifyLYorLYC modifie LY ou LYC et fait les checks et les interruptions necessaires    
     
@@ -44,85 +49,87 @@ public final class LcdController implements Component, Clocked {
         }
         
         displayedImage = new LcdImage(LCD_WIDTH, LCD_HEIGHT, new ArrayList<LcdImageLine>(0));
-        
-        registers = new HashMap<>();
-        registers.put(RegAddress.LCDC, 0);
-        registers.put(RegAddress.STAT, 0);
-        registers.put(RegAddress.SCY, 0);
-        registers.put(RegAddress.SCX, 0);
-        registers.put(RegAddress.LY, 0);
-        registers.put(RegAddress.LYC, 0);
-        registers.put(RegAddress.DMA, 0);
-        registers.put(RegAddress.BGP, 0);
-        registers.put(RegAddress.OBP0, 0);
-        registers.put(RegAddress.OBP1, 0);
-        registers.put(RegAddress.WY, 0);
-        registers.put(RegAddress.WX, 0);
-        
     }
     
     public LcdImage currentImage() {  
         return Objects.requireNonNull(displayedImage, "fatal: attempt to display a null image");
     }
-
-    private void reallyCycle(long cycle) {
-        
-        
-    }
-    
     
     @Override
     public void cycle(long cycle) {
-        // TODO Auto-generated method stub
-        
+    	if(nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
+    		lcdRegs.setBit(LCDReg.LCDC, LCDC.LCD_STATUS, true);
+    		lcdOnCycle = cycle;
+    		reallyCycle(cycle);
+    	}
+        if(cycle == nextNonIdleCycle) {
+        	reallyCycle(cycle);
+        } else {
+        	return;
+        }
     }
+
+    private void reallyCycle(long cycle) {
+                
+    }  
 
     @Override
     public int read(int address) throws IllegalArgumentException {
-        Preconditions.checkBits16(address);
-        if(address >= AddressMap.VIDEO_RAM_START && address < AddressMap.HIGH_RAM_END) return videoRam.read(address - AddressMap.VIDEO_RAM_START);
-        if(address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) return registers.get(address);
+        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.HIGH_RAM_END) return videoRam.read(address - AddressMap.VIDEO_RAM_START);
+        if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) { 
+        	return lcdRegs.get(address - AddressMap.REGS_LCDC_START);
+        }
         else return NO_DATA;
     }
 
     @Override
-    public void write(int address, int data) throws IllegalArgumentException {
-   
+    public void write(int address, int data) throws IllegalArgumentException {   
         
-        if(Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.HIGH_RAM_END) 
+    	Preconditions.checkBits8(data);
+    	
+        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.HIGH_RAM_END) 
             videoRam.write(address - AddressMap.VIDEO_RAM_START, Preconditions.checkBits8(data));
         
-        if(address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
+        if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
             
-            if(address == RegAddress.LCDC && !Bits.test(registers.get(RegAddress.LCDC), 7)) {
-                registers.put(address, Preconditions.checkBits8(data));
-                changeMode(0);
-                modifyLYorLYC(RegAddress.LY, 0);
-                nextNonIdleCycle = Long.MAX_VALUE;
+            if (address == AddressMap.REGS_LCDC_START) {
+            	lcdRegs.set(LCDReg.LCDC, data);
+            	if (!Bits.test(lcdRegs.get(LCDReg.LCDC), 7)) {
+            		lcdRegs.setBit(LCDReg.STAT, STAT.MODE0, false);
+            		lcdRegs.setBit(LCDReg.STAT, STAT.MODE1, false);
+            		lcdRegs.set(LCDReg.LY, 0);
+            		nextNonIdleCycle = Long.MAX_VALUE;
+            	}
+            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.STAT.index()) {
+            	lcdRegs.set(LCDReg.STAT, data | ((lcdRegs.get(LCDReg.STAT) & 0b0000_0111)));
+            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LY.index()) {
+            	modifyLYorLYC(LCDReg.LY, Preconditions.checkBits8(data));
+            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LYC.index()) {
+            	modifyLYorLYC(LCDReg.LYC, Preconditions.checkBits8(data));
+            } else {
+            	lcdRegs.set(address - AddressMap.REGS_LCDC_START, data);
             }
-            
-            else if(address == RegAddress.STAT) 
-                registers.replace(RegAddress.STAT, (registers.get(RegAddress.STAT) & 0b0000_0111) | Preconditions.checkBits8(data) & 0b1111_1000);
-            
-            else if(address == RegAddress.LY || address == RegAddress.LYC) modifyLYorLYC(address, Preconditions.checkBits8(data));
-            
-            else registers.put(address, Preconditions.checkBits8(data));
-        }
-
+        }       
+    }
+    
+    private void modifyLYorLYC(LCDReg reg, int data) {
+    	Preconditions.checkArgument(reg == LCDReg.LY || reg == LCDReg.LYC);
+    	
+        lcdRegs.set(reg, data);
         
-    }
-    
-    private void modifyLYorLYC(int address, int data) {
-        registers.replace(address, data);
-        if(registers.get(RegAddress.LY) == registers.get(RegAddress.LYC)) {
-            registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 2, true));
-            if(Bits.test(registers.get(RegAddress.STAT), 6) && address == RegAddress.LY) cpu.requestInterrupt(Interrupt.LCD_STAT);
+        if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
+            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
+        } else {
+        	lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, false);
         }
-        else  registers.replace(RegAddress.STAT, Bits.set(registers.get(RegAddress.STAT), 2, false));               
+        
+        if (!lcdRegs.testBit(LCDReg.STAT, STAT.INT_LYC)) {
+        	cpu.requestInterrupt(Interrupt.LCD_STAT);
+        }             
     }
     
     
-    private void changeMode(int nextMode) {
+    /*private void changeMode(int nextMode) {
         
         switch(nextMode) {
         case 0 : {
@@ -150,7 +157,7 @@ public final class LcdController implements Component, Clocked {
           } break;
         
         }
-    }
+    }*/
 
 }
 

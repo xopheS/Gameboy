@@ -77,8 +77,8 @@ public class GameBoy {
     	Preconditions.checkArgument(cycles <= cycle);
         while(cycles < cycle) {         
             timer.cycle(cycles);
-            cpu.cycle(cycles);
             lcdController.cycle(cycles);
+            cpu.cycle(cycles);
             cycles++;
         } 
     }

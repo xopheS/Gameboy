@@ -65,14 +65,6 @@ public final class Cpu implements Component, Clocked {
     
     private long nextNonIdleCycle;
     
-    /**
-     * Constructeur public de Cpu, il ne fait rien
-     * 
-     */
-    public Cpu() {
-
-    }
-    
     //TEST Functions
     public void setF(boolean Z, boolean C) {
         registers8.setBit(Reg.F, Flag.UNUSED_0, false);
