@@ -191,7 +191,7 @@ public final class LcdController implements Component, Clocked {
             		nextNonIdleCycle = Long.MAX_VALUE;
             	}
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.STAT.index()) {
-            	lcdRegs.set(LCDReg.STAT, data | ((lcdRegs.get(LCDReg.STAT) & 0b0000_0111)));
+            	lcdRegs.set(LCDReg.STAT, data | ((lcdRegs.get(LCDReg.STAT) & 0b1111_1000)));
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LY.index()) {
             	modifyLYorLYC(LCDReg.LY, Preconditions.checkBits8(data));
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LYC.index()) {
