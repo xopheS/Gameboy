@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component.lcd;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -37,7 +38,7 @@ public final class LcdController implements Component, Clocked {
     private final Ram oamRam;
     private final Cpu cpu;
     private long nextNonIdleCycle = Long.MAX_VALUE;
-    private long imageStartT = 0, lineStartT = 0, imageEndT = 0;
+    private long lineStartT = 0;
     private int currentDrawIndex = 0;
     private LcdImage.Builder nextImageBuilder;
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values()); 
@@ -65,9 +66,13 @@ public final class LcdController implements Component, Clocked {
     
     @Override
     public void cycle(long cycle) {
+    	//System.out.println(Arrays.toString(lcdRegs.registerFile));
     	if(nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
     		System.out.println("Power on, cycle " + cycle);
+    		lineStartT = cycle;
     		nextNonIdleCycle = cycle;
+    		setMode(2, cycle);
+    		nextNonIdleCycle += 20;
     		reallyCycle(cycle);
     	} else if(cycle != nextNonIdleCycle || !lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
         	return;
@@ -103,7 +108,6 @@ public final class LcdController implements Component, Clocked {
     		if (lcdRegs.get(LCDReg.LY) == 153) {
     			//nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_WIDTH);
         		modifyLYorLYC(LCDReg.LY, 0);
-        		imageStartT = cycle;
         		setMode(2, cycle);
         		nextNonIdleCycle += 20;
     		} else {
@@ -219,7 +223,7 @@ public final class LcdController implements Component, Clocked {
             		setMode(0, 0);
             		modifyLYorLYC(LCDReg.LY, 0);
             		nextNonIdleCycle = Long.MAX_VALUE;
-            	}
+            	} 
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.STAT.index()) {
             	lcdRegs.set(LCDReg.STAT, data & 0b1111_1000 | lcdRegs.get(LCDReg.STAT) & 0b0000_0111);
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LY.index()) {

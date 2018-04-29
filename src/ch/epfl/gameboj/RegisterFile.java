@@ -17,7 +17,7 @@ import ch.epfl.gameboj.bits.Bits;
  */
 public final class RegisterFile<E extends Register> {
     
-    private int[] registerFile;
+    public int[] registerFile;
             
     /**
      * Constructeur qui initialise le banc avec plusieurs registres
