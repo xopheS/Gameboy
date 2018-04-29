@@ -82,16 +82,17 @@ public final class LcdController implements Component, Clocked {
     }
 
     private void reallyCycle(long cycle) {
-    	System.out.println("execute cycle");
+    	//System.out.println("execute cycle");
     	int mode0 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE0) ? 1 : 0;
     	int mode1 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE1) ? 1 : 0;
     	int mode = mode0 | (mode1 << 1);
-    	System.out.println("Mode " +  mode);
     	
     	if (mode == 0 && lcdRegs.get(LCDReg.LY) == 143) {
     		//displayedImage = nextImageBuilder.build();
+    		modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
     		setMode(1, cycle);
-    		nextNonIdleCycle += 1140;
+    		lineStartT = cycle;
+    		nextNonIdleCycle += 114;
     	} else if (mode == 2 && cycle - lineStartT == 20) {
     		//nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(lcdRegs.get(LCDReg.LY)));
     		setMode(3, cycle);
@@ -105,6 +106,7 @@ public final class LcdController implements Component, Clocked {
     		setMode(2, cycle);
     		nextNonIdleCycle += 20;
     	} else if (mode == 1 && cycle - lineStartT == 114) {
+    		lineStartT = cycle;
     		if (lcdRegs.get(LCDReg.LY) == 153) {
     			//nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_WIDTH);
         		modifyLYorLYC(LCDReg.LY, 0);
@@ -112,9 +114,11 @@ public final class LcdController implements Component, Clocked {
         		nextNonIdleCycle += 20;
     		} else {
         		modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
-        		lineStartT = cycle;
+        		nextNonIdleCycle += 114;
     		}
     	}
+    	
+    	//IT IS DOING AN EXTRA 114 THREE PHASE CYCLE MUST FIX
     }
     
     private void setMode(int mode, long cycle) {
@@ -223,6 +227,7 @@ public final class LcdController implements Component, Clocked {
             		setMode(0, 0);
             		modifyLYorLYC(LCDReg.LY, 0);
             		nextNonIdleCycle = Long.MAX_VALUE;
+            		System.out.println("Power off");
             	} 
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.STAT.index()) {
             	lcdRegs.set(LCDReg.STAT, data & 0b1111_1000 | lcdRegs.get(LCDReg.STAT) & 0b0000_0111);
