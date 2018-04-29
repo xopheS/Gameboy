@@ -18,8 +18,7 @@ public final class Bits {
     private Bits() {
         
     }
-    
-    
+       
     /**
      * Crée un masque dont seul le bit d'index donné vaut 1
      * 

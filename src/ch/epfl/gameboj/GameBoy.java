@@ -127,6 +127,5 @@ public class GameBoy {
      */
     public LcdController lcdController() {
         return lcdController;
-    }
-    
+    }   
 }

@@ -127,14 +127,12 @@ public final class Cpu implements Component, Clocked {
      *            C'est le cycle actuel, au moment de l'appel de la fonction
      */
     public void cycle(long cycle) {
-        if(nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
+        if (nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
         	nextNonIdleCycle = cycle;
             reallyCycle();
-        }
-        else if(cycle != nextNonIdleCycle) {
+        } else if (cycle != nextNonIdleCycle) {
             return;
-        }
-        else {
+        } else {
             reallyCycle();
         }
     }

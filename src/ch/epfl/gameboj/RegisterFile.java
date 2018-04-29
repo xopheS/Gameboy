@@ -45,7 +45,7 @@ public final class RegisterFile<E extends Register> {
     }
     
     /**
-     * Overload du getter de la valeur d'un registre du banc, pratique un contrôle plus direct
+     * Overload du getter de la valeur d'un registre du banc, offre un contrôle plus direct
      * 
      * @param index
      * Index du registre
@@ -75,7 +75,7 @@ public final class RegisterFile<E extends Register> {
     }
     
     public void set(int index, int newValue) {
-    	newValue &= 0xFF;
+        newValue &= 0xFF;
         registerFile[index] = Preconditions.checkBits8(newValue);
     }
     
