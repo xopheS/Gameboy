@@ -30,13 +30,10 @@ public final class LcdController implements Component, Clocked {
     private final static int TILE_SIZE = 8;
     private final static int BG_SIZE = 256;
     private final static int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
-    private final static int LCD_WIDTH = 160;
-    private final static int LCD_HEIGHT = 144;
+    public final static int LCD_WIDTH = 160, LCD_HEIGHT = 144;
     private final static int LCD_TILE_WIDTH = LCD_WIDTH / TILE_SIZE;
     private final static int LCD_TILE_HEIGHT = LCD_HEIGHT / TILE_SIZE;
-    private final static int MODE2_DURATION = 20;
-    private final static int MODE3_DURATION = 43;
-    private final static int MODE0_DURATION = 51;
+    private final static int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     private final static int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
     private LcdImage displayedImage;
     private final Ram videoRam;
