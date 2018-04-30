@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
+import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -30,18 +31,16 @@ public final class LcdController implements Component, Clocked {
     private final static int TILE_SIZE = 8;
     private final static int BG_SIZE = 256;
     private final static int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
-    private final static int LCD_WIDTH = 160;
-    private final static int LCD_HEIGHT = 144;
+    private final static int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
+    public final static int LCD_WIDTH = 160, LCD_HEIGHT = 144;
     private final static int LCD_TILE_WIDTH = LCD_WIDTH / TILE_SIZE;
     private final static int LCD_TILE_HEIGHT = LCD_HEIGHT / TILE_SIZE;
-    private final static int MODE2_DURATION = 20;
-    private final static int MODE3_DURATION = 43;
-    private final static int MODE0_DURATION = 51;
+    private final static int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     private final static int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
     private LcdImage displayedImage;
-    private final Ram videoRam;
-    private final Ram oamRam;
+    private final Ram videoRam, oamRam;
     private final Cpu cpu;
+    private Bus bus;
     private long nextNonIdleCycle = Long.MAX_VALUE;
     private long lineStartT = 0;
     private int currentDrawIndex = 0;
@@ -83,6 +82,7 @@ public final class LcdController implements Component, Clocked {
         } else {
         	reallyCycle(cycle);
         }
+    	//DMA process
     }
 
     private void reallyCycle(long cycle) {
@@ -144,23 +144,11 @@ public final class LcdController implements Component, Clocked {
     }
     
     private LcdImageLine computeLine(int index) {
-    	LcdImageLine.Builder nextLineBuilder = new LcdImageLine.Builder(BG_SIZE);
+    	LcdImageLine.Builder nextBGLineBuilder = new LcdImageLine.Builder(BG_SIZE);
+    	LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_SIZE);
+    	LcdImageLine nextBGLine, nextWinLine;
     	
     	int adjustedWX = lcdRegs.get(LCDReg.WX) - 7;
-    	
-    	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && adjustedWX >= 0 && adjustedWX < 167) {
-    		int win_address;
-    		
-    		int win_i = 0;
-    		
-    		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
-        		win_address = AddressMap.BG_DISPLAY_DATA[1] + win_i;
-        	} else {
-        		win_address = AddressMap.BG_DISPLAY_DATA[0] + win_i;
-        	}
-    	} else {
-    		//window inactive
-    	}
     	
     	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
     		for (int i = 0; i < BG_TILE_SIZE; ++i) {
@@ -190,23 +178,71 @@ public final class LcdController implements Component, Clocked {
         			}
             	} 
         		
-        		nextLineBuilder.setBytes(i, Bits.reverse8(read(bg_type_address + 1)), Bits.reverse8(read(bg_type_address)));
+        		nextBGLineBuilder.setBytes(i, Bits.reverse8(read(bg_type_address + 1)), Bits.reverse8(read(bg_type_address)));
         	}
         	
-        	return nextLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH).mapColors(lcdRegs.get(LCDReg.BGP));
+        	nextBGLine = nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH).mapColors(lcdRegs.get(LCDReg.BGP));
     	} else {
     		for (int i = 0; i < BG_TILE_SIZE; ++i) {        		
-        		nextLineBuilder.setBytes(i, 0, 0);
+        		nextBGLineBuilder.setBytes(i, 0, 0);
         	}
     		
-    		return nextLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH);
+    		nextBGLine = nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH);
     	}
-    } 
+    	
+    	if(lcdRegs.get(LCDReg.LY) >= lcdRegs.get(LCDReg.WY) && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && adjustedWX >= 0 && adjustedWX < 167) {
+    		int winLineIndex = lcdRegs.get(LCDReg.LY) - lcdRegs.get(LCDReg.WY);
+			
+    		for (int i = 0; i < WIN_TILE_SIZE; ++i) {
+    			int win_address;
+    			
+    			int win_i = Math.floorDiv(winLineIndex, TILE_SIZE) * WIN_TILE_SIZE + i;
+        		
+        		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
+            		win_address = AddressMap.BG_DISPLAY_DATA[1] + win_i;
+            	} else {
+            		win_address = AddressMap.BG_DISPLAY_DATA[0] + win_i;
+            	}
+        		
+        		int win_type_index = read(win_address);
+        		
+        		int win_type_address;
+        		
+        		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {   			
+            		win_type_address = AddressMap.TILE_SOURCE[1] + win_type_index * 16 + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
+            	} else {
+            		if (win_type_index >= 0 && win_type_index < 128) {
+        				win_type_address = AddressMap.TILE_SOURCE[0] + (win_type_index + 128) * 16 + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
+        			} else if (win_type_index >= 128 && win_type_index < 256) {
+        				win_type_address = AddressMap.TILE_SOURCE[0] + (win_type_index - 128) * 16 + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
+        			} else {
+        				throw new IllegalArgumentException("bg_type_index wrong!");
+        			}
+            	} 
+        		
+        		nextWinLineBuilder.setBytes(i, Bits.reverse8(read(win_type_address + 1)), Bits.reverse8(read(win_type_address)));
+    		}
+    		
+    		nextWinLine = nextWinLineBuilder.build().mapColors(lcdRegs.get(LCDReg.BGP));
+    		
+    		return nextBGLine.join(nextWinLine, adjustedWX);   			
+    	} else {
+    		return nextBGLine;
+    	}
+    }
+    
+    @Override
+    public void attachTo(Bus bus) {
+    	this.bus = bus;
+    	bus.attach(this);
+    }
 
     @Override
     public int read(int address) throws IllegalArgumentException {
         if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
         	return videoRam.read(address - AddressMap.VIDEO_RAM_START);
+        } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
+        	return oamRam.read(address - AddressMap.OAM_START);
         } else if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) { 
         	return lcdRegs.get(address - AddressMap.REGS_LCDC_START);
         }
@@ -237,7 +273,10 @@ public final class LcdController implements Component, Clocked {
             	modifyLYorLYC(LCDReg.LY, data);
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LYC.index()) {
             	modifyLYorLYC(LCDReg.LYC, data);
-            } else {
+            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.DMA.index()) {
+            	//DMA write process
+            }
+            else {
             	lcdRegs.set(address - AddressMap.REGS_LCDC_START, data);
             }
         }       
