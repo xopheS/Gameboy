@@ -1,5 +1,7 @@
 package ch.epfl.gameboj;
 
+import java.util.Objects;
+
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
@@ -15,7 +17,7 @@ import ch.epfl.gameboj.bits.Bits;
  */
 public final class RegisterFile<E extends Register> {
     
-    private int[] registerFile;
+    public int[] registerFile;
             
     /**
      * Constructeur qui initialise le banc avec plusieurs registres
@@ -35,9 +37,24 @@ public final class RegisterFile<E extends Register> {
      *            Registre dont la valeur est à obtenir
      * 
      * @return la valeur du registre en question
+     * 
+     * @see #get(int)
      */
     public int get(E reg) {      
         return registerFile[reg.index()];
+    }
+    
+    /**
+     * Overload du getter de la valeur d'un registre du banc, offre un contrôle plus direct
+     * 
+     * @param index
+     * Index du registre
+     * @return la valeur du registre en question
+     * 
+     * @see #get(Register)
+     */
+    public int get(int index) {
+    	return registerFile[Objects.checkIndex(index, registerFile.length)];
     }
     
     /**
@@ -55,6 +72,11 @@ public final class RegisterFile<E extends Register> {
     public void set(E reg, int newValue) {
         newValue &= 0xFF;
         registerFile[reg.index()] = Preconditions.checkBits8(newValue);
+    }
+    
+    public void set(int index, int newValue) {
+        newValue &= 0xFF;
+        registerFile[index] = Preconditions.checkBits8(newValue);
     }
     
     /**

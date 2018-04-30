@@ -62,6 +62,7 @@ public class LcdImageLine {
         for (int i = 0; i < 4; i++) {
 
             int color = Bits.extract(palette, 2 * i, 2);
+            
             switch (i) {
             case 0:
                 mask = MSB.or(LSB).not();
@@ -166,7 +167,7 @@ public class LcdImageLine {
         public LcdImageLine build() {
             BitVector lsb = lsbBuilder.build();
             BitVector msb = msbBuilder.build();           
-            return new LcdImageLine(lsb, msb, lsb.and(msb));
+            return new LcdImageLine(msb, lsb, msb.and(lsb));
         }
     }
 }

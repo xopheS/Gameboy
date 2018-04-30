@@ -9,8 +9,6 @@ import ch.epfl.gameboj.bits.BitVector;
 
 
 public class LcdImage {
-    //must be immuable
-    
     private final int width;
     private final int height;
     private final List<LcdImageLine> imageLines;
@@ -60,7 +58,7 @@ public class LcdImage {
         public Builder(int width, int height) {
             this.width = width;
             this.height = height;
-            imageLines = new ArrayList<>();
+            imageLines = new ArrayList<>(height);
             for (int i = 0; i < height; i++) imageLines.add(new LcdImageLine(new BitVector(width), new BitVector(width), new BitVector(width))); 
         }
         
