@@ -45,6 +45,7 @@ public final class LcdController implements Component, Clocked {
     private long nextNonIdleCycle = Long.MAX_VALUE;
     private long lineStartT = 0;
     private int currentDrawIndex = 0;
+    private int winY = 0;
     private LcdImage.Builder nextImageBuilder;
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values()); 
     
@@ -97,6 +98,7 @@ public final class LcdController implements Component, Clocked {
     		nextNonIdleCycle += 114;
     	} else if (mode == 2 && cycle - lineStartT == MODE2_DURATION) {
     		nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(lcdRegs.get(LCDReg.LY)));
+    		winY++;
     		setMode(3);
     		nextNonIdleCycle += 43;
     	} else if (mode == 3 && cycle - lineStartT == MODE2_DURATION + MODE3_DURATION) {
@@ -113,6 +115,7 @@ public final class LcdController implements Component, Clocked {
     			nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_WIDTH);
         		modifyLYorLYC(LCDReg.LY, 0);
         		setMode(2);
+        		winY = 0;
         		nextNonIdleCycle += 20;
     		} else {
         		modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
@@ -148,12 +151,12 @@ public final class LcdController implements Component, Clocked {
     	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && adjustedWX >= 0 && adjustedWX < 167) {
     		int win_address;
     		
-    		int win_i;
+    		int win_i = 0;
     		
     		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
-        		//2eme plage fen
+        		win_address = AddressMap.BG_DISPLAY_DATA[1] + win_i;
         	} else {
-        		//1ere plage fen
+        		win_address = AddressMap.BG_DISPLAY_DATA[0] + win_i;
         	}
     	} else {
     		//window inactive
@@ -163,35 +166,29 @@ public final class LcdController implements Component, Clocked {
     		for (int i = 0; i < BG_TILE_SIZE; ++i) {
         		int bg_address;
         		
-        		int bg_i = Math.floorMod(Math.floorDiv(lcdRegs.get(LCDReg.SCY) + lcdRegs.get(LCDReg.LY), TILE_SIZE), BG_TILE_SIZE) * BG_TILE_SIZE + i * TILE_SIZE;
+        		int bg_i = Math.floorDiv(Math.floorMod(lcdRegs.get(LCDReg.SCY) + lcdRegs.get(LCDReg.LY), BG_SIZE), TILE_SIZE) * BG_TILE_SIZE + i;
         		
         		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA)) {
-        			bg_address = AddressMap.BG_DISPLAY_DATA[1] + bg_i; //2eme plage bg
+        			bg_address = AddressMap.BG_DISPLAY_DATA[1] + bg_i;
             	} else {
-            		bg_address = AddressMap.BG_DISPLAY_DATA[0] + bg_i; //1ere plage
+            		bg_address = AddressMap.BG_DISPLAY_DATA[0] + bg_i;
             	}
             	
             	int bg_type_index = read(bg_address);
             	
             	int bg_type_address;
             	
-            	Preconditions.checkArgument(lcdRegs.get(LCDReg.SCX) == 0);
-            	
         		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {   			
-            		bg_type_address = AddressMap.TILE_SOURCE[1] + bg_type_index * 16 + (lcdRegs.get(LCDReg.LY) % TILE_SIZE) * 2;
+            		bg_type_address = AddressMap.TILE_SOURCE[1] + bg_type_index * 16 + Math.floorMod(lcdRegs.get(LCDReg.LY), TILE_SIZE) * 2;
             	} else {
             		if (bg_type_index >= 0 && bg_type_index < 128) {
-        				bg_type_address = AddressMap.TILE_SOURCE[0] + (bg_type_index + 128) * 16 + (lcdRegs.get(LCDReg.LY) % TILE_SIZE) * 2;
+        				bg_type_address = AddressMap.TILE_SOURCE[0] + (bg_type_index + 128) * 16 + Math.floorMod(lcdRegs.get(LCDReg.LY), TILE_SIZE) * 2;
         			} else if (bg_type_index >= 128 && bg_type_index < 256) {
-        				bg_type_address = AddressMap.TILE_SOURCE[0] + (bg_type_index - 128) * 16 + (lcdRegs.get(LCDReg.LY) % TILE_SIZE) * 2;
+        				bg_type_address = AddressMap.TILE_SOURCE[0] + (bg_type_index - 128) * 16 + Math.floorMod(lcdRegs.get(LCDReg.LY), TILE_SIZE) * 2;
         			} else {
         				throw new IllegalArgumentException("bg_type_index wrong!");
         			}
             	} 
-        		
-        		//System.out.println("bg i " + bg_i + " bg type index " + bg_type_index + " address " + bg_type_address + " type " + Bits.reverse8(read(bg_type_address + 1)));
-        		
-        		Preconditions.checkArgument(bg_type_address >= 0x8000 && bg_type_address < 0x97FF);
         		
         		nextLineBuilder.setBytes(i, Bits.reverse8(read(bg_type_address + 1)), Bits.reverse8(read(bg_type_address)));
         	}
