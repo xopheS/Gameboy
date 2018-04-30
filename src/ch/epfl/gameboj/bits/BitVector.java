@@ -115,7 +115,7 @@ public final class BitVector {
 	}
 	
 	public boolean testBit(int index) {
-		return Bits.test(bitVector[Math.floorDiv(Objects.checkIndex(index, size()), Integer.SIZE)], index % Integer.SIZE);
+		return Bits.test(bitVector[Math.floorDiv(Objects.checkIndex(index, size()), Integer.SIZE)], Math.floorMod(index, Integer.SIZE));
 	}
 	
 	public BitVector not() {
@@ -194,17 +194,17 @@ public final class BitVector {
 	    }
 	    
 	    public Builder setByte(int index, int b) {
-	        if(vector == null) throw new IllegalStateException();
-	        if(!(index >= 0 && index < vector.length*Integer.SIZE/Byte.SIZE)) throw new IndexOutOfBoundsException();
-	        int startPosition =  Math.floorMod(Byte.SIZE*index, Integer.SIZE);
-	        int intIndex = Math.floorDiv(Byte.SIZE*index , Integer.SIZE);
+	        if (vector == null) throw new IllegalStateException();
+	        Objects.checkIndex(index, (vector.length * Integer.SIZE) / Byte.SIZE);
+	        int intIndex = Math.floorDiv(index * Byte.SIZE, Integer.SIZE);
+	        int startPosition =  Math.floorMod(index * Byte.SIZE, Integer.SIZE);
 	        vector[intIndex] &= ~(0b1111_1111 << startPosition);
 	        vector[intIndex] |= Preconditions.checkBits8(b) << startPosition;
 	        return this;
 	    }
 	    
 	    public BitVector build() {
-	        if(vector == null) throw new IllegalStateException();
+	        if (vector == null) throw new IllegalStateException();
 	        BitVector built = new BitVector(vector);
 	        vector = null;
 	        return built;

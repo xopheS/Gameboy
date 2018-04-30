@@ -166,7 +166,7 @@ public class LcdImageLine {
         public LcdImageLine build() {
             BitVector lsb = lsbBuilder.build();
             BitVector msb = msbBuilder.build();           
-            return new LcdImageLine(lsb, msb, lsb.and(msb));
+            return new LcdImageLine(msb, lsb, msb.and(lsb));
         }
     }
 }
