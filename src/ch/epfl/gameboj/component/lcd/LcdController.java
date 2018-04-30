@@ -30,6 +30,7 @@ public final class LcdController implements Component, Clocked {
     private final static int TILE_SIZE = 8;
     private final static int BG_SIZE = 256;
     private final static int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
+    private final static int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
     public final static int LCD_WIDTH = 160, LCD_HEIGHT = 144;
     private final static int LCD_TILE_WIDTH = LCD_WIDTH / TILE_SIZE;
     private final static int LCD_TILE_HEIGHT = LCD_HEIGHT / TILE_SIZE;
@@ -141,23 +142,11 @@ public final class LcdController implements Component, Clocked {
     }
     
     private LcdImageLine computeLine(int index) {
-    	LcdImageLine.Builder nextLineBuilder = new LcdImageLine.Builder(BG_SIZE);
+    	LcdImageLine.Builder nextBGLineBuilder = new LcdImageLine.Builder(BG_SIZE);
+    	LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_SIZE);
+    	LcdImageLine nextBGLine, nextWinLine;
     	
     	int adjustedWX = lcdRegs.get(LCDReg.WX) - 7;
-    	
-    	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && adjustedWX >= 0 && adjustedWX < 167) {
-    		int win_address;
-    		
-    		int win_i = 0;
-    		
-    		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
-        		win_address = AddressMap.BG_DISPLAY_DATA[1] + win_i;
-        	} else {
-        		win_address = AddressMap.BG_DISPLAY_DATA[0] + win_i;
-        	}
-    	} else {
-    		//window inactive
-    	}
     	
     	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
     		for (int i = 0; i < BG_TILE_SIZE; ++i) {
@@ -187,16 +176,56 @@ public final class LcdController implements Component, Clocked {
         			}
             	} 
         		
-        		nextLineBuilder.setBytes(i, Bits.reverse8(read(bg_type_address + 1)), Bits.reverse8(read(bg_type_address)));
+        		nextBGLineBuilder.setBytes(i, Bits.reverse8(read(bg_type_address + 1)), Bits.reverse8(read(bg_type_address)));
         	}
         	
-        	return nextLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH).mapColors(lcdRegs.get(LCDReg.BGP));
+        	nextBGLine = nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH).mapColors(lcdRegs.get(LCDReg.BGP));
     	} else {
     		for (int i = 0; i < BG_TILE_SIZE; ++i) {        		
-        		nextLineBuilder.setBytes(i, 0, 0);
+        		nextBGLineBuilder.setBytes(i, 0, 0);
         	}
     		
-    		return nextLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH);
+    		nextBGLine = nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH);
+    	}
+    	
+    	if(lcdRegs.get(LCDReg.LY) >= lcdRegs.get(LCDReg.WY) && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && adjustedWX >= 0 && adjustedWX < 167) {
+    		int winLineIndex = lcdRegs.get(LCDReg.LY) - lcdRegs.get(LCDReg.WY);
+			
+    		for (int i = 0; i < WIN_TILE_SIZE; ++i) {
+    			int win_address;
+    			
+    			int win_i = Math.floorDiv(winLineIndex, TILE_SIZE) * WIN_TILE_SIZE + i;
+        		
+        		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
+            		win_address = AddressMap.BG_DISPLAY_DATA[1] + win_i;
+            	} else {
+            		win_address = AddressMap.BG_DISPLAY_DATA[0] + win_i;
+            	}
+        		
+        		int win_type_index = read(win_address);
+        		
+        		int win_type_address;
+        		
+        		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {   			
+            		win_type_address = AddressMap.TILE_SOURCE[1] + win_type_index * 16 + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
+            	} else {
+            		if (win_type_index >= 0 && win_type_index < 128) {
+        				win_type_address = AddressMap.TILE_SOURCE[0] + (win_type_index + 128) * 16 + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
+        			} else if (win_type_index >= 128 && win_type_index < 256) {
+        				win_type_address = AddressMap.TILE_SOURCE[0] + (win_type_index - 128) * 16 + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
+        			} else {
+        				throw new IllegalArgumentException("bg_type_index wrong!");
+        			}
+            	} 
+        		
+        		nextWinLineBuilder.setBytes(i, Bits.reverse8(read(win_type_address + 1)), Bits.reverse8(read(win_type_address)));
+    		}
+    		
+    		nextWinLine = nextWinLineBuilder.build().mapColors(lcdRegs.get(LCDReg.BGP));
+    		
+    		return nextBGLine.join(nextWinLine, adjustedWX);   			
+    	} else {
+    		return nextBGLine;
     	}
     } 
 
