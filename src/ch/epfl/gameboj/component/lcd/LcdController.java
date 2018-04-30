@@ -143,6 +143,14 @@ public final class LcdController implements Component, Clocked {
     private LcdImageLine computeLine(int index) {
     	LcdImageLine.Builder nextLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
     	
+    	int adjustedWX = lcdRegs.get(LCDReg.WX) - 7;
+    	
+    	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && adjustedWX >= 0 && adjustedWX < 167) {
+    		//window active
+    	} else {
+    		//window inactive
+    	}
+    	
     	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
     		for (int i = 0; i < LCD_TILE_WIDTH; ++i) {
         		int bg_address;
