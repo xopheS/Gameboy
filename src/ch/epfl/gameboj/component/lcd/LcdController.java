@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
+import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -37,9 +38,9 @@ public final class LcdController implements Component, Clocked {
     private final static int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     private final static int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
     private LcdImage displayedImage;
-    private final Ram videoRam;
-    private final Ram oamRam;
+    private final Ram videoRam, oamRam;
     private final Cpu cpu;
+    private Bus bus;
     private long nextNonIdleCycle = Long.MAX_VALUE;
     private long lineStartT = 0;
     private int currentDrawIndex = 0;
@@ -81,6 +82,7 @@ public final class LcdController implements Component, Clocked {
         } else {
         	reallyCycle(cycle);
         }
+    	//DMA process
     }
 
     private void reallyCycle(long cycle) {
@@ -227,12 +229,20 @@ public final class LcdController implements Component, Clocked {
     	} else {
     		return nextBGLine;
     	}
-    } 
+    }
+    
+    @Override
+    public void attachTo(Bus bus) {
+    	this.bus = bus;
+    	bus.attach(this);
+    }
 
     @Override
     public int read(int address) throws IllegalArgumentException {
         if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
         	return videoRam.read(address - AddressMap.VIDEO_RAM_START);
+        } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
+        	return oamRam.read(address - AddressMap.OAM_START);
         } else if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) { 
         	return lcdRegs.get(address - AddressMap.REGS_LCDC_START);
         }
@@ -263,7 +273,10 @@ public final class LcdController implements Component, Clocked {
             	modifyLYorLYC(LCDReg.LY, data);
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LYC.index()) {
             	modifyLYorLYC(LCDReg.LYC, data);
-            } else {
+            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.DMA.index()) {
+            	//DMA write process
+            }
+            else {
             	lcdRegs.set(address - AddressMap.REGS_LCDC_START, data);
             }
         }       
