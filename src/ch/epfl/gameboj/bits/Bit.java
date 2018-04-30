@@ -10,7 +10,7 @@ package ch.epfl.gameboj.bits;
 
 public interface Bit {
 
-    public int ordinal();
+    int ordinal();
     
     
     /**
@@ -19,7 +19,7 @@ public interface Bit {
      * 
      * @return méthode ordinal du type énumération
      */
-    public default int index() {
+    default int index() {
         return ordinal();
     }
     
@@ -29,7 +29,7 @@ public interface Bit {
      * 
      * @return le masque correspondant au bit de position l'index
      */
-    public default int mask() {
+    default int mask() {
         return 1 << index();
     }
     
