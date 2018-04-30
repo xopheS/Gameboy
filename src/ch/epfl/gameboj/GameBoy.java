@@ -2,6 +2,7 @@ package ch.epfl.gameboj;
 
 import java.util.Objects;
 
+import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Timer;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -26,8 +27,12 @@ public class GameBoy {
     private final BootRomController bootRomController;
     private final Timer timer;
     private final Cpu cpu;
-    private LcdController lcdController;
+    private final LcdController lcdController;
+    private final Joypad joypad;
     
+    public final static long CYCLES_PER_SECOND = (long) Math.pow(2, 20);
+    public final static double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / Math.pow(10, 9);
+            
     private long cycles;
     
     /**
@@ -59,6 +64,9 @@ public class GameBoy {
         
         lcdController = new LcdController(cpu);
         lcdController.attachTo(bus);
+        
+        joypad = new Joypad(cpu);
+        joypad.attachTo(bus);
     }
     
     
@@ -127,5 +135,15 @@ public class GameBoy {
      */
     public LcdController lcdController() {
         return lcdController;
-    }   
+    }
+    
+    /**
+     * Getter du joypad
+     * 
+     * @return le joypad de la Gameboy
+     */
+    public Joypad joypad() {
+        return joypad;
+    }
+    
 }
