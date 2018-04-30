@@ -23,12 +23,12 @@ public final class DebugMain2 {
 
     System.out.println("+--------------------+");
     for (int y = 0; y < 18; ++y) {
-      System.out.print("|");
-      for (int x = 0; x < 20; ++x) {
-    char c = (char) gb.bus().read(0x9800 + 32*y + x);
-    System.out.print(Character.isISOControl(c) ? " " : c);
-      }
-      System.out.println("|");
+    	System.out.print("|");
+    	for (int x = 0; x < 20; ++x) {
+    		char c = (char) gb.bus().read(0x9800 + 32*y + x);
+    		System.out.print(Character.isISOControl(c) ? " " : c);
+    	}
+    	System.out.println("|");
     }
     System.out.println("+--------------------+");
 
@@ -42,6 +42,14 @@ public final class DebugMain2 {
     		i.setRGB(x, y, COLOR_MAP[li.get(x, y)]);
     	}
     }
+    
+    /*for (int j = 0; j < 384; j++) {
+    	String s = "";
+    	for (int k = 0; k < 16; k++) {
+    		s += gb.lcdController().read(0x8000 + j*16 + k);
+    	}
+    	System.out.println(s);
+    }*/
     
     ImageIO.write(i, "png", new File("gb.png"));
   }

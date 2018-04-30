@@ -141,32 +141,34 @@ public final class LcdController implements Component, Clocked {
     }
     
     private LcdImageLine computeLine(int index) {
-    	LcdImageLine.Builder nextLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
+    	LcdImageLine.Builder nextLineBuilder = new LcdImageLine.Builder(BG_SIZE);
     	
     	int adjustedWX = lcdRegs.get(LCDReg.WX) - 7;
     	
     	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && adjustedWX >= 0 && adjustedWX < 167) {
-    		//window active
+    		int win_address;
+    		
+    		int win_i;
+    		
+    		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
+        		//2eme plage fen
+        	} else {
+        		//1ere plage fen
+        	}
     	} else {
     		//window inactive
     	}
     	
     	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
-    		for (int i = 0; i < LCD_TILE_WIDTH; ++i) {
+    		for (int i = 0; i < BG_TILE_SIZE; ++i) {
         		int bg_address;
         		
-        		int bg_i = Math.floorDiv(lcdRegs.get(LCDReg.SCY) + lcdRegs.get(LCDReg.LY), TILE_SIZE) * BG_TILE_SIZE + Math.floorDiv(lcdRegs.get(LCDReg.SCX) + i * TILE_SIZE, TILE_SIZE);
+        		int bg_i = Math.floorMod(Math.floorDiv(lcdRegs.get(LCDReg.SCY) + lcdRegs.get(LCDReg.LY), TILE_SIZE), BG_TILE_SIZE) * BG_TILE_SIZE + i * TILE_SIZE;
         		
         		if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA)) {
         			bg_address = AddressMap.BG_DISPLAY_DATA[1] + bg_i; //2eme plage bg
             	} else {
             		bg_address = AddressMap.BG_DISPLAY_DATA[0] + bg_i; //1ere plage
-            	}
-            	
-            	if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
-            		//2eme plage fen
-            	} else {
-            		//1ere plage fen
             	}
             	
             	int bg_type_index = read(bg_address);
@@ -194,13 +196,13 @@ public final class LcdController implements Component, Clocked {
         		nextLineBuilder.setBytes(i, Bits.reverse8(read(bg_type_address + 1)), Bits.reverse8(read(bg_type_address)));
         	}
         	
-        	return nextLineBuilder.build().mapColors(lcdRegs.get(LCDReg.BGP));
+        	return nextLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH).mapColors(lcdRegs.get(LCDReg.BGP));
     	} else {
-    		for (int i = 0; i < LCD_TILE_WIDTH; ++i) {        		
-        		nextLineBuilder.setBytes(i * TILE_SIZE, 0, 0);
+    		for (int i = 0; i < BG_TILE_SIZE; ++i) {        		
+        		nextLineBuilder.setBytes(i, 0, 0);
         	}
     		
-    		return nextLineBuilder.build().mapColors(lcdRegs.get(LCDReg.BGP));
+    		return nextLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH);
     	}
     } 
 
