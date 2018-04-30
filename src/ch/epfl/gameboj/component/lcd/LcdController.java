@@ -34,6 +34,10 @@ public final class LcdController implements Component, Clocked {
     private final static int LCD_HEIGHT = 144;
     private final static int LCD_TILE_WIDTH = LCD_WIDTH / TILE_SIZE;
     private final static int LCD_TILE_HEIGHT = LCD_HEIGHT / TILE_SIZE;
+    private final static int MODE2_DURATION = 20;
+    private final static int MODE3_DURATION = 43;
+    private final static int MODE0_DURATION = 51;
+    private final static int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
     private LcdImage displayedImage;
     private final Ram videoRam;
     private final Ram oamRam;
@@ -91,19 +95,19 @@ public final class LcdController implements Component, Clocked {
     		setMode(1);
     		lineStartT = cycle;
     		nextNonIdleCycle += 114;
-    	} else if (mode == 2 && cycle - lineStartT == 20) {
+    	} else if (mode == 2 && cycle - lineStartT == MODE2_DURATION) {
     		nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(lcdRegs.get(LCDReg.LY)));
     		setMode(3);
     		nextNonIdleCycle += 43;
-    	} else if (mode == 3 && cycle - lineStartT == 63) {
+    	} else if (mode == 3 && cycle - lineStartT == MODE2_DURATION + MODE3_DURATION) {
     		setMode(0);
     		nextNonIdleCycle += 51;
-    	} else if (mode == 0 && cycle - lineStartT == 114) {
+    	} else if (mode == 0 && cycle - lineStartT == MODE2_DURATION + MODE3_DURATION + MODE0_DURATION) {
     		modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
     		lineStartT = cycle;
     		setMode(2);
     		nextNonIdleCycle += 20;
-    	} else if (mode == 1 && cycle - lineStartT == 114) {
+    	} else if (mode == 1 && cycle - lineStartT == LINE_CYCLE_DURATION) {
     		lineStartT = cycle;
     		if (lcdRegs.get(LCDReg.LY) == 153) {
     			nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_WIDTH);
