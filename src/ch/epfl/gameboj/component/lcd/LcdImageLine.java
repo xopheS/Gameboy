@@ -131,7 +131,7 @@ public class LcdImageLine {
      * Superpose une ligne avec une autre, en la mettant en dessous.
      * 
      * @param other
-     * l'autre ligne
+     * l'autre ligne qui est au-dessus
      * @return la nouvelle ligne
      */
     public LcdImageLine below(LcdImageLine other) {
@@ -209,7 +209,7 @@ public class LcdImageLine {
          * Modifie les octets d'une ligne.
          * 
          * @param index
-         * l'index des octets à modifier
+         * l'index des octets à modifier (en bits)
          * @param byteMSB
          * l'octet des MSB
          * @param byteLSB

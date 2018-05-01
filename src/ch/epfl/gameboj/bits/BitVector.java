@@ -222,7 +222,7 @@ public final class BitVector {
          * Change la valeur d'un octet.
          * 
          * @param index
-         * l'index de l'octet
+         * l'index de début (en bits)
          * @param b
          * la valeur à lui donner
          * @return le builder
@@ -231,9 +231,9 @@ public final class BitVector {
             if (vector == null) {
                 throw new IllegalStateException();
             }
-            Objects.checkIndex(index, (vector.length * Integer.SIZE) / Byte.SIZE);
-            int intIndex = Math.floorDiv(index * Byte.SIZE, Integer.SIZE);
-            int startPosition = Math.floorMod(index * Byte.SIZE, Integer.SIZE);
+            Objects.checkIndex(index, vector.length * Integer.SIZE - Byte.SIZE + 1);
+            int intIndex = Math.floorDiv(index, Integer.SIZE);
+            int startPosition = Math.floorMod(index, Integer.SIZE);
             vector[intIndex] &= ~(0b1111_1111 << startPosition);
             vector[intIndex] |= Preconditions.checkBits8(b) << startPosition;
             return this;
