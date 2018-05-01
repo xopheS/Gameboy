@@ -26,7 +26,7 @@ public final class DebugMainLive extends Application {
     private static final float EMULATION_SPEED = 1f;
     private static final int CYCLES_PER_ITERATION = (int) (17_556 * EMULATION_SPEED);
     private static final int[] COLOR_MAP = new int[] {
-            0xFF_FF_FF, 0xD3_D3_D3, 0xA9_A9_A9, 0x00_00_00
+        0xFF_FF_FF, 0xD3_D3_D3, 0xA9_A9_A9, 0x00_00_00
     };
 
     @Override public void start(Stage stage) throws IOException, InterruptedException {

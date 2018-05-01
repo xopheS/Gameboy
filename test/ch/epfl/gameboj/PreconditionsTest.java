@@ -19,13 +19,14 @@ public class PreconditionsTest {
     @Test
     void checkArgumentFailsForFalse() {
         assertThrows(IllegalArgumentException.class,
-                () -> Preconditions.checkArgument(false));
+            () -> Preconditions.checkArgument(false));
     }
 
     @Test
     void checkBits8SucceedsFor8BitValues() {
-        for (int i = 0; i <= 0xFF; ++i)
+        for (int i = 0; i <= 0xFF; ++i) {
             Preconditions.checkBits8(i);
+        }
     }
 
     @Test
@@ -34,7 +35,7 @@ public class PreconditionsTest {
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v = -rng.nextInt(Integer.MAX_VALUE);
             assertThrows(IllegalArgumentException.class,
-                    () -> Preconditions.checkBits8(v));
+                () -> Preconditions.checkBits8(v));
         }
     }
 
@@ -44,14 +45,15 @@ public class PreconditionsTest {
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v = 0x100 + rng.nextInt(1000);
             assertThrows(IllegalArgumentException.class,
-                    () -> Preconditions.checkBits8(v));
+                () -> Preconditions.checkBits8(v));
         }
     }
 
     @Test
     void checkBits16SucceedsFor16BitValues() {
-        for (int i = 0; i <= 0xFFFF; ++i)
+        for (int i = 0; i <= 0xFFFF; ++i) {
             Preconditions.checkBits16(i);
+        }
     }
 
     @Test
@@ -60,7 +62,7 @@ public class PreconditionsTest {
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v = -rng.nextInt(Integer.MAX_VALUE);
             assertThrows(IllegalArgumentException.class,
-                    () -> Preconditions.checkBits16(v));
+                () -> Preconditions.checkBits16(v));
         }
     }
 
@@ -70,7 +72,7 @@ public class PreconditionsTest {
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v = 0x10000 + rng.nextInt(1000);
             assertThrows(IllegalArgumentException.class,
-                    () -> Preconditions.checkBits16(v));
+                () -> Preconditions.checkBits16(v));
         }
     }
 }

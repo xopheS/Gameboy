@@ -11,14 +11,14 @@ package ch.epfl.gameboj;
 public interface Register {
     
     /**
-     * Index d'un registre
+     * Index d'un registre.
      * 
      * @return l'index du registre
      */
     int ordinal();
 
     /**
-     * Nom alternatif pour {@link #ordinal}
+     * Nom alternatif pour {@link #ordinal}.
      * 
      * @return l'index du registre
      */

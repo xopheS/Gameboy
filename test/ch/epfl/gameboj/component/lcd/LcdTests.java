@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component.lcd;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -146,7 +147,7 @@ public class LcdTests {
         BitVector msb = new BitVector(4 * 32, true);
         BitVector lsb = new BitVector(4 * 32);
         BitVector opa = BitVector.rand();
-        BitVector msb2 = new BitVector(4*32, true);
+        BitVector msb2 = new BitVector(4 * 32, true);
         LcdImageLine line1 = new LcdImageLine(msb, lsb, opa);
         LcdImageLine line2 = new LcdImageLine(msb2, lsb, opa);
         assertTrue(line1.equals(line2));
@@ -193,7 +194,7 @@ public class LcdTests {
         BitVector msb = new BitVector(4 * 32, true);
         BitVector lsb = new BitVector(4 * 32);
         BitVector opa = BitVector.rand();
-        BitVector msb2 = new BitVector(4*32, true);
+        BitVector msb2 = new BitVector(4 * 32, true);
         LcdImageLine line1 = new LcdImageLine(msb, lsb, opa);
         LcdImageLine line2 = new LcdImageLine(msb2, new BitVector(lsb), new BitVector(opa));
         assertTrue(msb.equals(msb2));
@@ -232,7 +233,7 @@ public class LcdTests {
     }
     
     @Test
-    void LcdImageEqualsWorks() {
+    void lcdImageEqualsWorks() {
         List<LcdImageLine> list = new ArrayList<>();
         BitVector.Builder bvb = new BitVector.Builder(32);
         bvb.setByte(0, 0b00000000).setByte(1, 0b00000000).setByte(2, 0b11111111).setByte(3, 0b11111111);

@@ -12,7 +12,7 @@ public interface Preconditions {
     int MAX_BYTE_VALUE = 255, MAX_SHORT_VALUE = 65535;
 
     /**
-     * Check la validité de l'expression booléenne donnée en argument
+     * Check la validité de l'expression booléenne donnée en argument.
      *
      * @param b
      *            expression booléenne
@@ -30,7 +30,7 @@ public interface Preconditions {
 
     /**
      * Vérifie la validité de l'expression booléenne donnée en argument, et affiche
-     * le message d'erreur en cas d'exception
+     * le message d'erreur en cas d'exception.
      *
      * @param b
      *            L'expression booléenne à tester
@@ -49,7 +49,7 @@ public interface Preconditions {
 
     /**
      * Retourne son argument si celui-ci est compris entre 0 et 0xFF inclus (valeur
-     * de 8 bits)
+     * de 8 bits).
      *
      * @param v
      *            entier à vérifier
@@ -67,7 +67,7 @@ public interface Preconditions {
 
     /**
      * Retourne son argument si celui-ci est compris entre 0 et 0xFFFF inclus
-     * (valeur de 16 bits)
+     * (valeur de 16 bits).
      *
      * @param v
      *            entier à vérifier

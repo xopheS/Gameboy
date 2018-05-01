@@ -19,7 +19,7 @@ public class S4CpuTest {
     @Test
     void addAN8Works() {
         int[][] operands = new int[][] { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 0xF }, { 0xEF, 1 }, { 0x80, 0x80 },
-                { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
+            { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0004, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0004, 0x0000, 0x0100000000000000L), CpuState.of(0x0004, 0x0000, 0x0100000000000000L),
                 CpuState.of(0x0004, 0x0000, 0x1020000000000000L), CpuState.of(0x0004, 0x0000, 0xF020000000000000L),
@@ -83,7 +83,7 @@ public class S4CpuTest {
     @Test
     void adcAN8Works() {
         int[][] operands = new int[][] { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 0xF }, { 0xEF, 1 }, { 0x80, 0x80 },
-                { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
+            { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0006, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0006, 0x0000, 0x0100000000000000L), CpuState.of(0x0006, 0x0000, 0x0200000000000000L),
                 CpuState.of(0x0006, 0x0000, 0x1120000000000000L), CpuState.of(0x0006, 0x0000, 0xE020000000000000L),
@@ -149,8 +149,9 @@ public class S4CpuTest {
                 .iterator();
         for (Opcode inc : incs) {
             Assembler asm = new Assembler();
-            for (int i = 0; i <= 0xF; ++i)
+            for (int i = 0; i <= 0xF; ++i) {
                 asm.emit(inc);
+            }
             assertEquals(exp.next(), stateAfter(asm));
         }
     }
@@ -159,8 +160,9 @@ public class S4CpuTest {
     void incHlRWorks() {
         Assembler asm = new Assembler();
         asm.emit(LD_HL_N16, 0xC000);
-        for (int i = 0; i <= 0xF; ++i)
+        for (int i = 0; i <= 0xF; ++i) {
             asm.emit(INC_HLR);
+        }
         asm.emit(LD_A_HLR);
         assertEquals(CpuState.of(0x0014, 0x0000, 0x102000000000C000L), stateAfter(asm, new WorkRam()));
     }
@@ -229,7 +231,7 @@ public class S4CpuTest {
     @Test
     void subAN8Works() {
         int[][] operands = new int[][] { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 0xF }, { 0xEF, 1 }, { 0x80, 0x80 },
-                { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
+            { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0004, 0x0000, 0x00C0000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xFF70000000000000L), CpuState.of(0x0004, 0x0000, 0xFF40000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xF040000000000000L), CpuState.of(0x0004, 0x0000, 0x1040000000000000L),
@@ -293,7 +295,7 @@ public class S4CpuTest {
     @Test
     void sbcAN8Works() {
         int[][] operands = new int[][] { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 0xF }, { 0xEF, 1 }, { 0x80, 0x80 },
-                { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
+            { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0004, 0x0000, 0x00C0000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xFF70000000000000L), CpuState.of(0x0004, 0x0000, 0xFE40000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xEF60000000000000L), CpuState.of(0x0004, 0x0000, 0x0F60000000000000L),
@@ -382,7 +384,7 @@ public class S4CpuTest {
     @Test
     void cpAN8Works() {
         int[][] operands = new int[][] { { 0, 0 }, { 0, 1 }, { 1, 0 }, { 1, 0xF }, { 0xEF, 1 }, { 0x80, 0x80 },
-                { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
+            { 0xFF, 0xFF }, { 0xF, 0xF1 }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0004, 0x0000, 0x00C0000000000000L),
                 CpuState.of(0x0004, 0x0000, 0x0070000000000000L), CpuState.of(0x0004, 0x0000, 0x0140000000000000L),
                 CpuState.of(0x0004, 0x0000, 0x0170000000000000L), CpuState.of(0x0004, 0x0000, 0xEF40000000000000L),
@@ -459,7 +461,7 @@ public class S4CpuTest {
     @Test
     void andAN8Works() {
         int[][] operands = new int[][] { { 0xA5, 0x5A }, { 0xFF, 0x00 }, { 0xFF, 0xA5 }, { 0xBD, 0xB2 },
-                { 0xDB, 0x2B }, };
+            { 0xDB, 0x2B }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0004, 0x0000, 0x00A0000000000000L),
                 CpuState.of(0x0004, 0x0000, 0x00A0000000000000L), CpuState.of(0x0004, 0x0000, 0xA520000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xB020000000000000L), CpuState.of(0x0004, 0x0000, 0x0B20000000000000L))
@@ -476,7 +478,7 @@ public class S4CpuTest {
     void andAR8Works() {
         List<Opcode> ands = List.of(AND_A_A, AND_A_B, AND_A_C, AND_A_D, AND_A_E, AND_A_H, AND_A_L);
         int[][] operands = new int[][] { { 0xA5, 0x5A }, { 0xFF, 0x00 }, { 0xFF, 0xA5 }, { 0xBD, 0xB2 },
-                { 0xDB, 0x2B }, };
+            { 0xDB, 0x2B }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0005, 0x0000, 0x5A20000000000000L),
                 CpuState.of(0x0005, 0x0000, 0x00A05A0000000000L), CpuState.of(0x0005, 0x0000, 0x00A0005A00000000L),
                 CpuState.of(0x0005, 0x0000, 0x00A000005A000000L), CpuState.of(0x0005, 0x0000, 0x00A00000005A0000L),
@@ -525,7 +527,7 @@ public class S4CpuTest {
     @Test
     void orAN8Works() {
         int[][] operands = new int[][] { { 0x00, 0x00 }, { 0xA5, 0x5A }, { 0xFF, 0x00 }, { 0xFF, 0xA5 }, { 0xBD, 0xB2 },
-                { 0xDB, 0x2B }, };
+            { 0xDB, 0x2B }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0004, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xFF00000000000000L), CpuState.of(0x0004, 0x0000, 0xFF00000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xFF00000000000000L), CpuState.of(0x0004, 0x0000, 0xBF00000000000000L),
@@ -542,7 +544,7 @@ public class S4CpuTest {
     void orAR8Works() {
         List<Opcode> ors = List.of(OR_A_A, OR_A_B, OR_A_C, OR_A_D, OR_A_E, OR_A_H, OR_A_L);
         int[][] operands = new int[][] { { 0x00, 0x00 }, { 0xA5, 0x5A }, { 0xFF, 0x00 }, { 0xFF, 0xA5 }, { 0xBD, 0xB2 },
-                { 0xDB, 0x2B }, };
+            { 0xDB, 0x2B }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0005, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0005, 0x0000, 0x0080000000000000L), CpuState.of(0x0005, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0005, 0x0000, 0x0080000000000000L), CpuState.of(0x0005, 0x0000, 0x0080000000000000L),
@@ -594,7 +596,7 @@ public class S4CpuTest {
     @Test
     void xorAN8Works() {
         int[][] operands = new int[][] { { 0x00, 0x00 }, { 0xA5, 0x5A }, { 0xFF, 0x00 }, { 0xFF, 0xA5 }, { 0xBD, 0xBD },
-                { 0xDB, 0x2B }, };
+            { 0xDB, 0x2B }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0004, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0004, 0x0000, 0xFF00000000000000L), CpuState.of(0x0004, 0x0000, 0xFF00000000000000L),
                 CpuState.of(0x0004, 0x0000, 0x5A00000000000000L), CpuState.of(0x0004, 0x0000, 0x0080000000000000L),
@@ -611,7 +613,7 @@ public class S4CpuTest {
     void xorAR8Works() {
         List<Opcode> xors = List.of(XOR_A_A, XOR_A_B, XOR_A_C, XOR_A_D, XOR_A_E, XOR_A_H, XOR_A_L);
         int[][] operands = new int[][] { { 0x00, 0x00 }, { 0xA5, 0x5A }, { 0xFF, 0x00 }, { 0xFF, 0xA5 }, { 0xBD, 0xBD },
-                { 0xDB, 0x2B }, };
+            { 0xDB, 0x2B }, };
         Iterator<CpuState> exp = List.of(CpuState.of(0x0005, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0005, 0x0000, 0x0080000000000000L), CpuState.of(0x0005, 0x0000, 0x0080000000000000L),
                 CpuState.of(0x0005, 0x0000, 0x0080000000000000L), CpuState.of(0x0005, 0x0000, 0x0080000000000000L),
@@ -1278,7 +1280,7 @@ public class S4CpuTest {
                 CpuState.of(0x0005, 0x0000, 0x0250000000000000L)).iterator();
 
         int[][] addOperands = new int[][] { { 0x10, 0x00 }, { 0x08, 0x08 }, { 0x88, 0x88 }, { 0x88, 0x78 },
-                { 0x50, 0x50 }, { 0x99, 0x01 }, };
+            { 0x50, 0x50 }, { 0x99, 0x01 }, };
         for (int[] ops : addOperands) {
             Assembler asm = new Assembler();
             asm.emit(LD_A_N8, ops[0]);
@@ -1288,7 +1290,7 @@ public class S4CpuTest {
         }
 
         int[][] subOperands = new int[][] { { 0x10, 0x00 }, { 0x08, 0x08 }, { 0x88, 0x88 }, { 0x88, 0x78 },
-                { 0x50, 0x51 }, { 0x01, 0x99 }, };
+            { 0x50, 0x51 }, { 0x01, 0x99 }, };
         for (int[] ops : subOperands) {
             Assembler asm = new Assembler();
             asm.emit(LD_A_N8, ops[0]);
@@ -1327,7 +1329,7 @@ public class S4CpuTest {
 
     private static void assertEquals(CpuState expected, CpuState actual) {
         Assertions.assertEquals(expected, actual,
-                () -> String.format("Expected state: [%s], actual: [%s]", expected, actual));
+            () -> String.format("Expected state: [%s], actual: [%s]", expected, actual));
     }
 
     private CpuState stateAfter(Assembler asm, Component... components) {
@@ -1337,10 +1339,12 @@ public class S4CpuTest {
         Bus bus = new Bus();
         rom.attachTo(bus);
         cpu.attachTo(bus);
-        for (Component c2 : components)
+        for (Component c2 : components) {
             c2.attachTo(bus);
-        for (int i = 0; i < prog.cycles(); ++i)
+        }
+        for (int i = 0; i < prog.cycles(); ++i) {
             cpu.cycle(i);
+        }
         return CpuState.ofArray(cpu._testGetPcSpAFBCDEHL());
     }
 
@@ -1353,16 +1357,18 @@ public class S4CpuTest {
 
         @Override
         public int read(int address) {
-            if (0xC000 <= address && address < 0xE000)
+            if (0xC000 <= address && address < 0xE000) {
                 return Byte.toUnsignedInt(data[address - 0xC000]);
-            else
+            } else {
                 return 0x100;
+            }
         }
 
         @Override
         public void write(int address, int d) {
-            if (0xC000 <= address && address < 0xE000)
+            if (0xC000 <= address && address < 0xE000) {
                 data[address - 0xC000] = (byte) d;
+            }
         }
     }
 }

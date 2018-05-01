@@ -14,7 +14,7 @@ import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 import ch.epfl.gameboj.component.memory.Ram;
 
 /**
- * Cette classe modélise le processeur de la Gameboy
+ * Cette classe modélise le processeur de la Gameboy.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -61,7 +61,7 @@ public final class Cpu implements Component, Clocked {
 
     /**
      * Cette énumération donne les interruptions possibles du processeur, dans
-     * l'ordre dans lequel elles apparaissent dans les registres IF et IE
+     * l'ordre dans lequel elles apparaissent dans les registres IF et IE.
      *
      */
     public enum Interrupt implements Bit {
@@ -73,6 +73,13 @@ public final class Cpu implements Component, Clocked {
     private long nextNonIdleCycle;
 
     // TEST Functions
+    /**
+     * Set f.
+     * @param Z
+     * Z
+     * @param C
+     * C
+     */
     public void setF(boolean Z, boolean C) {
         registers8.setBit(Reg.F, Flag.UNUSED_0, false);
         registers8.setBit(Reg.F, Flag.UNUSED_1, false);
@@ -84,13 +91,13 @@ public final class Cpu implements Component, Clocked {
         registers8.setBit(Reg.F, Flag.C, C);
     }
 
-    public boolean getIME() {
-        return IME;
-    }
-
     public void setF(int a) {
         Preconditions.checkBits8(a);
         registers8.set(Reg.F, a);
+    }
+
+    public boolean getIME() {
+        return IME;
     }
 
     public void setIE(int a) {
@@ -130,7 +137,7 @@ public final class Cpu implements Component, Clocked {
     /**
      * Cette méthode s'occupe du fonctionnement du processeur à un très haut niveau,
      * elle décide si celui-ci doit faire quelquechose ou pas, et appelle la méthode
-     * {@link #reallyCycle()} si oui
+     * {@link #reallyCycle()} si oui.
      *
      * @param cycle
      *            C'est le cycle actuel, au moment de l'appel de la fonction
@@ -171,451 +178,453 @@ public final class Cpu implements Component, Clocked {
      * @param opcode
      *            L'opcode qui indique l'instruction à effectuer
      */
-    private void dispatch(final Opcode opcode) {
+    private void dispatch(Opcode opcode) {
         int nextPC = PC + opcode.totalBytes;
         boolean instructionDone = false;
 
         switch (opcode.family) {
-        case NOP:
-            break;
-        case LD_R8_HLR: {
-            registers8.set(extractReg(opcode, 3), read8AtHl());
-        }
-            break;
-        case LD_A_HLRU: {
-            registers8.set(Reg.A, read8AtHl());
-            setReg16(Reg16.HL, reg16(Reg16.HL) + extractHlIncrement(opcode));
-        }
-            break;
-        case LD_A_N8R: {
-            registers8.set(Reg.A, read8(AddressMap.REGS_START + read8AfterOpcode()));
-        }
-            break;
-        case LD_A_CR: {
-            registers8.set(Reg.A, read8(AddressMap.REGS_START + registers8.get(Reg.C)));
-        }
-            break;
-        case LD_A_N16R: {
-            registers8.set(Reg.A, read8(read16AfterOpcode()));
-        }
-            break;
-        case LD_A_BCR: {
-            registers8.set(Reg.A, read8(reg16(Reg16.BC)));
-        }
-            break;
-        case LD_A_DER: {
-            registers8.set(Reg.A, read8(reg16(Reg16.DE)));
-        }
-            break;
-        case LD_R8_N8: {
-            registers8.set(extractReg(opcode, 3), read8AfterOpcode());
-        }
-            break;
-        case LD_R16SP_N16: {
-            setReg16SP(extractReg16(opcode), read16AfterOpcode());
-        }
-            break;
-        case POP_R16: {
-            setReg16(extractReg16(opcode), pop16());
-        }
-            break;
-        case LD_HLR_R8: {
-            write8AtHl(registers8.get(extractReg(opcode, 0)));
-        }
-            break;
-        case LD_HLRU_A: {
-            write8AtHl(registers8.get(Reg.A));
-            setReg16(Reg16.HL, reg16(Reg16.HL) + extractHlIncrement(opcode));
-        }
-            break;
-        case LD_N8R_A: {
-            write8(AddressMap.REGS_START + read8AfterOpcode(), registers8.get(Reg.A));
-        }
-            break;
-        case LD_CR_A: {
-            write8(AddressMap.REGS_START + registers8.get(Reg.C), registers8.get(Reg.A));
-        }
-            break;
-        case LD_N16R_A: {
-            write8(read16AfterOpcode(), registers8.get(Reg.A));
-        }
-            break;
-        case LD_BCR_A: {
-            write8(reg16(Reg16.BC), registers8.get(Reg.A));
-        }
-            break;
-        case LD_DER_A: {
-            write8(reg16(Reg16.DE), registers8.get(Reg.A));
-        }
-            break;
-        case LD_HLR_N8: {
-            write8AtHl(read8AfterOpcode());
-        }
-            break;
-        case LD_N16R_SP: {
-            write16(read16AfterOpcode(), SP);
-        }
-            break;
-        case LD_R8_R8: {
-            registers8.set(extractReg(opcode, 3), registers8.get(extractReg(opcode, 0)));
-        }
-            break;
-        case LD_SP_HL: {
-            SP = reg16(Reg16.HL);
-        }
-            break;
-        case PUSH_R16: {
-            push16(reg16(extractReg16(opcode)));
-        }
-            break;
-
-        // Add
-        case ADD_A_R8: {
-            int sum = Alu.add(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)), getInitialCarry(opcode));
-            setRegFlags(Reg.A, sum);
-        }
-            break;
-        case ADD_A_N8: {
-            int sum = Alu.add(registers8.get(Reg.A), read8AfterOpcode(), getInitialCarry(opcode));
-            setRegFlags(Reg.A, sum);
-        }
-            break;
-        case ADD_A_HLR: {
-            int sum = Alu.add(registers8.get(Reg.A), read8AtHl(), getInitialCarry(opcode));
-            setRegFlags(Reg.A, sum);
-        }
-            break;
-        case INC_R8: {
-            Reg r = extractReg(opcode, 3);
-            int sum = Alu.add(registers8.get(r), 1);
-            setRegFromAlu(r, sum);
-            combineAluFlags(sum, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.CPU);
-        }
-            break;
-        case INC_HLR: {
-            int sum = Alu.add(read8AtHl(), 1);
-            write8AtHl(Alu.unpackValue(sum));
-            combineAluFlags(sum, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.CPU);
-        }
-            break;
-        case INC_R16SP: {
-            Reg16 r = extractReg16(opcode);
-            int regValue = r == Reg16.AF ? SP : reg16(r);
-            setReg16SP(r, Bits.clip(16, regValue + 1));
-        }
-            break;
-        case ADD_HL_R16SP: {
-            Reg16 r = extractReg16(opcode);
-            int regValue = r == Reg16.AF ? SP : reg16(r);
-            int sum = Alu.add16H(reg16(Reg16.HL), regValue);
-            setReg16SP(Reg16.HL, Alu.unpackValue(sum));
-            combineAluFlags(sum, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
-        }
-            break;
-        case LD_HLSP_S8: {
-            int sum = Alu.add16L(SP, Bits.clip(16, Bits.signExtend8(read8AfterOpcode())));
-            if (Bits.test(opcode.encoding, 4)) {
-                setReg16(Reg16.HL, Alu.unpackValue(sum));
-            } else {
-                SP = Alu.unpackValue(sum);
+            case NOP:
+                break;
+            case LD_R8_HLR: {
+                registers8.set(extractReg(opcode, 3), read8AtHl());
             }
-            combineAluFlags(sum, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
-        }
-            break;
-
-        // Subtract
-        case SUB_A_R8: {
-            int sub = Alu.sub(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)), getInitialCarry(opcode));
-            setRegFlags(Reg.A, sub);
-        }
-            break;
-        case SUB_A_N8: {
-            int sub = Alu.sub(registers8.get(Reg.A), read8AfterOpcode(), getInitialCarry(opcode));
-            setRegFlags(Reg.A, sub);
-        }
-            break;
-        case SUB_A_HLR: {
-            int sub = Alu.sub(registers8.get(Reg.A), read8AtHl(), getInitialCarry(opcode));
-            setRegFlags(Reg.A, sub);
-        }
-            break;
-        case DEC_R8: {
-            Reg r = extractReg(opcode, 3);
-            int sub = Alu.sub(registers8.get(r), 1);
-            setRegFromAlu(r, sub);
-            combineAluFlags(sub, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.CPU);
-        }
-            break;
-        case DEC_HLR: {
-            int sub = Alu.sub(read8AtHl(), 1);
-            write8AtHl(Alu.unpackValue(sub));
-            combineAluFlags(sub, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.CPU);
-        }
-            break;
-        case CP_A_R8: {
-            int sub = Alu.sub(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)));
-            setFlags(sub);
-        }
-            break;
-        case CP_A_N8: {
-            int sub = Alu.sub(registers8.get(Reg.A), read8AfterOpcode());
-            setFlags(sub);
-        }
-            break;
-        case CP_A_HLR: {
-            int sub = Alu.sub(registers8.get(Reg.A), read8AtHl());
-            setFlags(sub);
-        }
-            break;
-        case DEC_R16SP: {
-            Reg16 r = extractReg16(opcode);
-            int regValue = r == Reg16.AF ? SP : reg16(r);
-            setReg16SP(r, Bits.clip(16, regValue - 1));
-        }
-            break;
-
-        // And, or, xor, complement
-        case AND_A_N8: {
-            setRegFlags(Reg.A, Alu.and(registers8.get(Reg.A), read8AfterOpcode()));
-        }
-            break;
-        case AND_A_R8: {
-            setRegFlags(Reg.A, Alu.and(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0))));
-        }
-            break;
-        case AND_A_HLR: {
-            setRegFlags(Reg.A, Alu.and(registers8.get(Reg.A), read8AtHl()));
-        }
-            break;
-        case OR_A_R8: {
-            setRegFlags(Reg.A, Alu.or(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0))));
-        }
-            break;
-        case OR_A_N8: {
-            setRegFlags(Reg.A, Alu.or(registers8.get(Reg.A), read8AfterOpcode()));
-        }
-            break;
-        case OR_A_HLR: {
-            setRegFlags(Reg.A, Alu.or(registers8.get(Reg.A), read8AtHl()));
-        }
-            break;
-        case XOR_A_R8: {
-            setRegFlags(Reg.A, Alu.xor(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0))));
-        }
-            break;
-        case XOR_A_N8: {
-            setRegFlags(Reg.A, Alu.xor(registers8.get(Reg.A), read8AfterOpcode()));
-        }
-            break;
-        case XOR_A_HLR: {
-            setRegFlags(Reg.A, Alu.xor(registers8.get(Reg.A), read8AtHl()));
-        }
-            break;
-        case CPL: {
-            int cpl = Bits.complement8(registers8.get(Reg.A));
-            registers8.set(Reg.A, cpl);
-            combineAluFlags(cpl, FlagSrc.CPU, FlagSrc.V1, FlagSrc.V1, FlagSrc.CPU);
-        }
-            break;
-
-        // Rotate, shift
-        case ROTCA: {
-            int rot = Alu.rotate(extractRotDir(opcode), registers8.get(Reg.A));
-            setRegFromAlu(Reg.A, rot);
-            combineAluFlags(rot, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-        }
-            break;
-        case ROTA: {
-            int rot = Alu.rotate(extractRotDir(opcode), registers8.get(Reg.A), registers8.testBit(Reg.F, Flag.C));
-            setRegFromAlu(Reg.A, rot);
-            combineAluFlags(rot, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-        }
-            break;
-        case ROTC_R8: {
-            Reg r = extractReg(opcode, 0);
-            int rot = Alu.rotate(extractRotDir(opcode), registers8.get(r));
-            setRegFlags(r, rot);
-        }
-            break;
-        case ROT_R8: {
-            Reg r = extractReg(opcode, 0);
-            int rot = Alu.rotate(extractRotDir(opcode), registers8.get(r), registers8.testBit(Reg.F, Flag.C));
-            setRegFlags(r, rot);
-        }
-            break;
-        case ROTC_HLR: {
-            int rot = Alu.rotate(extractRotDir(opcode), read8AtHl());
-            write8AtHlAndSetFlags(rot);
-        }
-            break;
-        case ROT_HLR: {
-            int rot = Alu.rotate(extractRotDir(opcode), read8AtHl(), registers8.testBit(Reg.F, Flag.C));
-            write8AtHlAndSetFlags(rot);
-        }
-            break;
-        case SWAP_R8: {
-            Reg r = extractReg(opcode, 0);
-            int swap = Alu.swap(registers8.get(r));
-            setRegFlags(r, swap);
-        }
-            break;
-        case SWAP_HLR: {
-            int swap = Alu.swap(read8AtHl());
-            write8AtHlAndSetFlags(swap);
-        }
-            break;
-        case SLA_R8: {
-            Reg r = extractReg(opcode, 0);
-            int shiftL = Alu.shiftLeft(registers8.get(r));
-            setRegFlags(r, shiftL);
-        }
-            break;
-        case SRA_R8: {
-            Reg r = extractReg(opcode, 0);
-            int shiftR = Alu.shiftRightA(registers8.get(r));
-            setRegFlags(r, shiftR);
-        }
-            break;
-        case SRL_R8: {
-            Reg r = extractReg(opcode, 0);
-            int shiftR = Alu.shiftRightL(registers8.get(r));
-            setRegFlags(r, shiftR);
-        }
-            break;
-        case SLA_HLR: {
-            int shiftL = Alu.shiftLeft(read8AtHl());
-            write8AtHlAndSetFlags(shiftL);
-        }
-            break;
-        case SRA_HLR: {
-            int shiftR = Alu.shiftRightA(read8AtHl());
-            write8AtHlAndSetFlags(shiftR);
-        }
-            break;
-        case SRL_HLR: {
-            int shiftR = Alu.shiftRightL(read8AtHl());
-            write8AtHlAndSetFlags(shiftR);
-        }
-            break;
-
-        // Bit test and set
-        case BIT_U3_R8: {
-            int test = Alu.testBit(registers8.get(extractReg(opcode, 0)), extractBitIndex(opcode));
-            combineAluFlags(test, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V1, FlagSrc.CPU);
-        }
-            break;
-        case BIT_U3_HLR:
-            int test = Alu.testBit(read8AtHl(), extractBitIndex(opcode));
-            combineAluFlags(test, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V1, FlagSrc.CPU);
-            break;
-        case CHG_U3_R8: {
-            Reg r = extractReg(opcode, 0);
-            if (!extractSetValue(opcode)) {
-                registers8.set(r, registers8.get(r) & Bits.complement8(1 << extractBitIndex(opcode)));
-            } else {
-                registers8.set(r, registers8.get(r) | (1 << extractBitIndex(opcode)));
+                break;
+            case LD_A_HLRU: {
+                registers8.set(Reg.A, read8AtHl());
+                setReg16(Reg16.HL, reg16(Reg16.HL) + extractHlIncrement(opcode));
             }
-        }
-            break;
-        case CHG_U3_HLR: {
-            if (!extractSetValue(opcode)) {
-                write8AtHl(read8AtHl() & Bits.complement8(1 << extractBitIndex(opcode)));
-            } else {
-                write8AtHl(read8AtHl() | (1 << extractBitIndex(opcode)));
+                break;
+            case LD_A_N8R: {
+                registers8.set(Reg.A, read8(AddressMap.REGS_START + read8AfterOpcode()));
             }
-        }
-            break;
+                break;
+            case LD_A_CR: {
+                registers8.set(Reg.A, read8(AddressMap.REGS_START + registers8.get(Reg.C)));
+            }
+                break;
+            case LD_A_N16R: {
+                registers8.set(Reg.A, read8(read16AfterOpcode()));
+            }
+                break;
+            case LD_A_BCR: {
+                registers8.set(Reg.A, read8(reg16(Reg16.BC)));
+            }
+                break;
+            case LD_A_DER: {
+                registers8.set(Reg.A, read8(reg16(Reg16.DE)));
+            }
+                break;
+            case LD_R8_N8: {
+                registers8.set(extractReg(opcode, 3), read8AfterOpcode());
+            }
+                break;
+            case LD_R16SP_N16: {
+                setReg16SP(extractReg16(opcode), read16AfterOpcode());
+            }
+                break;
+            case POP_R16: {
+                setReg16(extractReg16(opcode), pop16());
+            }
+                break;
+            case LD_HLR_R8: {
+                write8AtHl(registers8.get(extractReg(opcode, 0)));
+            }
+                break;
+            case LD_HLRU_A: {
+                write8AtHl(registers8.get(Reg.A));
+                setReg16(Reg16.HL, reg16(Reg16.HL) + extractHlIncrement(opcode));
+            }
+                break;
+            case LD_N8R_A: {
+                write8(AddressMap.REGS_START + read8AfterOpcode(), registers8.get(Reg.A));
+            }
+                break;
+            case LD_CR_A: {
+                write8(AddressMap.REGS_START + registers8.get(Reg.C), registers8.get(Reg.A));
+            }
+                break;
+            case LD_N16R_A: {
+                write8(read16AfterOpcode(), registers8.get(Reg.A));
+            }
+                break;
+            case LD_BCR_A: {
+                write8(reg16(Reg16.BC), registers8.get(Reg.A));
+            }
+                break;
+            case LD_DER_A: {
+                write8(reg16(Reg16.DE), registers8.get(Reg.A));
+            }
+                break;
+            case LD_HLR_N8: {
+                write8AtHl(read8AfterOpcode());
+            }
+                break;
+            case LD_N16R_SP: {
+                write16(read16AfterOpcode(), SP);
+            }
+                break;
+            case LD_R8_R8: {
+                registers8.set(extractReg(opcode, 3), registers8.get(extractReg(opcode, 0)));
+            }
+                break;
+            case LD_SP_HL: {
+                SP = reg16(Reg16.HL);
+            }
+                break;
+            case PUSH_R16: {
+                push16(reg16(extractReg16(opcode)));
+            }
+                break;
 
-        // Misc. ALU
-        case DAA:
-            int adjust = Alu.bcdAdjust(registers8.get(Reg.A), registers8.testBit(Reg.F, Flag.N),
-                    registers8.testBit(Reg.F, Flag.H), registers8.testBit(Reg.F, Flag.C));
-            setRegFromAlu(Reg.A, adjust);
-            combineAluFlags(adjust, FlagSrc.ALU, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU);
-            break;
-        case SCCF:
-            int sccf = Alu.maskZNHC(false, false, false, !getInitialCarry(opcode));
-            combineAluFlags(sccf, FlagSrc.CPU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-            break;
+            // Add
+            case ADD_A_R8: {
+                int sum = Alu.add(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)),
+                        getInitialCarry(opcode));
+                setRegFlags(Reg.A, sum);
+            }
+                break;
+            case ADD_A_N8: {
+                int sum = Alu.add(registers8.get(Reg.A), read8AfterOpcode(), getInitialCarry(opcode));
+                setRegFlags(Reg.A, sum);
+            }
+                break;
+            case ADD_A_HLR: {
+                int sum = Alu.add(registers8.get(Reg.A), read8AtHl(), getInitialCarry(opcode));
+                setRegFlags(Reg.A, sum);
+            }
+                break;
+            case INC_R8: {
+                Reg r = extractReg(opcode, 3);
+                int sum = Alu.add(registers8.get(r), 1);
+                setRegFromAlu(r, sum);
+                combineAluFlags(sum, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.CPU);
+            }
+                break;
+            case INC_HLR: {
+                int sum = Alu.add(read8AtHl(), 1);
+                write8AtHl(Alu.unpackValue(sum));
+                combineAluFlags(sum, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.CPU);
+            }
+                break;
+            case INC_R16SP: {
+                Reg16 r = extractReg16(opcode);
+                int regValue = r == Reg16.AF ? SP : reg16(r);
+                setReg16SP(r, Bits.clip(16, regValue + 1));
+            }
+                break;
+            case ADD_HL_R16SP: {
+                Reg16 r = extractReg16(opcode);
+                int regValue = r == Reg16.AF ? SP : reg16(r);
+                int sum = Alu.add16H(reg16(Reg16.HL), regValue);
+                setReg16SP(Reg16.HL, Alu.unpackValue(sum));
+                combineAluFlags(sum, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+            }
+                break;
+            case LD_HLSP_S8: {
+                int sum = Alu.add16L(SP, Bits.clip(16, Bits.signExtend8(read8AfterOpcode())));
+                if (Bits.test(opcode.encoding, 4)) {
+                    setReg16(Reg16.HL, Alu.unpackValue(sum));
+                } else {
+                    SP = Alu.unpackValue(sum);
+                }
+                combineAluFlags(sum, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+            }
+                break;
 
-        // Jumps
-        case JP_HL:
-            nextPC = reg16(Reg16.HL);
-            break;
-        case JP_N16: {
-            nextPC = read16AfterOpcode();
-        }
-            break;
-        case JP_CC_N16: {
-            if (testCondition(opcode)) {
+            // Subtract
+            case SUB_A_R8: {
+                int sub = Alu.sub(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)),
+                        getInitialCarry(opcode));
+                setRegFlags(Reg.A, sub);
+            }
+                break;
+            case SUB_A_N8: {
+                int sub = Alu.sub(registers8.get(Reg.A), read8AfterOpcode(), getInitialCarry(opcode));
+                setRegFlags(Reg.A, sub);
+            }
+                break;
+            case SUB_A_HLR: {
+                int sub = Alu.sub(registers8.get(Reg.A), read8AtHl(), getInitialCarry(opcode));
+                setRegFlags(Reg.A, sub);
+            }
+                break;
+            case DEC_R8: {
+                Reg r = extractReg(opcode, 3);
+                int sub = Alu.sub(registers8.get(r), 1);
+                setRegFromAlu(r, sub);
+                combineAluFlags(sub, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.CPU);
+            }
+                break;
+            case DEC_HLR: {
+                int sub = Alu.sub(read8AtHl(), 1);
+                write8AtHl(Alu.unpackValue(sub));
+                combineAluFlags(sub, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.CPU);
+            }
+                break;
+            case CP_A_R8: {
+                int sub = Alu.sub(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)));
+                setFlags(sub);
+            }
+                break;
+            case CP_A_N8: {
+                int sub = Alu.sub(registers8.get(Reg.A), read8AfterOpcode());
+                setFlags(sub);
+            }
+                break;
+            case CP_A_HLR: {
+                int sub = Alu.sub(registers8.get(Reg.A), read8AtHl());
+                setFlags(sub);
+            }
+                break;
+            case DEC_R16SP: {
+                Reg16 r = extractReg16(opcode);
+                int regValue = r == Reg16.AF ? SP : reg16(r);
+                setReg16SP(r, Bits.clip(16, regValue - 1));
+            }
+                break;
+
+            // And, or, xor, complement
+            case AND_A_N8: {
+                setRegFlags(Reg.A, Alu.and(registers8.get(Reg.A), read8AfterOpcode()));
+            }
+                break;
+            case AND_A_R8: {
+                setRegFlags(Reg.A, Alu.and(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0))));
+            }
+                break;
+            case AND_A_HLR: {
+                setRegFlags(Reg.A, Alu.and(registers8.get(Reg.A), read8AtHl()));
+            }
+                break;
+            case OR_A_R8: {
+                setRegFlags(Reg.A, Alu.or(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0))));
+            }
+                break;
+            case OR_A_N8: {
+                setRegFlags(Reg.A, Alu.or(registers8.get(Reg.A), read8AfterOpcode()));
+            }
+                break;
+            case OR_A_HLR: {
+                setRegFlags(Reg.A, Alu.or(registers8.get(Reg.A), read8AtHl()));
+            }
+                break;
+            case XOR_A_R8: {
+                setRegFlags(Reg.A, Alu.xor(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0))));
+            }
+                break;
+            case XOR_A_N8: {
+                setRegFlags(Reg.A, Alu.xor(registers8.get(Reg.A), read8AfterOpcode()));
+            }
+                break;
+            case XOR_A_HLR: {
+                setRegFlags(Reg.A, Alu.xor(registers8.get(Reg.A), read8AtHl()));
+            }
+                break;
+            case CPL: {
+                int cpl = Bits.complement8(registers8.get(Reg.A));
+                registers8.set(Reg.A, cpl);
+                combineAluFlags(cpl, FlagSrc.CPU, FlagSrc.V1, FlagSrc.V1, FlagSrc.CPU);
+            }
+                break;
+
+            // Rotate, shift
+            case ROTCA: {
+                int rot = Alu.rotate(extractRotDir(opcode), registers8.get(Reg.A));
+                setRegFromAlu(Reg.A, rot);
+                combineAluFlags(rot, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+            }
+                break;
+            case ROTA: {
+                int rot = Alu.rotate(extractRotDir(opcode), registers8.get(Reg.A), registers8.testBit(Reg.F, Flag.C));
+                setRegFromAlu(Reg.A, rot);
+                combineAluFlags(rot, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+            }
+                break;
+            case ROTC_R8: {
+                Reg r = extractReg(opcode, 0);
+                int rot = Alu.rotate(extractRotDir(opcode), registers8.get(r));
+                setRegFlags(r, rot);
+            }
+                break;
+            case ROT_R8: {
+                Reg r = extractReg(opcode, 0);
+                int rot = Alu.rotate(extractRotDir(opcode), registers8.get(r), registers8.testBit(Reg.F, Flag.C));
+                setRegFlags(r, rot);
+            }
+                break;
+            case ROTC_HLR: {
+                int rot = Alu.rotate(extractRotDir(opcode), read8AtHl());
+                write8AtHlAndSetFlags(rot);
+            }
+                break;
+            case ROT_HLR: {
+                int rot = Alu.rotate(extractRotDir(opcode), read8AtHl(), registers8.testBit(Reg.F, Flag.C));
+                write8AtHlAndSetFlags(rot);
+            }
+                break;
+            case SWAP_R8: {
+                Reg r = extractReg(opcode, 0);
+                int swap = Alu.swap(registers8.get(r));
+                setRegFlags(r, swap);
+            }
+                break;
+            case SWAP_HLR: {
+                int swap = Alu.swap(read8AtHl());
+                write8AtHlAndSetFlags(swap);
+            }
+                break;
+            case SLA_R8: {
+                Reg r = extractReg(opcode, 0);
+                int shiftL = Alu.shiftLeft(registers8.get(r));
+                setRegFlags(r, shiftL);
+            }
+                break;
+            case SRA_R8: {
+                Reg r = extractReg(opcode, 0);
+                int shiftR = Alu.shiftRightA(registers8.get(r));
+                setRegFlags(r, shiftR);
+            }
+                break;
+            case SRL_R8: {
+                Reg r = extractReg(opcode, 0);
+                int shiftR = Alu.shiftRightL(registers8.get(r));
+                setRegFlags(r, shiftR);
+            }
+                break;
+            case SLA_HLR: {
+                int shiftL = Alu.shiftLeft(read8AtHl());
+                write8AtHlAndSetFlags(shiftL);
+            }
+                break;
+            case SRA_HLR: {
+                int shiftR = Alu.shiftRightA(read8AtHl());
+                write8AtHlAndSetFlags(shiftR);
+            }
+                break;
+            case SRL_HLR: {
+                int shiftR = Alu.shiftRightL(read8AtHl());
+                write8AtHlAndSetFlags(shiftR);
+            }
+                break;
+
+            // Bit test and set
+            case BIT_U3_R8: {
+                int test = Alu.testBit(registers8.get(extractReg(opcode, 0)), extractBitIndex(opcode));
+                combineAluFlags(test, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V1, FlagSrc.CPU);
+            }
+                break;
+            case BIT_U3_HLR:
+                int test = Alu.testBit(read8AtHl(), extractBitIndex(opcode));
+                combineAluFlags(test, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V1, FlagSrc.CPU);
+                break;
+            case CHG_U3_R8: {
+                Reg r = extractReg(opcode, 0);
+                if (!extractSetValue(opcode)) {
+                    registers8.set(r, registers8.get(r) & Bits.complement8(1 << extractBitIndex(opcode)));
+                } else {
+                    registers8.set(r, registers8.get(r) | (1 << extractBitIndex(opcode)));
+                }
+            }
+                break;
+            case CHG_U3_HLR: {
+                if (!extractSetValue(opcode)) {
+                    write8AtHl(read8AtHl() & Bits.complement8(1 << extractBitIndex(opcode)));
+                } else {
+                    write8AtHl(read8AtHl() | (1 << extractBitIndex(opcode)));
+                }
+            }
+                break;
+
+            // Misc. ALU
+            case DAA:
+                int adjust = Alu.bcdAdjust(registers8.get(Reg.A), registers8.testBit(Reg.F, Flag.N),
+                        registers8.testBit(Reg.F, Flag.H), registers8.testBit(Reg.F, Flag.C));
+                setRegFromAlu(Reg.A, adjust);
+                combineAluFlags(adjust, FlagSrc.ALU, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU);
+                break;
+            case SCCF:
+                int sccf = Alu.maskZNHC(false, false, false, !getInitialCarry(opcode));
+                combineAluFlags(sccf, FlagSrc.CPU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+                break;
+
+            // Jumps
+            case JP_HL:
+                nextPC = reg16(Reg16.HL);
+                break;
+            case JP_N16: {
                 nextPC = read16AfterOpcode();
-                instructionDone = true;
             }
-        }
-            break;
-        case JR_E8: {
-            nextPC += Bits.signExtend8(read8AfterOpcode());
-        }
-            break;
-        case JR_CC_E8: {
-            if (testCondition(opcode)) {
+                break;
+            case JP_CC_N16: {
+                if (testCondition(opcode)) {
+                    nextPC = read16AfterOpcode();
+                    instructionDone = true;
+                }
+            }
+                break;
+            case JR_E8: {
                 nextPC += Bits.signExtend8(read8AfterOpcode());
-                instructionDone = true;
             }
-        }
-            break;
+                break;
+            case JR_CC_E8: {
+                if (testCondition(opcode)) {
+                    nextPC += Bits.signExtend8(read8AfterOpcode());
+                    instructionDone = true;
+                }
+            }
+                break;
 
-        // Calls and returns
-        case CALL_N16: {
-            push16(nextPC);
-            nextPC = read16AfterOpcode();
-        }
-            break;
-        case CALL_CC_N16: {
-            if (testCondition(opcode)) {
+            // Calls and returns
+            case CALL_N16: {
                 push16(nextPC);
                 nextPC = read16AfterOpcode();
-                instructionDone = true;
             }
-        }
-            break;
-        case RST_U3: {
-            push16(nextPC);
-            nextPC = 8 * Bits.extract(opcode.encoding, 3, 3);
-        }
-            break;
-        case RET: {
-            nextPC = pop16();
-        }
-            break;
-        case RET_CC: {
-            if (testCondition(opcode)) {
+                break;
+            case CALL_CC_N16: {
+                if (testCondition(opcode)) {
+                    push16(nextPC);
+                    nextPC = read16AfterOpcode();
+                    instructionDone = true;
+                }
+            }
+                break;
+            case RST_U3: {
+                push16(nextPC);
+                nextPC = 8 * Bits.extract(opcode.encoding, 3, 3);
+            }
+                break;
+            case RET: {
                 nextPC = pop16();
-                instructionDone = true;
             }
-        }
-            break;
+                break;
+            case RET_CC: {
+                if (testCondition(opcode)) {
+                    nextPC = pop16();
+                    instructionDone = true;
+                }
+            }
+                break;
 
-        // Interrupts
-        case EDI: {
-            IME = Bits.test(opcode.encoding, 3) ? true : false;
-        }
-            break;
-        case RETI: {
-            IME = true;
-            nextPC = pop16();
-        }
-            break;
+            // Interrupts
+            case EDI: {
+                IME = Bits.test(opcode.encoding, 3) ? true : false;
+            }
+                break;
+            case RETI: {
+                IME = true;
+                nextPC = pop16();
+            }
+                break;
 
-        // Misc control
-        case HALT: {
-            nextNonIdleCycle = Long.MAX_VALUE;
-        }
-            break;
-        case STOP:
-            throw new Error("STOP is not implemented");
-        default:
-            break;
+            // Misc control
+            case HALT: {
+                nextNonIdleCycle = Long.MAX_VALUE;
+            }
+                break;
+            case STOP:
+                throw new Error("STOP is not implemented");
+            default:
+                break;
         }
 
         PC = nextPC;
@@ -630,13 +639,13 @@ public final class Cpu implements Component, Clocked {
      *            le bus auquel le processeur est attaché
      */
     @Override
-    public void attachTo(final Bus bus) {
+    public void attachTo(Bus bus) {
         this.bus = bus;
         bus.attach(this);
     }
 
     /**
-     * Cette méthode permet de demander au processeur d'initier une interruption
+     * Cette méthode permet de demander au processeur d'initier une interruption.
      *
      * @param i
      *            Le type de l'interruption à initier
@@ -697,8 +706,9 @@ public final class Cpu implements Component, Clocked {
     }
 
     private void setReg16(Reg16 r, int newV) {
-        if (r == Reg16.AF)
+        if (r == Reg16.AF) {
             newV &= 0b11111111_11111111_11111111_11110000;
+        }
         registers8.set(r.b, Bits.clip(8, newV));
         registers8.set(r.a, Bits.extract(newV, 8, 8));
     }
@@ -714,24 +724,24 @@ public final class Cpu implements Component, Clocked {
 
     private Reg extractReg(Opcode opcode, int startBit) {
         switch (Bits.extract(opcode.encoding, startBit, 3)) {
-        case 0:
-            return Reg.B;
-        case 1:
-            return Reg.C;
-        case 2:
-            return Reg.D;
-        case 3:
-            return Reg.E;
-        case 4:
-            return Reg.H;
-        case 5:
-            return Reg.L;
-        case 6:
-            throw new NullPointerException();
-        case 7:
-            return Reg.A;
-        default:
-            break;
+            case 0:
+                return Reg.B;
+            case 1:
+                return Reg.C;
+            case 2:
+                return Reg.D;
+            case 3:
+                return Reg.E;
+            case 4:
+                return Reg.H;
+            case 5:
+                return Reg.L;
+            case 6:
+                throw new NullPointerException();
+            case 7:
+                return Reg.A;
+            default:
+                break;
         }
 
         return null;
@@ -739,16 +749,16 @@ public final class Cpu implements Component, Clocked {
 
     private Reg16 extractReg16(Opcode opcode) {
         switch (Bits.extract(opcode.encoding, 4, 2)) {
-        case 0:
-            return Reg16.BC;
-        case 1:
-            return Reg16.DE;
-        case 2:
-            return Reg16.HL;
-        case 3:
-            return Reg16.AF;
-        default:
-            break;
+            case 0:
+                return Reg16.BC;
+            case 1:
+                return Reg16.DE;
+            case 2:
+                return Reg16.HL;
+            case 3:
+                return Reg16.AF;
+            default:
+                break;
         }
 
         return null;
@@ -780,24 +790,24 @@ public final class Cpu implements Component, Clocked {
         FlagSrc[] tableFlag = { c, h, n, z };
         for (int i = tableFlag.length; i < Flag.values().length; i++) {
             switch (tableFlag[i - tableFlag.length]) {
-            case V0: {
-                registers8.setBit(Reg.F, Flag.values()[i], false);
-            }
-                break;
-            case V1: {
-                registers8.setBit(Reg.F, Flag.values()[i], true);
-            }
-                break;
-            case ALU: {
-                registers8.setBit(Reg.F, Flag.values()[i], Bits.test(Alu.unpackFlags(vf), Flag.values()[i]));
-            }
-                break;
-            case CPU: {
-                registers8.setBit(Reg.F, Flag.values()[i], Bits.test(registers8.get(Reg.F), Flag.values()[i]));
-            }
-                break;
-            default:
-                break;
+                case V0: {
+                    registers8.setBit(Reg.F, Flag.values()[i], false);
+                }
+                    break;
+                case V1: {
+                    registers8.setBit(Reg.F, Flag.values()[i], true);
+                }
+                    break;
+                case ALU: {
+                    registers8.setBit(Reg.F, Flag.values()[i], Bits.test(Alu.unpackFlags(vf), Flag.values()[i]));
+                }
+                    break;
+                case CPU: {
+                    registers8.setBit(Reg.F, Flag.values()[i], Bits.test(registers8.get(Reg.F), Flag.values()[i]));
+                }
+                    break;
+                default:
+                    break;
             }
         }
         registers8.set(Reg.F, registers8.get(Reg.F) & 0b1111_0000);
@@ -821,22 +831,22 @@ public final class Cpu implements Component, Clocked {
 
     private boolean testCondition(Opcode opcode) {
         switch (Bits.extract(opcode.encoding, 3, 2)) {
-        case 0:
-            return !registers8.testBit(Reg.F, Flag.Z);
-        case 1:
-            return registers8.testBit(Reg.F, Flag.Z);
-        case 2:
-            return !registers8.testBit(Reg.F, Flag.C);
-        case 3:
-            return registers8.testBit(Reg.F, Flag.C);
-        default:
-            return false;
+            case 0:
+                return !registers8.testBit(Reg.F, Flag.Z);
+            case 1:
+                return registers8.testBit(Reg.F, Flag.Z);
+            case 2:
+                return !registers8.testBit(Reg.F, Flag.C);
+            case 3:
+                return registers8.testBit(Reg.F, Flag.C);
+            default:
+                return false;
         }
     }
 
     /**
      * Cette méthode permet d'accéder aux registres IE et IF sur le bus, ainsi qu'au
-     * RAM du processeur (high RAM)
+     * RAM du processeur (high RAM).
      *
      * @param address
      *            L'adresse à laquelle la lecture doit être effectuée
@@ -860,7 +870,7 @@ public final class Cpu implements Component, Clocked {
 
     /**
      * Cette méthode permet d'écrire sur le bus dans les registres IE et IF, ainsi
-     * que dans le RAM du processeur
+     * que dans le RAM du processeur.
      *
      * @param address
      *            L'adresse à laquelle l'écriture doit être effectuée
@@ -884,7 +894,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * Méthode de déboguage, permet d'obtenir la valeur des registres
+     * Méthode de déboguage, permet d'obtenir la valeur des registres.
      *
      * @return un tableau contenant les valeurs des registres
      */

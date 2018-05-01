@@ -8,7 +8,7 @@ import ch.epfl.gameboj.bits.Bits;
 
 /**
  * Cette classe simule l'unité logique et arithmétique (UAL ou ALU en anglais)
- * du processeur de la Gameboy
+ * du processeur de la Gameboy.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -23,7 +23,7 @@ public final class Alu {
      * qui stocke les fanions dans un entier: Z est vrai si le résultat d'une
      * opération est nul, N est vrai si l'opération effectuée est une soustraction,
      * H est vrai si l'opération produit un carry pour les 4 premiers bits (LSBs), C
-     * est vrai si l'opération produit un carry
+     * est vrai si l'opération produit un carry.
      */
     public enum Flag implements Bit {
         UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, C, H, N, Z
@@ -31,7 +31,7 @@ public final class Alu {
 
     /**
      * Cette énumération représente les deux directions possibles de rotation,
-     * gauche et droite
+     * gauche et droite.
      *
      */
     public enum RotDir {
@@ -47,7 +47,7 @@ public final class Alu {
     }
 
     /**
-     * Cette méthode met les fanions stockés dans un entier aux valeurs données
+     * Cette méthode met les fanions stockés dans un entier aux valeurs données.
      *
      * @param Z
      *            La valeur à donner au fanion Z
@@ -69,7 +69,7 @@ public final class Alu {
     }
 
     /**
-     * Cette méthode extrait la valeur stockée dans un entier
+     * Cette méthode extrait la valeur stockée dans un entier.
      *
      * @param valueFlags
      *            L'entier à utiliser pour l'extraction
@@ -81,7 +81,7 @@ public final class Alu {
     }
 
     /**
-     * Cette méthode extrait la valeur des fanions stockés dans un entier
+     * Cette méthode extrait la valeur des fanions stockés dans un entier.
      *
      * @param valueFlags
      *            L'entier à utiliser pour l'extraction
@@ -94,7 +94,7 @@ public final class Alu {
 
     /**
      * Cette méthode donne le résultat de l'addition de deux entiers de 8 bits et
-     * d'un bit de carry initial
+     * d'un bit de carry initial.
      *
      * @param l
      *            Le premier entier à ajouter
@@ -123,7 +123,7 @@ public final class Alu {
 
     /**
      * Cette méthode fait la même chose que la méthode
-     * {@link #add(int, int, boolean)}, sans carry initial
+     * {@link #add(int, int, boolean)}, sans carry initial.
      *
      * @param l
      *            Le premier entier à ajouter
@@ -145,7 +145,7 @@ public final class Alu {
 
     /**
      * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les
-     * fanions de l'addition des 8 LSBs
+     * fanions de l'addition des 8 LSBs.
      *
      * @param l
      *            Le premier entier à ajouter
@@ -169,7 +169,7 @@ public final class Alu {
 
     /**
      * Cette méthode effectue l'addition de deux entiers de 16 bits, avec les
-     * fanions de l'addition des 8 MSBs
+     * fanions de l'addition des 8 MSBs.
      *
      * @param l
      *            Le premier entier à ajouter
@@ -183,7 +183,7 @@ public final class Alu {
      * @throws IllegalArgumentException
      *             si l'une des deux opérandes n'est pas une valeur de 16 bits
      *
-     * @see {@link #add16L(int, int)}
+     * @see #add16L(int, int)
      */
     public static int add16H(int l, int r) {
         int lAdd = add(Bits.clip(8, Preconditions.checkBits16(l)), Bits.clip(8, Preconditions.checkBits16(r)));
@@ -193,7 +193,7 @@ public final class Alu {
 
     /**
      * Cette méthode donne le résultat de la soustraction de deux entiers de 8 bits
-     * et d'un bit de borrow initial
+     * et d'un bit de borrow initial.
      *
      * @param l
      *            Le premier entier (le <em>minuend</em>)
@@ -209,7 +209,7 @@ public final class Alu {
      * @throws IllegalArgumentException
      *             si l'une des deux opérandes n'est pas une valeur de 8 bits
      */
-    public static int sub(final int l, final int r, final boolean b0) {
+    public static int sub(int l, int r, boolean b0) {
         int initialBorrow = b0 ? 1 : 0;
         int javaDifference = Preconditions.checkBits8(l) - Preconditions.checkBits8(r) - initialBorrow;
         int result = Bits.clip(8, javaDifference);
@@ -219,7 +219,7 @@ public final class Alu {
 
     /**
      * Cette méthode fait la même chose que la méthode
-     * {@link #sub(int, int, boolean)}, sans borrow initial
+     * {@link #sub(int, int, boolean)}, sans borrow initial.
      *
      * @param l
      *            Le premier entier (le <em>minuend</em>)
@@ -238,7 +238,7 @@ public final class Alu {
 
     /**
      * Cette méthode ajuste une valeur codée en décimal binaire (DCB ou BCD en
-     * anglais) résultant d'une opération arithmétique
+     * anglais) résultant d'une opération arithmétique.
      *
      * @param v
      *            La valeur à ajuster
@@ -267,7 +267,7 @@ public final class Alu {
 
     /**
      * Cette méthode donne le résultat d'un <em>et</em> bit à bit entre deux entiers
-     * sur 8 bits
+     * sur 8 bits.
      *
      * @param l
      *            Le premier entier
@@ -287,7 +287,7 @@ public final class Alu {
 
     /**
      * Cette méthode donne le résultat d'un <em>ou inclusif</em> bit à bit entre
-     * deux entiers sur 8 bits
+     * deux entiers sur 8 bits.
      *
      * @param l
      *            Le premier entier
@@ -307,7 +307,7 @@ public final class Alu {
 
     /**
      * Cette méthode donne le résultat d'un <em>ou exclusif</em> bit à bit entre
-     * deux entiers sur 8 bits
+     * deux entiers sur 8 bits.
      *
      * @param l
      *            Le premier entier
@@ -326,7 +326,7 @@ public final class Alu {
     }
 
     /**
-     * Cette méthode effectue un décalage de 1 bit vers la gauche de l'entier donné
+     * Cette méthode effectue un décalage de 1 bit vers la gauche de l'entier donné.
      *
      * @param v
      *            L'entier à utiliser pour effectuer la rotation
@@ -346,7 +346,7 @@ public final class Alu {
      * Cette méthode effectue un décalage arithmétique
      * <dd>(<b>Définition</b>: un décalage arithmétique tient compte du MSB, qui
      * représente le signe, et le copie)</dd> de 1 bit vers la droite de l'entier
-     * donné
+     * donné.
      *
      * @param v
      *            L'entier à utiliser pour effectuer la rotation
@@ -366,7 +366,7 @@ public final class Alu {
     /**
      * Cette méthode effectue un décalage logique
      * <dd>(<b>Définition</b>: un décalage logique introduit des 0 à gauche)</dd> de
-     * 1 bit vers la droite de l'entier donné
+     * 1 bit vers la droite de l'entier donné.
      *
      * @param v
      *            L'entier à utiliser pour effectuer la rotation
@@ -385,7 +385,7 @@ public final class Alu {
 
     /**
      * Cette méthode effectue la rotation d'un entier d'un bit dans la direction
-     * donnée
+     * donnée.
      *
      * @param d
      *            La direction de rotation
@@ -407,7 +407,7 @@ public final class Alu {
 
     /**
      * Cette méthode effectue la rotation d'un entier d'un bit dans la direction
-     * donnée, à travers la retenue
+     * donnée, à travers la retenue.
      *
      * @param d
      *            La direction de rotation
@@ -434,7 +434,7 @@ public final class Alu {
     }
 
     /**
-     * Cette méthode inverse les positions des bits d'un entier
+     * Cette méthode inverse les positions des bits d'un entier.
      *
      * @param v
      *            L'entier dont les bits sont à inverser entre eux
@@ -450,7 +450,7 @@ public final class Alu {
     }
 
     /**
-     * Cette méthode teste la valeur du bit d'index donné d'un entier
+     * Cette méthode teste la valeur du bit d'index donné d'un entier.
      *
      * @param v
      *            L'entier à tester

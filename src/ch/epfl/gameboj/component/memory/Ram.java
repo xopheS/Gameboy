@@ -1,8 +1,9 @@
 package ch.epfl.gameboj.component.memory;
+
 import ch.epfl.gameboj.Preconditions;
 
 /**
- * Ram : une mémoire vive dont le contenu peut changer au cours du temps
+ * Ram : une mémoire vive dont le contenu peut changer au cours du temps.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -14,7 +15,7 @@ public final class Ram {
     
     /**
      * Constructeur qui construit une mémoire vive (tableau de byte) de taille
-     * l'argument
+     * l'argument.
      * 
      * @param size
      *            taille du tableau qui constitue la mémoire vive
@@ -27,7 +28,7 @@ public final class Ram {
     }
     
     /**
-     * Retourne la taille en octets de la mémoire (taille du tableau de byte)
+     * Retourne la taille en octets de la mémoire (taille du tableau de byte).
      * 
      * @return data.lenghth la taille de la mémoire
      */
@@ -37,7 +38,7 @@ public final class Ram {
     
     /**
      * Retourne l'octet se trouvant à l'index donné, sous la forme d'une valeur
-     * comprise entre 0 et 0xFF
+     * comprise entre 0 et 0xFF.
      * 
      * @param index
      * l'index de la donnée à lire
@@ -47,7 +48,7 @@ public final class Ram {
      *             si l'index est invalide (négatif ou supérieur à la taille du
      *             tableau - 1)
      */
-    public int read(final int index) {
+    public int read(int index) {
         return Byte.toUnsignedInt(data[index]);
     }
     
@@ -55,7 +56,7 @@ public final class Ram {
     
     /**
      * Modifie le contenu de la mémoire à l'index donné pour qu'il soit égal à
-     * la valeur donnée
+     * la valeur donnée.
      * 
      * @param index
      *            index de l'élément à modifier

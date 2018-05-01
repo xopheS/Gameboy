@@ -7,7 +7,7 @@ import ch.epfl.gameboj.bits.Bits;
 
 /**
  * Cette classe modélise un "banc de registres", i.e. un groupe cohérent de
- * registres
+ * registres.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -20,7 +20,7 @@ public final class RegisterFile<E extends Register> {
     public int[] registerFile;
 
     /**
-     * Constructeur qui initialise le banc avec plusieurs registres
+     * Constructeur qui initialise le banc avec plusieurs registres.
      *
      * @param allRegs
      *            Les registres à appartenir au banc de registres
@@ -31,7 +31,7 @@ public final class RegisterFile<E extends Register> {
     }
 
     /**
-     * Getter de la valeur d'un registre du banc
+     * Getter de la valeur d'un registre du banc.
      *
      * @param reg
      *            Registre dont la valeur est à obtenir
@@ -40,7 +40,7 @@ public final class RegisterFile<E extends Register> {
      *
      * @see #get(int)
      */
-    public int get(final E reg) {
+    public int get(E reg) {
         return registerFile[reg.index()];
     }
 
@@ -54,7 +54,7 @@ public final class RegisterFile<E extends Register> {
      *
      * @see #get(Register)
      */
-    public int get(final int index) {
+    public int get(int index) {
         return registerFile[Objects.checkIndex(index, registerFile.length)];
     }
 
@@ -96,7 +96,7 @@ public final class RegisterFile<E extends Register> {
     }
 
     /**
-     * Modifie l'état d'un bit donné du registre spécifié
+     * Modifie l'état d'un bit donné du registre spécifié.
      *
      * @param reg
      *            Le registre à modifier

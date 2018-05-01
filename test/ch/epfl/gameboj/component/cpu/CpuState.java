@@ -12,6 +12,17 @@ public final class CpuState {
         return new CpuState(pc, sp, a, f, b, c, d, e, h, l);
     }
     
+    /**
+     * a faire.
+     * 
+     * @param pc
+     * ?
+     * @param sp
+     * ?
+     * @param afbcdehl
+     * ?
+     * @return
+     */
     public static CpuState of(int pc, int sp, long afbcdehl) {
         return new CpuState(pc,
                 sp,
@@ -24,17 +35,45 @@ public final class CpuState {
                 b(afbcdehl, 1),
                 b(afbcdehl, 0));
     }
-
-    private static int b(long v, int s) {
-        return (int) ((v >>> (s << 3)) & 0xFF);
-    }
     
+    /**
+     * a faire.
+     * 
+     * @param a
+     * ?
+     * @return
+     */
     public static CpuState ofArray(int[] a) {
-        if (a.length < 10)
+        if (a.length < 10) {
             a = Arrays.copyOf(a, 10);
+        }
         return new CpuState(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
     }
     
+    /**
+     * A faire.
+     * 
+     * @param pc
+     * ?
+     * @param sp
+     * ?
+     * @param a
+     * ?
+     * @param f
+     * ?
+     * @param b
+     * ?
+     * @param c
+     * ?
+     * @param d
+     * ?
+     * @param e
+     * ?
+     * @param h
+     * ?
+     * @param l
+     * ?
+     */
     public CpuState(int pc, int sp, int a, int f, int b, int c, int d, int e, int h, int l) {
         this.pc = pc;
         this.sp = sp;
@@ -52,22 +91,65 @@ public final class CpuState {
         return new int[] {pc, sp, a, f, b, c, d, e, h, l};
     }
     
-    public int pc() { return pc; }
-    public int sp() { return sp; }
+    public int pc() { 
+        return pc; 
+    }
     
-    public int a() { return a; }
-    public int f() { return f; }
-    public int b() { return b; }
-    public int c() { return c; }
-    public int d() { return d; }
-    public int e() { return e; }
-    public int h() { return h; }
-    public int l() { return l; }
+    public int sp() { 
+        return sp; 
+    }
+    
+    public int a() { 
+        return a; 
+    }
+    
+    public int f() { 
+        return f; 
+    }
+    
+    private static int b(long v, int s) {
+        return (int) ((v >>> (s << 3)) & 0xFF);
+    }
+    
+    public int b() { 
+        return b; 
+    }
+    
+    public int c() { 
+        return c; 
+    }
+    
+    public int d() { 
+        return d; 
+    }
+    
+    public int e() { 
+        return e; 
+    }
+    
+    public int h() { 
+        return h; 
+    }
+    
+    public int l() { 
+        return l; 
+    }
 
-    public int af() { return combine(a, f); }
-    public int bc() { return combine(b, c); }
-    public int de() { return combine(d, e); }
-    public int hl() { return combine(h, l); }
+    public int af() { 
+        return combine(a, f); 
+    }
+    
+    public int bc() { 
+        return combine(b, c); 
+    }
+    
+    public int de() { 
+        return combine(d, e); 
+    }
+    
+    public int hl() { 
+        return combine(h, l); 
+    }
     
     private static int combine(int h, int l) {
         return (h << 8) | l;
@@ -78,8 +160,9 @@ public final class CpuState {
         if (thatO instanceof CpuState) {
             CpuState that = (CpuState)thatO;
             return Arrays.equals(this.toArray(), that.toArray());
-        } else
+        } else {
             return false;
+        }
     }
     
     @Override
@@ -93,6 +176,11 @@ public final class CpuState {
                 pc(), sp(), af(), bc(), de(), hl());
     }
     
+    /**
+     * a faire.
+     * 
+     * @return
+     */
     public String toJavaString() {
         return String.format("CpuState.of(0x%04X, 0x%04X, 0x%016XL)",
                 pc(), sp(),

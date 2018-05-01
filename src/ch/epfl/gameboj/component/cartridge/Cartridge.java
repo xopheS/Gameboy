@@ -8,7 +8,7 @@ import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
 
 /**
- * Cette classe simule une cartouche de Gameboy
+ * Cette classe simule une cartouche de Gameboy.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -34,7 +34,7 @@ public final class Cartridge implements Component {
      * @throws IOException
      *             si un problème de lecture intervient
      */
-    public static Cartridge ofFile(final File romFile) throws FileNotFoundException, IOException {
+    public static Cartridge ofFile(File romFile) throws FileNotFoundException, IOException {
 
         try (FileInputStream fis = new FileInputStream(romFile)) {
             byte[] fileBytes = fis.readAllBytes();

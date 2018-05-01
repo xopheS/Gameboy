@@ -39,7 +39,7 @@ public final class Bus {
      * @throws IllegalArgumentException
      *             si l'adresse n'est pas une valeur 16 bits
      */
-    public int read(final int address) {   
+    public int read(int address) {   
         Preconditions.checkBits16(address);
         for (Component c : attachedComponents) {
             if (c.read(address) != Component.NO_DATA) {

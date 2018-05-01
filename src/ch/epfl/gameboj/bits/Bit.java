@@ -11,14 +11,15 @@ package ch.epfl.gameboj.bits;
 public interface Bit {
 
     /**
+     * Retourne l'index du bit.
      *
      * @return index
      */
     int ordinal();
 
     /**
-     * Retourne la même valeur que la méthode ordinal du type énumération.
-     * (retourne le numéro d'ordre d'un élément énuméré)
+     * Retourne la même valeur que la méthode ordinal du type énumération
+     * (retourne le numéro d'ordre d'un élément énuméré).
      *
      * @return méthode ordinal du type énumération
      */

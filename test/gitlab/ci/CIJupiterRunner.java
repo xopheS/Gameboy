@@ -13,7 +13,7 @@ public final class CIJupiterRunner {
 
     }
 
-    public static void main(final String[] args) {
+    public static void main(String[] args) {
         /*
          * Result result = JUnitCore.runClasses(BusTest.class, GameBoyTest.class,
          * PreconditionsTest.class, S6GameBoyTest.class); if (!result.wasSuccessful())

@@ -76,8 +76,9 @@ public final class S5CpuTest {
     void jrE8Works() {
         for (int d = Byte.MIN_VALUE; d <= Byte.MAX_VALUE; ++d) {
             Assembler asm = new Assembler();
-            for (int i = 0; i < 126; ++i)
+            for (int i = 0; i < 126; ++i) {
                 asm.emit(NOP);
+            }
             asm.emit(JR_E8, d & 0xFF);
             assertEquals(CpuState.of(d - Byte.MIN_VALUE, 0, 0), stateAfter(asm));
         }
@@ -390,8 +391,9 @@ public final class S5CpuTest {
                     assertEquals(CpuState.of(0x000E, 0xE000, 0x0080000000000000L), stateAfter(asm));
                 } else {
                     int i = 0;
-                    while ((ief & (1 << i)) == 0)
+                    while ((ief & (1 << i)) == 0) {
                         ++i;
+                    }
                     int expPC = 0x40 + (i << 3);
                     assertEquals(CpuState.of(expPC, 0xDFFE, 0x0080000000000000L), stateAfter(asm));
                 }
@@ -433,8 +435,9 @@ public final class S5CpuTest {
             asm.emit(JR_NZ_E8, -2 & 0xFF);
         }
         MiniGameBoy mgb = MiniGameBoy.forProgramOf(asm);
-        for (int a = 0xFF80; a < 0xFFFF; ++a)
+        for (int a = 0xFF80; a < 0xFFFF; ++a) {
             mgb.bus.write(a, Byte.toUnsignedInt(highRamData[a - 0xFF80]));
+        }
         mgb.cycleUntil(mgb.prog.cycles());
         assertEquals(CpuState.of(0x03F8, 0x0000, 0x8DC08D0000000000L), mgb.cpuState());
     }
@@ -510,7 +513,7 @@ public final class S5CpuTest {
 
     private static void assertEquals(CpuState expected, CpuState actual) {
         Assertions.assertEquals(expected, actual,
-                () -> String.format("Expected state: [%s], actual: [%s]", expected, actual));
+            () -> String.format("Expected state: [%s], actual: [%s]", expected, actual));
     }
 
     private CpuState stateAfter(Assembler asm, Component... components) {
@@ -536,8 +539,9 @@ public final class S5CpuTest {
             Bus bus = new Bus();
             progRom.attachTo(bus);
             cpu.attachTo(bus);
-            for (Component c2: components)
+            for (Component c2: components) {
                 c2.attachTo(bus);
+            }
             MiniGameBoy mgb = new MiniGameBoy(prog, bus, cpu);
             return mgb;
         }
@@ -549,8 +553,9 @@ public final class S5CpuTest {
         }
 
         public void cycleUntil(long c) {
-            while (cycle < c)
+            while (cycle < c) {
                 cpu.cycle(cycle++);
+            }
         }
 
         public CpuState cpuState() {
@@ -563,16 +568,18 @@ public final class S5CpuTest {
 
         @Override
         public int read(int address) {
-            if (0xC000 <= address && address < 0xE000)
+            if (0xC000 <= address && address < 0xE000) {
                 return Byte.toUnsignedInt(data[address - 0xC000]);
-            else
+            } else {
                 return 0x100;
+            }
         }
 
         @Override
         public void write(int address, int d) {
-            if (0xC000 <= address && address < 0xE000)
+            if (0xC000 <= address && address < 0xE000) {
                 data[address - 0xC000] = (byte)d;
+            }
         }
     }
 }

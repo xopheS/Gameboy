@@ -13,7 +13,7 @@ import ch.epfl.gameboj.component.memory.RamController;
 
 /**
  * Cette classe modélise la Gameboy en entier, avec tous ses composants
- * fonctionnant ensemble
+ * fonctionnant ensemble.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -79,7 +79,7 @@ public class GameBoy {
      * @throws IllegalArgumentException
      *             si le cycle à atteindre est strictement inférieur au cycle actuel
      */
-    public void runUntil(final long cycle) {
+    public void runUntil(long cycle) {
         Preconditions.checkArgument(cycles <= cycle);
         while (cycles < cycle) {
             timer.cycle(cycles);
@@ -99,7 +99,7 @@ public class GameBoy {
     }
 
     /**
-     * Getter du timer
+     * Getter du timer.
      *
      * @return le timer de la Gameboy
      */
@@ -108,7 +108,7 @@ public class GameBoy {
     }
 
     /**
-     * Getter du bus
+     * Getter du bus.
      *
      * @return le bus de la Gameboy
      */
@@ -117,7 +117,7 @@ public class GameBoy {
     }
 
     /**
-     * Getter du cpu
+     * Getter du cpu.
      *
      * @return le processeur de la Gameboy
      */
@@ -126,7 +126,7 @@ public class GameBoy {
     }
 
     /**
-     * Getter de LcdController
+     * Getter de LcdController.
      *
      * @return le LcdController de la Gameboy
      */
@@ -135,7 +135,7 @@ public class GameBoy {
     }
 
     /**
-     * Getter du joypad
+     * Getter du joypad.
      *
      * @return le joypad de la Gameboy
      */

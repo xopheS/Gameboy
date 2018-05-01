@@ -18,6 +18,12 @@ public final class Joypad implements Component {
         RIGHT, LEFT, UP, DOWN, A, B, SELECT, START
     };
 
+    /**
+     * Construit un Joypad.
+     * 
+     * @param cpu
+     * le cpu ave lequel le Joypad interagit
+     */
     public Joypad(Cpu cpu) {
 
         this.cpu = cpu;
@@ -27,6 +33,12 @@ public final class Joypad implements Component {
 
     }
 
+    /**
+     * a faire.
+     * 
+     * @param k
+     * ?
+     */
     public void keyPressed(Key k) {
 
         int lineSize = Key.values().length / 2;
@@ -40,19 +52,19 @@ public final class Joypad implements Component {
         }
 
         switch (Bits.extract(P1, 4, 2)) {
-        case 0b00:
-            break;
-        case 0b01:
-            P1 |= line1;
-            break;
-        case 0b10:
-            P1 |= line2;
-            break;
-        case 0b11:
-            P1 |= (line1 | line2);
-            break;
-        default:
-            break;
+            case 0b00:
+                break;
+            case 0b01:
+                P1 |= line1;
+                break;
+            case 0b10:
+                P1 |= line2;
+                break;
+            case 0b11:
+                P1 |= (line1 | line2);
+                break;
+            default:
+                break;
         }
 
         if (Bits.clip(4, P1) != Bits.clip(4, lastP1)) {
@@ -60,7 +72,11 @@ public final class Joypad implements Component {
         }
     }
 
-    public void keyReleased(final Key k) {
+    /**
+     * a faire.
+     * @param k ?
+     */
+    public void keyReleased(Key k) {
 
         int lineSize = Key.values().length / 2;
         int index = k.ordinal();
@@ -73,19 +89,19 @@ public final class Joypad implements Component {
         }
 
         switch (Bits.extract(P1, 4, 2)) {
-        case 0b00:
-            break;
-        case 0b01:
-            P1 &= line1;
-            break;
-        case 0b10:
-            P1 &= line2;
-            break;
-        case 0b11:
-            P1 &= line1 | line2;
-            break;
-        default:
-            break;
+            case 0b00:
+                break;
+            case 0b01:
+                P1 &= line1;
+                break;
+            case 0b10:
+                P1 &= line2;
+                break;
+            case 0b11:
+                P1 &= line1 | line2;
+                break;
+            default:
+                break;
         }
 
         if (Bits.clip(4, P1) != Bits.clip(4, lastP1)) {
@@ -94,7 +110,7 @@ public final class Joypad implements Component {
     }
 
     @Override
-    public int read(final int address) throws IllegalArgumentException {
+    public int read(int address) throws IllegalArgumentException {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
             return Bits.complement8(P1);
         }
@@ -102,7 +118,7 @@ public final class Joypad implements Component {
     }
 
     @Override
-    public void write(final int address, final int data) throws IllegalArgumentException {
+    public void write(int address, int data) throws IllegalArgumentException {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
             P1 = (P1 & 0000_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0011_0000);
         }

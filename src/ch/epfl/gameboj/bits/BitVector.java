@@ -6,6 +6,7 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 
 /**
+ * Cette classe simule un vecteur de bits plus long que 64.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -121,6 +122,11 @@ public final class BitVector {
                 Math.floorMod(index, Integer.SIZE));
     }
 
+    /**
+     * Effectue la négation du vecteur de bits.
+     * 
+     * @return la négation
+     */
     public BitVector not() {
         int[] notVector = new int[bitVector.length];
 
@@ -131,6 +137,13 @@ public final class BitVector {
         return new BitVector(notVector);
     }
 
+    /**
+     * Effectue le ET entre ce vecteur et un autre.
+     * 
+     * @param otherVector
+     * l'autre vecteur
+     * @return la conjonction
+     */
     public BitVector and(BitVector otherVector) {
         Preconditions.checkArgument(
                 size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
@@ -145,6 +158,13 @@ public final class BitVector {
         return new BitVector(andVector);
     }
 
+    /**
+     * Effectue le OU entre ce vecteur et un autre.
+     * 
+     * @param otherVector
+     * l'autre vecteur
+     * @return la disjonction
+     */
     public BitVector or(BitVector otherVector) {
         Preconditions.checkArgument(
                 size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
@@ -198,6 +218,15 @@ public final class BitVector {
             vector = bitVector(size, false);
         }
 
+        /**
+         * Change la valeur d'un octet.
+         * 
+         * @param index
+         * l'index de l'octet
+         * @param b
+         * la valeur à lui donner
+         * @return le builder
+         */
         public Builder setByte(int index, int b) {
             if (vector == null) {
                 throw new IllegalStateException();
@@ -210,6 +239,11 @@ public final class BitVector {
             return this;
         }
 
+        /**
+         * Construit le vecteur de bits.
+         * 
+         * @return le vecteur
+         */
         public BitVector build() {
             if (vector == null) {
                 throw new IllegalStateException();

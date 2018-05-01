@@ -3,7 +3,7 @@ package ch.epfl.gameboj.component;
 import ch.epfl.gameboj.Bus;
 
 /**
- * Component : un composant de la Gameboy
+ * Component : un composant de la Gameboy.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -16,7 +16,7 @@ public interface Component {
     
     /**
      * Retourne l'octet stocké à l'adresse donnée par le composant, ou NO_DATA
-     * si le composant ne possède aucune valeur à cette adresse 
+     * si le composant ne possède aucune valeur à cette adresse. 
      * 
      * @param address
      *            l'adresse
@@ -29,7 +29,7 @@ public interface Component {
     
     /**
      * Stocke la valeur donnée à l'adresse donnée dans le composant, ou ne fait
-     * rien si le composant ne permet pas de stocker de valeur à cette adresse
+     * rien si le composant ne permet pas de stocker de valeur à cette adresse.
      * 
      * @param address
      *            l'adresse
@@ -45,7 +45,7 @@ public interface Component {
     
     
     /**
-     * Attache le composant au bus donné
+     * Attache le composant au bus donné.
      * 
      * @param bus
      *            le bus
