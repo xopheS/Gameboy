@@ -8,8 +8,6 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 
 public class LcdImageLine {
-    // must be immuable
-
     private final BitVector LSB;
     private final BitVector MSB;
     private final BitVector opacity;

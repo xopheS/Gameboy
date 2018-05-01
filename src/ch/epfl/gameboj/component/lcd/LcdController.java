@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component.lcd;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
@@ -19,37 +20,50 @@ import ch.epfl.gameboj.bits.Bits;
 
 public final class LcdController implements Component, Clocked {
 
-    private enum LCDReg implements Register {
-        LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
-    }
+    private enum LCDReg implements Register { LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX }
 
-    private enum LCDC implements Bit {
-        BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS
-    }
+    private enum LCDC implements Bit { BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS }
 
-    private enum STAT implements Bit {
-        MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED
-    }
+    private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED }
+    
+    private enum SPRITE_ATTR { Y_COORD, X_COORD, TILE_INDEX, MISC }
+    
+    private enum MISC { UNUSED0, UNUSED1, UNUSED2, UNUSED3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG }
 
     private static final int TILE_SIZE = 8;
     private static final int BG_SIZE = 256;
     private static final int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
-    private static final int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
     private static final int LCD_TILE_WIDTH = LCD_WIDTH / TILE_SIZE;
     private static final int LCD_TILE_HEIGHT = LCD_HEIGHT / TILE_SIZE;
+    private static final int WIN_WIDTH = LCD_WIDTH, WIN_TILE_WIDTH = LCD_TILE_WIDTH;
+    private static final int WIN_HEIGHT = LCD_WIDTH, WIN_TILE_HEIGHT = LCD_TILE_WIDTH;
     private static final int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     private static final int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
+    private static final LcdImageLine EMPTY_LCD_LINE = new LcdImageLine(new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH));
     private LcdImage displayedImage;
     private final Ram videoRam, oamRam;
     private final Cpu cpu;
     private Bus bus;
     private long nextNonIdleCycle = Long.MAX_VALUE;
     private long lineStartT = 0;
+    private boolean winActive = false;
     private int winY = 0;
+    private int adjustedWX = -7;
     private LcdImage.Builder nextImageBuilder;
+    private QuickCopyInfo quickCopy = new QuickCopyInfo();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
 
+    private static class QuickCopyInfo {
+        boolean isActive = false;
+        int startAddress;
+        int currentIndex = 0;
+        
+        void setAddressMSB(int addressMSB) {
+            startAddress = Preconditions.checkBits8(addressMSB) << 8;
+        }
+    }
+    
     /**
      * Construit un contrôleur LCD.
      * 
@@ -65,8 +79,7 @@ public final class LcdController implements Component, Clocked {
         ArrayList<LcdImageLine> imgLines = new ArrayList<>(LCD_HEIGHT);
 
         for (int i = 0; i < LCD_HEIGHT; ++i) {
-            imgLines.add(
-                    new LcdImageLine(new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH)));
+            imgLines.add(EMPTY_LCD_LINE);
         }
 
         displayedImage = new LcdImage(LCD_WIDTH, LCD_HEIGHT, imgLines);
@@ -80,7 +93,15 @@ public final class LcdController implements Component, Clocked {
 
     @Override
     public void cycle(long cycle) {
-        if (nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
+        if (quickCopy.isActive) {
+            if (quickCopy.currentIndex < 159) {
+                write(AddressMap.OAM_START + quickCopy.currentIndex, bus.read(quickCopy.startAddress + quickCopy.currentIndex));
+                quickCopy.currentIndex++;
+            } else {
+                quickCopy = new QuickCopyInfo();
+            }
+            nextNonIdleCycle++; 
+        } else if (nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
             System.out.println("Power on, cycle " + cycle);
             lineStartT = cycle;
             nextNonIdleCycle = cycle + 20;
@@ -91,7 +112,6 @@ public final class LcdController implements Component, Clocked {
         } else {
             reallyCycle(cycle);
         }
-        // DMA process
     }
 
     private void reallyCycle(long cycle) {
@@ -106,8 +126,7 @@ public final class LcdController implements Component, Clocked {
             lineStartT = cycle;
             nextNonIdleCycle += 114;
         } else if (mode == 2 && cycle - lineStartT == MODE2_DURATION) {
-            nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(lcdRegs.get(LCDReg.LY)));
-            winY++;
+            nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(cycle));
             setMode(3);
             nextNonIdleCycle += 43;
         } else if (mode == 3 && cycle - lineStartT == MODE2_DURATION + MODE3_DURATION) {
@@ -160,103 +179,117 @@ public final class LcdController implements Component, Clocked {
         }
     }
 
-    private LcdImageLine computeLine(int index) {
-        LcdImageLine.Builder nextBGLineBuilder = new LcdImageLine.Builder(BG_SIZE);
-        LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_SIZE);
-        LcdImageLine nextBGLine, nextWinLine;
-
-        int adjustedWX = lcdRegs.get(LCDReg.WX) - 7;
-
+    private LcdImageLine computeLine(long cycle) {  
+        LcdImageLine nextLine;
+        
         if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
-            for (int i = 0; i < BG_TILE_SIZE; ++i) {
-                int bgAddress;
-
-                int bgI = Math.floorDiv(Math.floorMod(lcdRegs.get(LCDReg.SCY) + lcdRegs.get(LCDReg.LY), BG_SIZE),
-                        TILE_SIZE) * BG_TILE_SIZE + i;
-
-                if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA)) {
-                    bgAddress = AddressMap.BG_DISPLAY_DATA[1] + bgI;
-                } else {
-                    bgAddress = AddressMap.BG_DISPLAY_DATA[0] + bgI;
+            nextLine = computeBGLine();
+            
+            if (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ)) {
+                //Sprites background
+                if (lcdRegs.get(LCDReg.LY) >= lcdRegs.get(LCDReg.WY) && winActive) {
+                    nextLine = nextLine.join(computeWinLine(), adjustedWX);
                 }
-
-                int bgTypeIndex = read(bgAddress);
-
-                int bgTypeAddress;
-
-                if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
-                    bgTypeAddress = AddressMap.TILE_SOURCE[1] + bgTypeIndex * 16
-                            + Math.floorMod(lcdRegs.get(LCDReg.LY), TILE_SIZE) * 2;
-                } else {
-                    if (bgTypeIndex >= 0 && bgTypeIndex < 128) {
-                        bgTypeAddress = AddressMap.TILE_SOURCE[0] + (bgTypeIndex + 128) * 16
-                                + Math.floorMod(lcdRegs.get(LCDReg.LY), TILE_SIZE) * 2;
-                    } else if (bgTypeIndex >= 128 && bgTypeIndex < 256) {
-                        bgTypeAddress = AddressMap.TILE_SOURCE[0] + (bgTypeIndex - 128) * 16
-                                + Math.floorMod(lcdRegs.get(LCDReg.LY), TILE_SIZE) * 2;
-                    } else {
-                        throw new IllegalArgumentException("bg_type_index wrong!");
-                    }
+                //Sprites foreground
+            } else {
+                if (lcdRegs.get(LCDReg.LY) >= lcdRegs.get(LCDReg.WY) && winActive) {
+                    nextLine = nextLine.join(computeWinLine(), adjustedWX);
                 }
+            }
+        } else { 
+            nextLine = EMPTY_LCD_LINE;
+            
+            if (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ)) {
+                //Sprites background
+                if (lcdRegs.get(LCDReg.LY) >= lcdRegs.get(LCDReg.WY) && winActive) {
+                    nextLine = nextLine.join(computeWinLine(), adjustedWX);
+                }
+                //Sprites foreground
+            } else {
+                if (lcdRegs.get(LCDReg.LY) >= lcdRegs.get(LCDReg.WY) && winActive) {
+                    nextLine = nextLine.join(computeWinLine(), adjustedWX);
+                }
+            }
+        }
+        
+        return nextLine;
+    }
+    
+    private LcdImageLine computeBGLine() {
+        LcdImageLine.Builder nextBGLineBuilder = new LcdImageLine.Builder(BG_SIZE);
+        
+        for (int i = 0; i < BG_TILE_SIZE; ++i) {
+            int bgAddress;
 
-                nextBGLineBuilder.setBytes(i, Bits.reverse8(read(bgTypeAddress + 1)),
-                        Bits.reverse8(read(bgTypeAddress)));
+            int bgI = Math.floorDiv(Math.floorMod(lcdRegs.get(LCDReg.SCY) + lcdRegs.get(LCDReg.LY), BG_SIZE), TILE_SIZE) * BG_TILE_SIZE + i;
+
+            if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA)) {
+                bgAddress = AddressMap.BG_DISPLAY_DATA[1] + bgI;
+            } else {
+                bgAddress = AddressMap.BG_DISPLAY_DATA[0] + bgI;
             }
 
-            nextBGLine = nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH)
-                    .mapColors(lcdRegs.get(LCDReg.BGP));
-        } else {
-            for (int i = 0; i < BG_TILE_SIZE; ++i) {
-                nextBGLineBuilder.setBytes(i, 0, 0);
-            }
+            int bgTypeIndex = read(bgAddress);
 
-            nextBGLine = nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH);
+            nextBGLineBuilder.setBytes(i, Bits.reverse8(tileLineMSB(bgTypeIndex, lcdRegs.get(LCDReg.LY))), Bits.reverse8(tileLineLSB(bgTypeIndex, lcdRegs.get(LCDReg.LY))));
         }
 
-        if (lcdRegs.get(LCDReg.LY) >= lcdRegs.get(LCDReg.WY) && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN)
-                && adjustedWX >= 0 && adjustedWX < 167) {
-            int winLineIndex = lcdRegs.get(LCDReg.LY) - lcdRegs.get(LCDReg.WY);
+        return nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH).mapColors(lcdRegs.get(LCDReg.BGP));
+    }
+        
+    
+    private LcdImageLine computeWinLine() {
+        LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_WIDTH);
+        
+        winY++;
+          
+        for (int i = 0; i < WIN_TILE_WIDTH; ++i) {
+            int winAddress;
 
-            for (int i = 0; i < WIN_TILE_SIZE; ++i) {
-                int winAddress;
+            int winI = Math.floorDiv(winY, TILE_SIZE) * WIN_TILE_WIDTH + i;
 
-                int winI = Math.floorDiv(winLineIndex, TILE_SIZE) * WIN_TILE_SIZE + i;
-
-                if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
-                    winAddress = AddressMap.BG_DISPLAY_DATA[1] + winI;
-                } else {
-                    winAddress = AddressMap.BG_DISPLAY_DATA[0] + winI;
-                }
-
-                int winTypeIndex = read(winAddress);
-
-                int winTypeAddress;
-
-                if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
-                    winTypeAddress = AddressMap.TILE_SOURCE[1] + winTypeIndex * 16
-                            + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
-                } else {
-                    if (winTypeIndex >= 0 && winTypeIndex < 128) {
-                        winTypeAddress = AddressMap.TILE_SOURCE[0] + (winTypeIndex + 128) * 16
-                                + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
-                    } else if (winTypeIndex >= 128 && winTypeIndex < 256) {
-                        winTypeAddress = AddressMap.TILE_SOURCE[0] + (winTypeIndex - 128) * 16
-                                + Math.floorMod(winLineIndex, TILE_SIZE) * 2;
-                    } else {
-                        throw new IllegalArgumentException("bg_type_index wrong!");
-                    }
-                }
-
-                nextWinLineBuilder.setBytes(i, Bits.reverse8(read(winTypeAddress + 1)),
-                        Bits.reverse8(read(winTypeAddress)));
+            if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
+                winAddress = AddressMap.BG_DISPLAY_DATA[1] + winI;
+            } else {
+                winAddress = AddressMap.BG_DISPLAY_DATA[0] + winI;
             }
 
-            nextWinLine = nextWinLineBuilder.build().mapColors(lcdRegs.get(LCDReg.BGP));
+            int winTypeIndex = read(winAddress);
 
-            return nextBGLine.join(nextWinLine, adjustedWX);
-        } else {
-            return nextBGLine;
+            nextWinLineBuilder.setBytes(i, Bits.reverse8(tileLineMSB(winTypeIndex, winY)), Bits.reverse8(tileLineLSB(winTypeIndex, winY)));
         }
+        
+        return nextWinLineBuilder.build().mapColors(lcdRegs.get(LCDReg.BGP));
+    }
+    
+    private int tileLineMSB(int tileTypeIndex, int lineIndex) {
+        return read(tileTypeAddress(tileTypeIndex, lineIndex) + 1);
+    }
+    
+    private int tileLineLSB(int tileTypeIndex, int lineIndex) {
+        return read(tileTypeAddress(tileTypeIndex, lineIndex));
+    }
+    
+    private int tileTypeAddress(int tileTypeIndex, int lineIndex) {
+        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * 16 + Math.floorMod(lineIndex, TILE_SIZE) * 2;
+        } else {
+            if (tileTypeIndex >= 0 && tileTypeIndex < 128) {
+                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex + 128) * 16 + Math.floorMod(lineIndex, TILE_SIZE) * 2;
+            } else if (tileTypeIndex >= 128 && tileTypeIndex < 256) {
+                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex - 128) * 16 + Math.floorMod(lineIndex, TILE_SIZE) * 2;
+            } else {
+                throw new IllegalArgumentException("tile_type_index wrong!");
+            }
+        }
+    }
+    
+    private int[] spritesIntersectingLine(int lineIndex) {
+        int[] intersectSprites = new int[10];
+        
+        int[] intersectIndex = new int[0];
+        
+        return intersectIndex;
     }
 
     @Override
@@ -296,6 +329,12 @@ public final class LcdController implements Component, Clocked {
                     nextNonIdleCycle = Long.MAX_VALUE;
                     System.out.println("Power off");
                 }
+                if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && !winActive) {
+                    winActive = true;
+                } else if (!lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && winActive) {
+                    winY = lcdRegs.get(LCDReg.LY);
+                    winActive = false;
+                }
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.STAT.index()) {
                 lcdRegs.set(LCDReg.STAT, data & 0b1111_1000 | lcdRegs.get(LCDReg.STAT) & 0b0000_0111);
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LY.index()) {
@@ -303,7 +342,17 @@ public final class LcdController implements Component, Clocked {
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LYC.index()) {
                 modifyLYorLYC(LCDReg.LYC, data);
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.DMA.index()) {
-                // DMA write process
+                quickCopy.isActive = true;
+                quickCopy.setAddressMSB(data);
+            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.WX.index()) {
+                lcdRegs.set(LCDReg.WX, data);
+                adjustedWX = lcdRegs.get(LCDReg.WX) - 7;
+                if (adjustedWX >= 0 && adjustedWX < 16 && !winActive) {
+                    winActive = true;
+                } else if (!(adjustedWX >= 0 && adjustedWX < 16) && winActive) {
+                    winY = lcdRegs.get(LCDReg.LY);
+                    winActive = false;
+                }
             } else {
                 lcdRegs.set(address - AddressMap.REGS_LCDC_START, data);
             }

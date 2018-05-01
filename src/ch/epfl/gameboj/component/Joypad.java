@@ -14,7 +14,7 @@ public final class Joypad implements Component {
     private int line1;
     private int line2;
 
-    private enum Key {
+    public enum Key {
         RIGHT, LEFT, UP, DOWN, A, B, SELECT, START
     };
 
@@ -22,7 +22,7 @@ public final class Joypad implements Component {
      * Construit un Joypad.
      * 
      * @param cpu
-     * le cpu ave lequel le Joypad interagit
+     * le cpu avec lequel le Joypad interagit
      */
     public Joypad(Cpu cpu) {
 
