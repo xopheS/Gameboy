@@ -24,7 +24,7 @@ public final class MBC0Test {
 
     @Test
     void constructorFailsWithRomOfInvalidSize() {
-        for (int err: new int[] { -1, 1 }) {
+        for (int err: new int[] {-1, 1}) {
             assertThrows(IllegalArgumentException.class, () -> {
                 new MBC0(new Rom(new byte[0x8000 + err]));
             });

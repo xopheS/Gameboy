@@ -124,7 +124,7 @@ class SimpleComponent implements Component {
     private int value;
     private boolean wasRead, wasWritten;
 
-    public SimpleComponent(int address, int initialValue) {
+    SimpleComponent(int address, int initialValue) {
         this.address = address;
         this.value = initialValue;
     }

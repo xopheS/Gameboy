@@ -11,7 +11,7 @@ import ch.epfl.gameboj.Bus;
 
 public interface Component {
 
-    public final static int NO_DATA = 256;
+    int NO_DATA = 256;
     
     
     /**
@@ -25,7 +25,7 @@ public interface Component {
      * @throws IllegalArgumentException
      *             si l'adresse donnée n'est pas une valeur de 16 bits
      */
-    public int read(int address) throws IllegalArgumentException;
+    int read(int address) throws IllegalArgumentException;
     
     /**
      * Stocke la valeur donnée à l'adresse donnée dans le composant, ou ne fait
@@ -40,7 +40,7 @@ public interface Component {
      *             si la valeur n'est pas une valeur de 8 bits
      *             
      */
-    public void write(int address, int data) throws IllegalArgumentException;
+    void write(int address, int data) throws IllegalArgumentException;
     
     
     
@@ -50,7 +50,7 @@ public interface Component {
      * @param bus
      *            le bus
      */
-    public default void attachTo(Bus bus) {
+    default void attachTo(Bus bus) {
         bus.attach(this);
     }
 }

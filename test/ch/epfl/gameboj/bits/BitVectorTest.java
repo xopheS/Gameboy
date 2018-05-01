@@ -1,17 +1,14 @@
 package ch.epfl.gameboj.bits;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import ch.epfl.gameboj.bits.BitVector;
-import ch.epfl.gameboj.bits.Bits;
-import ch.epfl.gameboj.component.cpu.Cpu;
-import ch.epfl.gameboj.component.memory.Ram;
 
 class BitVectorTest {
 
@@ -71,17 +68,17 @@ class BitVectorTest {
       
     @Test
     void extractWrapped() {
-        assertEquals("0011001100000000001010101011110000000000001111111100000000000000" , v1.extractWrapped(-30, 64).toString());
+        assertEquals("0011001100000000001010101011110000000000001111111100000000000000", v1.extractWrapped(-30, 64).toString());
     }
     
     @Test
     void andWorks() {
-        assertEquals("0000000000110110000000000000000011001100000000001000100011010000" , v1.and(v2).toString());
+        assertEquals("0000000000110110000000000000000011001100000000001000100011010000", v1.and(v2).toString());
     }
     
     @Test
     void orWorks() {
-        assertEquals("0000000011111111000000000000000011011110000000001010101011111100" , v1.or(v2).toString());
+        assertEquals("0000000011111111000000000000000011011110000000001010101011111100", v1.or(v2).toString());
     }
     
     @Test
@@ -91,7 +88,7 @@ class BitVectorTest {
     
     @Test
     void extractWhenModulo32() {
-        assertEquals("00000000111111110000000000000000" , v1.extractWrapped(32, 32).toString());
+        assertEquals("00000000111111110000000000000000", v1.extractWrapped(32, 32).toString());
     }
     
     @Test
@@ -118,7 +115,7 @@ class BitVectorTest {
                 .setByte(1, 0b1010_1010)
                 .setByte(3, 0b1100_1100)
                 .build();
-        assertEquals("11001100000000001010101011110000" , v.toString());
+        assertEquals("11001100000000001010101011110000", v.toString());
     }
     
     @Test

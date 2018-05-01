@@ -54,14 +54,14 @@ public final class S5CpuTest {
                 CpuState.of(0x0001, 0x0000, 0x0000000000000000L),
                 CpuState.of(0x0006, 0x0000, 0x6610000000000000L)).iterator();
         Opcode[][] ops = new Opcode[][] {
-            { NOP, JP_Z_N16 },
-            { XOR_A_A, JP_Z_N16 },
-            { NOP, JP_C_N16 },
-            { SCF, JP_C_N16 },
-            { NOP, JP_NZ_N16 },
-            { XOR_A_A, JP_NZ_N16 },
-            { NOP, JP_NC_N16 },
-            { SCF, JP_NC_N16 },
+            {NOP, JP_Z_N16},
+            {XOR_A_A, JP_Z_N16},
+            {NOP, JP_C_N16},
+            {SCF, JP_C_N16},
+            {NOP, JP_NZ_N16},
+            {XOR_A_A, JP_NZ_N16},
+            {NOP, JP_NC_N16},
+            {SCF, JP_NC_N16},
         };
         for (Opcode[] os: ops) {
             Assembler asm = new Assembler();
@@ -96,14 +96,14 @@ public final class S5CpuTest {
                 CpuState.of(0x0005, 0x0000, 0x6610000000000000L)).iterator();
 
         Opcode[][] ops = new Opcode[][] {
-            { NOP, JR_Z_E8 },
-            { XOR_A_A, JR_Z_E8 },
-            { NOP, JR_C_E8 },
-            { SCF, JR_C_E8 },
-            { NOP, JR_NZ_E8 },
-            { XOR_A_A, JR_NZ_E8 },
-            { NOP, JR_NC_E8 },
-            { SCF, JR_NC_E8 },
+            {NOP, JR_Z_E8},
+            {XOR_A_A, JR_Z_E8},
+            {NOP, JR_C_E8},
+            {SCF, JR_C_E8},
+            {NOP, JR_NZ_E8},
+            {XOR_A_A, JR_NZ_E8},
+            {NOP, JR_NC_E8},
+            {SCF, JR_NC_E8},
         };
         for (Opcode[] os: ops) {
             Assembler asm = new Assembler();
@@ -138,14 +138,14 @@ public final class S5CpuTest {
                 CpuState.of(0x000F, 0xE000, 0x0010DEADDEAD0000L)).iterator();
 
         Opcode[][] ops = new Opcode[][] {
-            { NOP, CALL_Z_N16 },
-            { XOR_A_A, CALL_Z_N16 },
-            { NOP, CALL_C_N16 },
-            { SCF, CALL_C_N16 },
-            { NOP, CALL_NZ_N16 },
-            { XOR_A_A, CALL_NZ_N16 },
-            { NOP, CALL_NC_N16 },
-            { SCF, CALL_NC_N16 },
+            {NOP, CALL_Z_N16},
+            {XOR_A_A, CALL_Z_N16},
+            {NOP, CALL_C_N16},
+            {SCF, CALL_C_N16},
+            {NOP, CALL_NZ_N16},
+            {XOR_A_A, CALL_NZ_N16},
+            {NOP, CALL_NC_N16},
+            {SCF, CALL_NC_N16},
         };
         for (Opcode[] os: ops) {
             Assembler asm = new Assembler();
@@ -213,14 +213,14 @@ public final class S5CpuTest {
                 CpuState.of(0x000F, 0xDFFE, 0x0010000000030000L)).iterator();
 
         Opcode[][] ops = new Opcode[][] {
-            { NOP, RET_Z },
-            { XOR_A_A, RET_Z },
-            { NOP, RET_C },
-            { SCF, RET_C },
-            { NOP, RET_NZ },
-            { XOR_A_A, RET_NZ },
-            { NOP, RET_NC },
-            { SCF, RET_NC },
+            {NOP, RET_Z},
+            {XOR_A_A, RET_Z},
+            {NOP, RET_C},
+            {SCF, RET_C},
+            {NOP, RET_NZ},
+            {XOR_A_A, RET_NZ},
+            {NOP, RET_NC},
+            {SCF, RET_NC},
 
         };
         for (Opcode[] os: ops) {
@@ -542,7 +542,7 @@ public final class S5CpuTest {
             return mgb;
         }
 
-        public MiniGameBoy(Program prog, Bus bus, Cpu cpu) {
+        MiniGameBoy(Program prog, Bus bus, Cpu cpu) {
             this.prog = prog;
             this.bus = bus;
             this.cpu = cpu;

@@ -8,12 +8,18 @@ import ch.epfl.gameboj.GameBoyTest;
 import ch.epfl.gameboj.PreconditionsTest;
 import ch.epfl.gameboj.S6GameBoyTest;*/
 
-public class CIJupiterRunner {
+public final class CIJupiterRunner {
+    private CIJupiterRunner() {
 
-	public static void main(String[] args) {
-		/*Result result = JUnitCore.runClasses(BusTest.class, GameBoyTest.class, PreconditionsTest.class, S6GameBoyTest.class);
-		if (!result.wasSuccessful()) System.exit(1);*/
-		
-		System.exit(0);
-	}
+    }
+
+    public static void main(final String[] args) {
+        /*
+         * Result result = JUnitCore.runClasses(BusTest.class, GameBoyTest.class,
+         * PreconditionsTest.class, S6GameBoyTest.class); if (!result.wasSuccessful())
+         * System.exit(1);
+         */
+
+        System.exit(0);
+    }
 }

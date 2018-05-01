@@ -32,7 +32,7 @@ public class PreconditionsTest {
     void chechBits8FailsForNegativeValues() {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
-            int v = - rng.nextInt(Integer.MAX_VALUE);
+            int v = -rng.nextInt(Integer.MAX_VALUE);
             assertThrows(IllegalArgumentException.class,
                     () -> Preconditions.checkBits8(v));
         }
@@ -58,7 +58,7 @@ public class PreconditionsTest {
     void chechBits16FailsForNegativeValues() {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
-            int v = - rng.nextInt(Integer.MAX_VALUE);
+            int v = -rng.nextInt(Integer.MAX_VALUE);
             assertThrows(IllegalArgumentException.class,
                     () -> Preconditions.checkBits16(v));
         }

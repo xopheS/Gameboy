@@ -282,7 +282,7 @@ class CpuTest {
        bus.write(3, Opcode.EI.encoding);
        bus.write(4, Opcode.LD_B_N8.encoding);
        bus.write(5, 3);
-       bus.write(AddressMap.INTERRUPTS[1], Opcode.LD_A_N8.encoding );
+       bus.write(AddressMap.INTERRUPTS[1], Opcode.LD_A_N8.encoding);
        bus.write(AddressMap.INTERRUPTS[1]+1, 2);
        bus.write(AddressMap.INTERRUPTS[1]+2, Opcode.RETI.encoding);
             
@@ -322,7 +322,7 @@ class CpuTest {
                     
             cycleCpu(cpu,Opcode.LD_A_N8.cycles + Opcode.EI.cycles + 5 + Opcode.LD_B_N8.cycles + Opcode.RET.cycles + Opcode.LD_SP_N16.cycles);     
             assertArrayEquals(
-                    new int[] { 6, 0xFFFF, 0xFF, 0, 12, 0, 0, 0, 0, 0},
+                    new int[] {6, 0xFFFF, 0xFF, 0, 12, 0, 0, 0, 0, 0},
                     cpu._testGetPcSpAFBCDEHL());
         }
         
@@ -365,7 +365,7 @@ class CpuTest {
             
             cycleCpu(cpu,Opcode.LD_A_N8.cycles + Opcode.EI.cycles + 5 + Opcode.LD_B_N8.cycles + Opcode.RET.cycles + Opcode.LD_SP_N16.cycles);     
             assertArrayEquals(
-                    new int[] { 6, 0xFFFF, 0xFF, 0, 12, 0, 0, 0, 0, 0},
+                    new int[] {6, 0xFFFF, 0xFF, 0, 12, 0, 0, 0, 0, 0},
                     cpu._testGetPcSpAFBCDEHL());
         }
         
@@ -384,7 +384,7 @@ class CpuTest {
             
             cycleCpu(cpu,Opcode.LD_A_N8.cycles + Opcode.EI.cycles);     
             assertArrayEquals(
-                    new int[] { 3, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
+                    new int[] {3, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
                     cpu._testGetPcSpAFBCDEHL());
         }
     }   

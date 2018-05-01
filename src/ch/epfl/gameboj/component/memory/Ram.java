@@ -38,13 +38,16 @@ public final class Ram {
     /**
      * Retourne l'octet se trouvant à l'index donné, sous la forme d'une valeur
      * comprise entre 0 et 0xFF
+     * 
+     * @param index
+     * l'index de la donnée à lire
      *
      * @return entier entre 0 et 0xFF
      * @throws IndexOutOfBoundsException
      *             si l'index est invalide (négatif ou supérieur à la taille du
      *             tableau - 1)
      */
-    public int read(int index) {
+    public int read(final int index) {
         return Byte.toUnsignedInt(data[index]);
     }
     
@@ -65,7 +68,7 @@ public final class Ram {
      *             si la valeur n'est pas un byte (une valeur de 8 bits)
      */
     public void write(int index, int value) {  
-        data[index] = (byte)Preconditions.checkBits8(value);      
+        data[index] = (byte) Preconditions.checkBits8(value);
     }
     
 }

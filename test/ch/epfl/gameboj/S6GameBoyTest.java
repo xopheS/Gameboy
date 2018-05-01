@@ -74,10 +74,10 @@ public final class S6GameBoyTest {
         assertEquals(BLARGGS_TESTS_EXPECTED_OUTPUT, s.toString());
     }
 
-    private final static class RecordingComponent implements Component {
+    private static final class RecordingComponent implements Component {
         private final StringBuilder buf;
 
-        public RecordingComponent(StringBuilder buf) {
+        RecordingComponent(StringBuilder buf) {
             this.buf = buf;
         }
 
@@ -93,53 +93,100 @@ public final class S6GameBoyTest {
         }
     }
 
-    private static String BLARGGS_TESTS_EXPECTED_OUTPUT = "01-special\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "02-interrupts\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "03-op sp,hl\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "04-op r,imm\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "05-op rp\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "06-ld r,r\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "07-jr,jp,call,ret,rst\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "08-misc instrs\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "09-op r,r\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "10-bit ops\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "11-op a,(hl)\n" + 
-            "\n" + 
-            "\n" + 
-            "Passed\n" + 
-            "instr_timing\n" + 
-            "\n" + 
-            "\n" + 
+    private static String BLARGGS_TESTS_EXPECTED_OUTPUT = "01-special\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "02-interrupts\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "03-op sp,hl\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "04-op r,imm\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "05-op rp\n" 
+    + 
+            "\n" 
+    + 
+            "\n"
+    + 
+            "Passed\n" 
+    + 
+            "06-ld r,r\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "07-jr,jp,call,ret,rst\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "08-misc instrs\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "09-op r,r\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n"
+    + 
+            "10-bit ops\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "11-op a,(hl)\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
+            "Passed\n" 
+    + 
+            "instr_timing\n" 
+    + 
+            "\n" 
+    + 
+            "\n" 
+    + 
             "Passed\n";
 
     // Blargg's tests, gzipped and encoded in base64

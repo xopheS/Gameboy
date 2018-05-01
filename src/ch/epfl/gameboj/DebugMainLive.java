@@ -21,12 +21,10 @@ import java.io.IOException;
 
 public final class DebugMainLive extends Application {
 
-    /** Configuration */
-
     private static final String ROM_PATH = "ROM files/flappyboy.gb";
 
     private static final float EMULATION_SPEED = 1f;
-    private static final int CYCLES_PER_ITERATION = (int)(17_556 * EMULATION_SPEED);
+    private static final int CYCLES_PER_ITERATION = (int) (17_556 * EMULATION_SPEED);
     private static final int[] COLOR_MAP = new int[] {
             0xFF_FF_FF, 0xD3_D3_D3, 0xA9_A9_A9, 0x00_00_00
     };
@@ -67,18 +65,19 @@ public final class DebugMainLive extends Application {
         }.start();
     }
 
-    private static final Image getImage(GameBoy gb) {
+    private static Image getImage(GameBoy gb) {
         LcdImage lcdImage = gb.lcdController().currentImage();
         BufferedImage bufferedImage = new BufferedImage(lcdImage.getWidth(),
                 lcdImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-        for (int y = 0; y < lcdImage.getHeight(); ++y)
-            for (int x = 0; x < lcdImage.getWidth(); ++x)
+        for (int y = 0; y < lcdImage.getHeight(); ++y) {
+            for (int x = 0; x < lcdImage.getWidth(); ++x) {
                 bufferedImage.setRGB(x, y, COLOR_MAP[lcdImage.get(x, y)]);
+            }
+        }
         return SwingFXUtils.toFXImage(bufferedImage, null);
     }
 
     public static void main(String[] args) {
         Application.launch(args);
     }
-
 }

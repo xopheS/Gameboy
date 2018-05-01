@@ -76,6 +76,8 @@ public class LcdImageLine {
             case 3:
                 mask = LSB.and(MSB);
                 break;
+            default:
+                break;
             }
 
             switch (color) {
@@ -97,6 +99,8 @@ public class LcdImageLine {
                 msbCopy = msbCopy.or(mask);
                 lsbCopy = lsbCopy.or(mask);
             } break;
+            default:
+                break;
 
             }
         }
@@ -106,13 +110,12 @@ public class LcdImageLine {
 
     // other & opacity | this & notOpacity
     public LcdImageLine below(LcdImageLine other) {
-        
         Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
         
         BitVector newOpacity = opacity.or(other.opacity);
         BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
         BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
-        return new LcdImageLine(newMSB ,newLSB ,newOpacity);
+        return new LcdImageLine(newMSB, newLSB, newOpacity);
     } 
 
     public LcdImageLine below(LcdImageLine other, BitVector opacity) {
@@ -148,7 +151,7 @@ public class LcdImageLine {
         return Objects.hash(MSB, LSB, opacity);
     }
 
-    public final static class Builder {
+    public static final class Builder {
 
         BitVector.Builder msbBuilder;
         BitVector.Builder lsbBuilder;

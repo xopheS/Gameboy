@@ -79,8 +79,10 @@ public final class RamController implements Component {
      *             si l'adresse n'est pas une valeur de 16 bits
      */
     @Override
-    public int read(int address) {
-        if(Preconditions.checkBits16(address) < startAddress || address >= endAddress) return NO_DATA;
+    public int read(final int address) {
+        if (Preconditions.checkBits16(address) < startAddress || address >= endAddress) {
+            return NO_DATA;
+        }
         return ram.read(address - startAddress);
     }
 
@@ -99,9 +101,8 @@ public final class RamController implements Component {
      *             
      */
     @Override
-    public void write(int address, int data) {
-        if(Preconditions.checkBits16(address) >= startAddress && address < endAddress)
-        {
+    public void write(final int address, final int data) {
+        if (Preconditions.checkBits16(address) >= startAddress && address < endAddress) {
             ram.write(address - startAddress, Preconditions.checkBits8(data));
         }  
     }

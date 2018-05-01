@@ -136,7 +136,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.add(v1, 0, false);
@@ -157,7 +158,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.sub(v1, 0, false);
@@ -178,7 +180,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.bcdAdjust(v1, false, false, false);
@@ -196,7 +199,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.and(v1, 0);
@@ -217,7 +221,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.or(v1, 0);
@@ -238,7 +243,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.xor(v1, 0);
@@ -259,7 +265,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.shiftLeft(v1);
@@ -277,7 +284,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.shiftRightA(v1);
@@ -295,7 +303,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.shiftRightL(v1);
@@ -313,7 +322,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.rotate(Alu.RotDir.LEFT, v1);
@@ -331,7 +341,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.rotate(Alu.RotDir.LEFT, v1, false);
@@ -349,7 +360,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.swap(v1);
@@ -362,28 +374,13 @@ class AluTest {
         test("testBit", "TST", INT_8, INT_3, Alu::testBit);
     }
 
-    //    @Test
-    //    void testBitProducesSameResultsAsReferenceOrOpposite() throws IOException {
-    //        try (DataInputStream in = openStream("TST")) {
-    //            for (int v1: INT_8) {
-    //                for (int v2: INT_3) {
-    //                    int expected = in.readInt();
-    //                    int expectedWithZInverted = expected ^ 0b1000_0000;
-    //                    int actual = ((IntBinaryOperator) Alu::testBit).applyAsInt(v1, v2);
-    //                    assertTrue(actual == expected || actual == expectedWithZInverted,
-    //                            String.format("Alu.%s(%d,%d), expected 0x%X or 0x%X, actual 0x%X",
-    //                                    "testBit", v1, v2, expected, expectedWithZInverted, actual));
-    //                }
-    //            }
-    //        }
-    //    }
-
     @Test
     void testBitFailsOnNon8BitsValues() {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.testBit(v1, 0);
@@ -396,7 +393,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0b111);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0b111);
             int v1 = v;
             assertThrows(IndexOutOfBoundsException.class, () -> {
                 Alu.testBit(0, v1);
@@ -415,7 +413,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFFFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFFFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.add16L(v1, 0);
@@ -436,7 +435,8 @@ class AluTest {
         Random rng = newRandom();
         for (int i = 0; i < RANDOM_ITERATIONS; ++i) {
             int v;
-            do { v = rng.nextInt(); } while (0 <= v && v <= 0xFFFF);
+            do { v = rng.nextInt(); } 
+            while (0 <= v && v <= 0xFFFF);
             int v1 = v;
             assertThrows(IllegalArgumentException.class, () -> {
                 Alu.add16H(v1, 0);

@@ -69,7 +69,7 @@ public final class Assembler {
     private static class ProgRom implements Component {
         private final byte[] p;
 
-        public ProgRom(byte[] p) {
+        ProgRom(byte[] p) {
             this.p = Arrays.copyOf(p, p.length);
         }
 

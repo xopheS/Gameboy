@@ -49,7 +49,7 @@ public final class CpuState {
     }
 
     public int[] toArray() {
-        return new int[] { pc, sp, a, f, b, c, d, e, h, l };
+        return new int[] {pc, sp, a, f, b, c, d, e, h, l};
     }
     
     public int pc() { return pc; }

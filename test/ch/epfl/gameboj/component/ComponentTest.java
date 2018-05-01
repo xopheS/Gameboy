@@ -9,10 +9,8 @@ import java.util.Random;
 import static ch.epfl.test.TestRandomizer.*;
 import org.junit.jupiter.api.Test;
 
-import ch.epfl.gameboj.component.Component;
-
 public interface ComponentTest {
-    abstract Component newComponent();
+    Component newComponent();
 
     @Test
     default void readFailsForInvalidAddress() {

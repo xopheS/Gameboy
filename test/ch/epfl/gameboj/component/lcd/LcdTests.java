@@ -5,12 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.bits.BitVector;
-import ch.epfl.gameboj.component.lcd.LcdImage;
-import ch.epfl.gameboj.component.lcd.LcdImageLine;
 
 public class LcdTests {
 

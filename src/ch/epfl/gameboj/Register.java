@@ -15,14 +15,14 @@ public interface Register {
      * 
      * @return l'index du registre
      */
-    public int ordinal();
+    int ordinal();
 
     /**
      * Nom alternatif pour {@link #ordinal}
      * 
      * @return l'index du registre
      */
-    public default int index() {
+    default int index() {
         return ordinal();
     }
 }
