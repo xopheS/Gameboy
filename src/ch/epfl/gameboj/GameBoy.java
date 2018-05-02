@@ -85,6 +85,7 @@ public class GameBoy {
             timer.cycle(cycles);
             lcdController.cycle(cycles);
             cpu.cycle(cycles);
+            //System.out.println(joypad.P1);
             cycles++;
         }
     }

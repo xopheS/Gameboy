@@ -22,10 +22,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-import javax.swing.Action;
-import javax.swing.JComponent;
-import javax.swing.KeyStroke;
-
 /**
  * 
  * @author Ulysse Ramage
@@ -42,7 +38,8 @@ public final class DebugMainLive extends Application {
         0xFF_FF_FF, 0xD3_D3_D3, 0xA9_A9_A9, 0x00_00_00
     };
 
-    @Override public void start(Stage stage) throws IOException, InterruptedException {
+    @Override 
+    public void start(Stage stage) throws IOException, InterruptedException {
         // Create GameBoy
         File romFile = new File(ROM_PATH);
         GameBoy gb = new GameBoy(Cartridge.ofFile(romFile));
@@ -57,6 +54,7 @@ public final class DebugMainLive extends Application {
         imageView.fitWidthProperty().bind(scene.widthProperty());
         imageView.fitHeightProperty().bind(scene.heightProperty());
         scene.setFill(Color.BLACK);
+        setInput(scene, jp);
         HBox box = new HBox();
         box.getChildren().add(imageView);
         root.getChildren().add(box);
@@ -68,89 +66,6 @@ public final class DebugMainLive extends Application {
         stage.minHeightProperty().bind(scene.widthProperty());
         stage.setTitle("gameboj");
         stage.show();
-        
-        // Set up keyboard input
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.UP) {
-                jp.keyPressed(Key.UP);
-            }
-        });
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.LEFT) {
-                jp.keyPressed(Key.LEFT);
-            }
-        });
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.RIGHT) {
-                jp.keyPressed(Key.RIGHT);
-            }
-        });
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.DOWN) {
-                jp.keyPressed(Key.DOWN);
-            }
-        });
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.A) {
-                jp.keyPressed(Key.A);
-            }
-        });
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.B) {
-                jp.keyPressed(Key.B);
-            }
-        });
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.S) {
-                jp.keyPressed(Key.SELECT);
-            }
-        });
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.X) {
-                jp.keyPressed(Key.START);
-            }
-        });
-        
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.UP) {
-                jp.keyReleased(Key.UP);
-            }
-        });
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.LEFT) {
-                jp.keyReleased(Key.LEFT);
-            }
-        });
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.RIGHT) {
-                jp.keyReleased(Key.RIGHT);
-            }
-        });
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.DOWN) {
-                jp.keyReleased(Key.DOWN);
-            }
-        });
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.A) {
-                jp.keyReleased(Key.A);
-            }
-        });
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.B) {
-                jp.keyReleased(Key.B);
-            }
-        });
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.S) {
-                jp.keyReleased(Key.SELECT);
-            }
-        });
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.X) {
-                jp.keyReleased(Key.START);
-            }
-        });
 
         // Update GameBoy
         new AnimationTimer() {
@@ -160,6 +75,70 @@ public final class DebugMainLive extends Application {
                 imageView.setImage(getImage(gb));
             }
         }.start();
+    }
+    
+    private static void setInput(Scene scene, Joypad jp) {
+     // Set up keyboard input
+        scene.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+            case UP:
+                jp.keyPressed(Key.UP);
+                break;
+            case RIGHT:
+                jp.keyPressed(Key.RIGHT);
+                break;
+            case DOWN:
+                jp.keyPressed(Key.DOWN);
+                break;
+            case LEFT:
+                jp.keyPressed(Key.LEFT);
+                break;
+            case A:
+                jp.keyPressed(Key.A);
+                break;
+            case B:
+                jp.keyPressed(Key.B);
+                break;
+            case S:
+                jp.keyPressed(Key.SELECT);
+                break;
+            case X:
+                jp.keyPressed(Key.START);
+                break;
+            case Q:
+                System.exit(0);
+                break;
+            }
+        });
+        
+        scene.setOnKeyReleased(e -> {
+            switch (e.getCode()) {
+            case UP:
+                jp.keyReleased(Key.UP);
+                break;
+            case RIGHT:
+                jp.keyReleased(Key.RIGHT);
+                break;
+            case DOWN:
+                jp.keyReleased(Key.DOWN);
+                break;
+            case LEFT:
+                jp.keyReleased(Key.LEFT);
+                break;
+            case A:
+                jp.keyReleased(Key.A);
+                break;
+            case B:
+                jp.keyReleased(Key.B);
+                break;
+            case S:
+                jp.keyReleased(Key.SELECT);
+                break;
+            case X:
+                jp.keyReleased(Key.START);
+                break;
+            }
+        });
     }
 
     private static Image getImage(GameBoy gb) {

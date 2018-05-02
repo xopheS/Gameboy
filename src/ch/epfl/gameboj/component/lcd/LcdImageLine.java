@@ -174,12 +174,10 @@ public class LcdImageLine {
 
         Preconditions.checkArgument(other.size() == size(), "The two image lines must have the same length");
         int size = size();
-        BitVector lsbModified = ((LSB.shift(size - n)).extractWrapped(-n, size))
-                .or(other.LSB.extractZeroExtended(n, size).shift(n));
-        BitVector msbModified = ((MSB.shift(size - n)).extractWrapped(-n, size))
-                .or(other.MSB.extractZeroExtended(n, size).shift(n));
-        BitVector opacityModified = ((opacity.shift(size - n)).extractWrapped(-n, size))
-                .or(other.opacity.extractZeroExtended(n, size).shift(n));
+        
+        BitVector lsbModified = ((LSB.shift(size - n)).extractWrapped(-n, size)).or(other.LSB.extractZeroExtended(n, size).shift(n));
+        BitVector msbModified = ((MSB.shift(size - n)).extractWrapped(-n, size)).or(other.MSB.extractZeroExtended(n, size).shift(n));
+        BitVector opacityModified = ((opacity.shift(size - n)).extractWrapped(-n, size)).or(other.opacity.extractZeroExtended(n, size).shift(n));
 
         return new LcdImageLine(msbModified, lsbModified, opacityModified);
     }
