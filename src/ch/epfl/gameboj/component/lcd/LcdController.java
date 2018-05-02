@@ -109,7 +109,6 @@ public final class LcdController implements Component, Clocked {
             }
             nextNonIdleCycle++; 
         } else if (nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
-            System.out.println("Power on, cycle " + cycle);
             lineStartT = cycle;
             nextNonIdleCycle = cycle + 20;
             setMode(2);
@@ -204,8 +203,8 @@ public final class LcdController implements Component, Clocked {
                 }
             }
             
-            Integer[] bgSpriteIndexes = bgSpriteIndex.toArray(new Integer[10]);
-            Integer[] fgSpriteIndexes = fgSpriteIndex.toArray(new Integer[10]);
+            Integer[] bgSpriteIndexes = bgSpriteIndex.toArray(new Integer[0]);
+            Integer[] fgSpriteIndexes = fgSpriteIndex.toArray(new Integer[0]);
             
             nextLine = computeSpriteLine(bgSpriteIndexes);
             
@@ -291,13 +290,13 @@ public final class LcdController implements Component, Clocked {
     }
     
     private LcdImageLine computeSpriteLine(Integer[] spriteIndexes) { 
-        LcdImageLine[] spriteLines = new LcdImageLine[MAX_SPRITES];
+        LcdImageLine[] spriteLines = new LcdImageLine[spriteIndexes.length];
         LcdImageLine spriteLine = EMPTY_BG_LINE;
         
         for (int i = 0; i < spriteIndexes.length; ++i) {
             LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(BG_SIZE);
             LcdImageLine indSpriteLine;
-            boolean spritePalette = Bits.test(read(AddressMap.OAM_START + spriteIndexes[i] * 4 + SPRITE_ATTR.MISC.ordinal()), MISC.PALETTE);
+            boolean spritePalette = Bits.test(read(AddressMap.OAM_START + spriteIndexes[i] * 4 + SPRITE_ATTR.MISC.ordinal()), MISC.PALETTE.index());
             int spriteTileIndex = read(AddressMap.OAM_START + spriteIndexes[i] * 4 + SPRITE_ATTR.TILE_INDEX.ordinal());
             int spriteX = read(AddressMap.OAM_START + spriteIndexes[i] * 4 + SPRITE_ATTR.X_COORD.ordinal()) - SPRITE_XOFFSET;
             
@@ -310,6 +309,8 @@ public final class LcdController implements Component, Clocked {
             } else {
                 indSpriteLine.mapColors(lcdRegs.get(LCDReg.OBP0));
             }
+            
+            spriteLines[i] = indSpriteLine;
         }
         
         for (int i = 0; i < spriteLines.length; ++i) {
@@ -409,7 +410,6 @@ public final class LcdController implements Component, Clocked {
                     setMode(0);
                     modifyLYorLYC(LCDReg.LY, 0);
                     nextNonIdleCycle = Long.MAX_VALUE;
-                    System.out.println("Power off");
                 }
                 if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && !winActive) {
                     winActive = true;

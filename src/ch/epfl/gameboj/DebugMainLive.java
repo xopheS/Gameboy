@@ -1,5 +1,7 @@
 package ch.epfl.gameboj;
 
+import ch.epfl.gameboj.component.Joypad;
+import ch.epfl.gameboj.component.Joypad.Key;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.component.lcd.LcdImage;
@@ -11,6 +13,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -19,6 +22,16 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.Action;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
+
+/**
+ * 
+ * @author Ulysse Ramage
+ * @author David Cian (added input module)
+ *
+ */
 public final class DebugMainLive extends Application {
 
     private static final String ROM_PATH = "ROM files/flappyboy.gb";
@@ -33,6 +46,7 @@ public final class DebugMainLive extends Application {
         // Create GameBoy
         File romFile = new File(ROM_PATH);
         GameBoy gb = new GameBoy(Cartridge.ofFile(romFile));
+        Joypad jp = gb.joypad();
 
         // Create Scene
         ImageView imageView = new ImageView();
@@ -54,6 +68,89 @@ public final class DebugMainLive extends Application {
         stage.minHeightProperty().bind(scene.widthProperty());
         stage.setTitle("gameboj");
         stage.show();
+        
+        // Set up keyboard input
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.UP) {
+                jp.keyPressed(Key.UP);
+            }
+        });
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.LEFT) {
+                jp.keyPressed(Key.LEFT);
+            }
+        });
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.RIGHT) {
+                jp.keyPressed(Key.RIGHT);
+            }
+        });
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.DOWN) {
+                jp.keyPressed(Key.DOWN);
+            }
+        });
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.A) {
+                jp.keyPressed(Key.A);
+            }
+        });
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.B) {
+                jp.keyPressed(Key.B);
+            }
+        });
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.S) {
+                jp.keyPressed(Key.SELECT);
+            }
+        });
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.X) {
+                jp.keyPressed(Key.START);
+            }
+        });
+        
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.UP) {
+                jp.keyReleased(Key.UP);
+            }
+        });
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.LEFT) {
+                jp.keyReleased(Key.LEFT);
+            }
+        });
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.RIGHT) {
+                jp.keyReleased(Key.RIGHT);
+            }
+        });
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.DOWN) {
+                jp.keyReleased(Key.DOWN);
+            }
+        });
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.A) {
+                jp.keyReleased(Key.A);
+            }
+        });
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.B) {
+                jp.keyReleased(Key.B);
+            }
+        });
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.S) {
+                jp.keyReleased(Key.SELECT);
+            }
+        });
+        scene.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.X) {
+                jp.keyReleased(Key.START);
+            }
+        });
 
         // Update GameBoy
         new AnimationTimer() {
