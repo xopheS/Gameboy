@@ -38,6 +38,10 @@ public final class DebugMainLive extends Application {
         0xFF_FF_FF, 0xD3_D3_D3, 0xA9_A9_A9, 0x00_00_00
     };
 
+    public static void main(String[] args) {
+        Application.launch(args);
+    }
+    
     @Override 
     public void start(Stage stage) throws IOException, InterruptedException {
         // Create GameBoy
@@ -77,70 +81,6 @@ public final class DebugMainLive extends Application {
         }.start();
     }
     
-    private static void setInput(Scene scene, Joypad jp) {
-     // Set up keyboard input
-        scene.setOnKeyPressed(e -> {
-            switch (e.getCode()) {
-            case UP:
-                jp.keyPressed(Key.UP);
-                break;
-            case RIGHT:
-                jp.keyPressed(Key.RIGHT);
-                break;
-            case DOWN:
-                jp.keyPressed(Key.DOWN);
-                break;
-            case LEFT:
-                jp.keyPressed(Key.LEFT);
-                break;
-            case A:
-                jp.keyPressed(Key.A);
-                break;
-            case B:
-                jp.keyPressed(Key.B);
-                break;
-            case S:
-                jp.keyPressed(Key.SELECT);
-                break;
-            case X:
-                jp.keyPressed(Key.START);
-                break;
-            case Q:
-                System.exit(0);
-                break;
-            }
-        });
-        
-        scene.setOnKeyReleased(e -> {
-            switch (e.getCode()) {
-            case UP:
-                jp.keyReleased(Key.UP);
-                break;
-            case RIGHT:
-                jp.keyReleased(Key.RIGHT);
-                break;
-            case DOWN:
-                jp.keyReleased(Key.DOWN);
-                break;
-            case LEFT:
-                jp.keyReleased(Key.LEFT);
-                break;
-            case A:
-                jp.keyReleased(Key.A);
-                break;
-            case B:
-                jp.keyReleased(Key.B);
-                break;
-            case S:
-                jp.keyReleased(Key.SELECT);
-                break;
-            case X:
-                jp.keyReleased(Key.START);
-                break;
-            }
-        });
-    }
-
     private static Image getImage(GameBoy gb) {
         LcdImage lcdImage = gb.lcdController().currentImage();
         BufferedImage bufferedImage = new BufferedImage(lcdImage.getWidth(),
@@ -152,8 +92,68 @@ public final class DebugMainLive extends Application {
         }
         return SwingFXUtils.toFXImage(bufferedImage, null);
     }
-
-    public static void main(String[] args) {
-        Application.launch(args);
-    }
+    
+    private static void setInput(Scene scene, Joypad jp) {
+        // Set up keyboard input
+           scene.setOnKeyPressed(e -> {
+               switch (e.getCode()) {
+               case UP:
+                   jp.keyPressed(Key.UP);
+                   break;
+               case RIGHT:
+                   jp.keyPressed(Key.RIGHT);
+                   break;
+               case DOWN:
+                   jp.keyPressed(Key.DOWN);
+                   break;
+               case LEFT:
+                   jp.keyPressed(Key.LEFT);
+                   break;
+               case A:
+                   jp.keyPressed(Key.A);
+                   break;
+               case B:
+                   jp.keyPressed(Key.B);
+                   break;
+               case S:
+                   jp.keyPressed(Key.SELECT);
+                   break;
+               case X:
+                   jp.keyPressed(Key.START);
+                   break;
+               case Q:
+                   System.exit(0);
+                   break;
+               }
+           });
+           
+           scene.setOnKeyReleased(e -> {
+               switch (e.getCode()) {
+               case UP:
+                   jp.keyReleased(Key.UP);
+                   break;
+               case RIGHT:
+                   jp.keyReleased(Key.RIGHT);
+                   break;
+               case DOWN:
+                   jp.keyReleased(Key.DOWN);
+                   break;
+               case LEFT:
+                   jp.keyReleased(Key.LEFT);
+                   break;
+               case A:
+                   jp.keyReleased(Key.A);
+                   break;
+               case B:
+                   jp.keyReleased(Key.B);
+                   break;
+               case S:
+                   jp.keyReleased(Key.SELECT);
+                   break;
+               case X:
+                   jp.keyReleased(Key.START);
+                   break;
+               }
+           });
+       }
 }

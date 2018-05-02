@@ -154,11 +154,9 @@ public class LcdImageLine {
      */
     public LcdImageLine below(LcdImageLine other, BitVector opacity) {
 
-        Preconditions.checkArgument(other.size() == size() && opacity.size() == size(),
-                "The line and the opacity vector must have the same length");
+        Preconditions.checkArgument(other.size() == size() && opacity.size() == size(), "The line and the opacity vector must have the same length");
 
-        return new LcdImageLine(other.MSB.and(opacity).or(MSB.and(opacity.not())),
-                other.LSB.and(opacity).or(LSB.and(opacity.not())), this.opacity);
+        return new LcdImageLine(other.MSB.and(opacity).or(MSB.and(opacity.not())), other.LSB.and(opacity).or(LSB.and(opacity.not())), this.opacity);
     }
 
     /**

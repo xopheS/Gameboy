@@ -362,8 +362,14 @@ public final class LcdController implements Component, Clocked {
     }
     
     private int tileTypeAddress(int tileTypeIndex, int lineIndex, boolean vFlipped) {
+        boolean isDouble = lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE);
+        
         if (vFlipped) {
-            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * 16 + (TILE_SIZE - Math.floorMod(lineIndex, TILE_SIZE)) * 2;
+            if (isDouble) {
+                return AddressMap.TILE_SOURCE[1] + tileTypeIndex * 16 + (TILE_SIZE * 2 - Math.floorMod(lineIndex, TILE_SIZE)) * 2;
+            } else {
+                return AddressMap.TILE_SOURCE[1] + tileTypeIndex * 16 + (TILE_SIZE - Math.floorMod(lineIndex, TILE_SIZE)) * 2;
+            }
         } else {
             return AddressMap.TILE_SOURCE[1] + tileTypeIndex * 16 + Math.floorMod(lineIndex, TILE_SIZE) * 2;
         }
@@ -391,7 +397,8 @@ public final class LcdController implements Component, Clocked {
             intersectIndex[i] = intersect[i];
         }
         
-        Arrays.sort(intersectIndex);
+        //TODO reverse order or natural order?
+        Arrays.sort(intersectIndex, Comparator.<Integer>naturalOrder().reversed());
         
         return intersectIndex;
     }

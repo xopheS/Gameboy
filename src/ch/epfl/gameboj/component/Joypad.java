@@ -20,8 +20,6 @@ public final class Joypad implements Component {
     public enum KBState implements Bit { COL0, COL1, COL2, COL3, LINE0, LINE1, UNUSED_6, UNUSED_7 }
     
     private static final int LINE_LENGTH = 4;
-    
-    //TODO why are the lines always inactive despite being written to?
 
     /**
      * Construit un Joypad.
@@ -71,9 +69,7 @@ public final class Joypad implements Component {
         updateP1();
     }
 
-    private void updateP1() {        
-        //P1 = 0b0010_0000;
-        
+    private void updateP1() {               
         if (Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
             P1 = (P1 & 0b1111_0000) | line0;
         } else if (!Bits.test(P1, KBState.LINE0) && Bits.test(P1, KBState.LINE1)) {
