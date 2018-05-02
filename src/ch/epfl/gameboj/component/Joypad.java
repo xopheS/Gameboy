@@ -51,8 +51,6 @@ public final class Joypad implements Component {
         if (Bits.clip(4, tmp) != Bits.clip(4, P1)) {
             cpu.requestInterrupt(Interrupt.JOYPAD);
         }
-        
-        System.out.println("press key " + k.name());
     }
 
     /**
