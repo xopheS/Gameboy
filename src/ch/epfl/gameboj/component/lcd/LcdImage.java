@@ -29,11 +29,11 @@ public class LcdImage {
     }
 
     public int getWidth() {
-        return this.width;
+        return width;
     }
 
     public int getHeight() {
-        return this.height;
+        return height;
     }
 
     /**
@@ -46,8 +46,7 @@ public class LcdImage {
      * @return la couleur du pixel
      */
     public int get(int x, int y) {
-        Preconditions.checkArgument(x < width && x >= 0 && y < height && y >= 0,
-                "Pixel coordinates must be within the bounds of the screen");
+        Preconditions.checkArgument(x < width && x >= 0 && y < height && y >= 0, "Pixel coordinates must be within the bounds of the screen");
         int lsb = imageLines.get(y).getLsb().testBit(x) ? 1 : 0;
         int msb = (imageLines.get(y).getMsb().testBit(x) ? 1 : 0) << 1;
         return (lsb | msb);
@@ -70,8 +69,8 @@ public class LcdImage {
     }
 
     public static final class Builder {
-        int height;
-        int width;
+        int builderHeight;
+        int builderWidth;
         List<LcdImageLine> imageLines;
 
         /**
@@ -83,8 +82,8 @@ public class LcdImage {
          * la hauteur de l'image à construire
          */
         public Builder(int width, int height) {
-            this.width = width;
-            this.height = height;
+            builderWidth = width;
+            builderHeight = height;
             imageLines = new ArrayList<>(height);
             for (int i = 0; i < height; i++) {
                 imageLines.add(new LcdImageLine(new BitVector(width), new BitVector(width), new BitVector(width)));
@@ -101,13 +100,13 @@ public class LcdImage {
          * @return le constructeur
          */
         public Builder setLine(int index, LcdImageLine l) {
-            Preconditions.checkArgument(index < height);
+            Preconditions.checkArgument(index < builderHeight);
             imageLines.set(index, l);
             return this;
         }
 
         public LcdImage build() {
-            return new LcdImage(width, height, imageLines);
+            return new LcdImage(builderWidth, builderHeight, imageLines);
         }
     }
 }

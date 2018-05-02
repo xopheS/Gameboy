@@ -189,7 +189,7 @@ public final class BitVector {
     }
 
     public BitVector shift(int distance) {
-        return extractZeroExtended(-distance, size());
+        return extractZeroExtended(distance, size());
     }
 
     @Override

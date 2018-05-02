@@ -30,8 +30,6 @@ import java.io.IOException;
  */
 public final class DebugMainLive extends Application {
 
-    private static final String ROM_PATH = "ROM files/flappyboy.gb";
-
     private static final float EMULATION_SPEED = 1f;
     private static final int CYCLES_PER_ITERATION = (int) (17_556 * EMULATION_SPEED);
     private static final int[] COLOR_MAP = new int[] {
@@ -45,7 +43,7 @@ public final class DebugMainLive extends Application {
     @Override 
     public void start(Stage stage) throws IOException, InterruptedException {
         // Create GameBoy
-        File romFile = new File(ROM_PATH);
+        File romFile = new File(getParameters().getRaw().get(0));
         GameBoy gb = new GameBoy(Cartridge.ofFile(romFile));
         Joypad jp = gb.joypad();
 
