@@ -11,13 +11,15 @@ public final class Joypad implements Component {
 
     private final Cpu cpu;
 
-    private int P1 = 0;
+    private int P1 = 0b00_11_1111;
+    private int line0 = 0;
     private int line1 = 0;
-    private int line2 = 0;
 
     public enum Key { RIGHT, LEFT, UP, DOWN, A, B, SELECT, START }
     
     public enum KBState implements Bit { COL0, COL1, COL2, COL3, LINE0, LINE1, UNUSED_6, UNUSED_7 }
+    
+    private static final int LINE_LENGTH = 4;
 
     /**
      * Construit un Joypad.
@@ -26,86 +28,65 @@ public final class Joypad implements Component {
      * le cpu avec lequel le Joypad interagit
      */
     public Joypad(Cpu cpu) {
-
         this.cpu = cpu;
     }
 
     /**
-     * a faire.
+     * Permet de simuler l'appui d'une touche.
      * 
      * @param k
-     * ?
+     * la touche appuyée
      */
     public void keyPressed(Key k) {
-
-        int lineSize = Key.values().length / 2;
-        int index = k.ordinal();
-        int lastP1 = P1;
-
-        if (index < lineSize) {
-            Bits.set(line1, index, true);
+        int tmp = P1;
+        
+        if (k.ordinal() < LINE_LENGTH) {
+            line0 = Bits.set(line0, k.ordinal(), true);
         } else {
-            Bits.set(line2, index % lineSize, true);
+            line1 = Bits.set(line1, k.ordinal() % LINE_LENGTH, true);
         }
-
-        switch (Bits.extract(P1, 4, 2)) {
-            case 0b00:
-                break;
-            case 0b01:
-                P1 |= line1;
-                break;
-            case 0b10:
-                P1 |= line2;
-                break;
-            case 0b11:
-                P1 |= (line1 | line2);
-                break;
-            default:
-                break;
-        }
-
-        if (Bits.clip(4, P1) != Bits.clip(4, lastP1)) {
+        
+        updateP1(line0, line1);
+        
+        if (Bits.clip(4, tmp) != Bits.clip(4, P1)) {
             cpu.requestInterrupt(Interrupt.JOYPAD);
         }
     }
 
     /**
-     * a faire.
-     * @param k ?
+     * Permet de simuler l'éliberation d'une touche.
+     * 
+     * @param k 
+     * la touche libérée
      */
     public void keyReleased(Key k) {
-
-        int lineSize = Key.values().length / 2;
-        int index = k.ordinal();
-        int lastP1 = P1;
-
-        if (index < lineSize) {
-            Bits.set(line1, index, false);
+        int tmp = P1;
+        
+        if (k.ordinal() < LINE_LENGTH) {
+            line0 = Bits.set(line0, k.ordinal(), false);
         } else {
-            Bits.set(line2, index % lineSize, false);
+            line1 = Bits.set(line1, k.ordinal() % LINE_LENGTH, false);
         }
-
-        switch (Bits.extract(P1, 4, 2)) {
-            case 0b00:
-                break;
-            case 0b01:
-                P1 &= line1;
-                break;
-            case 0b10:
-                P1 &= line2;
-                break;
-            case 0b11:
-                P1 &= line1 | line2;
-                break;
-            default:
-                break;
-        }
-
-        if (Bits.clip(4, P1) != Bits.clip(4, lastP1)) {
+        
+        updateP1(line0, line1);
+        
+        if (Bits.clip(4, tmp) != Bits.clip(4, P1)) {
             cpu.requestInterrupt(Interrupt.JOYPAD);
         }
     }
 
+    private void updateP1(int line0, int line1) {
+        if (Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
+            P1 = (P1 & 0b1111_0000) | line0;
+        } else if (!Bits.test(P1, KBState.LINE0) && Bits.test(P1, KBState.LINE1)) {
+            P1 = (P1 & 0b1111_0000) | line1;
+        } else if (Bits.test(P1, KBState.LINE0) && Bits.test(P1, KBState.LINE1)) {
+            P1 = (P1 & 0b1111_0000) | line0 | line1;
+        } else if (!Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
+            P1 &= 0b1111_0000;
+        }
+    }
+    
     @Override
     public int read(int address) throws IllegalArgumentException {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
