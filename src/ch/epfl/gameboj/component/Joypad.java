@@ -48,10 +48,6 @@ public final class Joypad implements Component {
             line1 = Bits.set(line1, k.ordinal() % LINE_LENGTH, true);
         }
         
-        System.out.println("key pressed " + k.name());
-        System.out.println("line 0 " + Integer.toBinaryString(line0));
-        System.out.println("line 1 " + Integer.toBinaryString(line1));
-        
         updateP1();
         
         if (Bits.clip(4, P1) < Bits.clip(4, tmp)) {
@@ -75,9 +71,7 @@ public final class Joypad implements Component {
         updateP1();
     }
 
-    private void updateP1() { 
-        System.out.println("P1 " + Integer.toBinaryString(P1) + " LINE0 " + Bits.test(P1, KBState.LINE0) + " LINE1 " + Bits.test(P1, KBState.LINE1));
-        
+    private void updateP1() {        
         //P1 = 0b0010_0000;
         
         if (Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
@@ -89,8 +83,6 @@ public final class Joypad implements Component {
         } else if (!Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
             P1 &= 0b1111_0000;
         }
-        
-        System.out.println("P1 " + Integer.toBinaryString(P1));
     }
     
     @Override
@@ -105,7 +97,9 @@ public final class Joypad implements Component {
     @Override
     public void write(int address, int data) throws IllegalArgumentException {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
-            P1 = (P1 & 0b0000_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
+            if (!Bits.test(data, KBState.LINE0) || !Bits.test(data, KBState.LINE1)) {
+                P1 = (P1 & 0b0000_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
+            }
         }
     }
 }

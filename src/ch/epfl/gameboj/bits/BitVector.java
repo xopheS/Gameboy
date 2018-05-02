@@ -51,25 +51,26 @@ public final class BitVector {
 
         if (methodZeroExtended) {
             if (Math.floorMod(start, Integer.SIZE) == 0) {
-                for (int i = 0; i < size / Integer.SIZE; i++) {
-                    extractedInts[i] = (i < -d.div || i >= d.div + bitVector.length) ? 0 : bitVector[i + d.div];
+                for (int i = 0; i < extractedInts.length; i++) {
+                    extractedInts[i] = (i <= -d.div || i >= bitVector.length - d.div) ? 0 : bitVector[i + d.div];
                 }
             } else {
-                for (int i = 0; i < size / Integer.SIZE; i++) {
+                for (int i = 0; i < extractedInts.length; i++) {
                     extractedInts[i] = intExtZeroExtended(start + Integer.SIZE * i);
                 }
             }
         } else {
             if (Math.floorMod(start, Integer.SIZE) == 0) {
-                for (int i = 0; i < size / Integer.SIZE; i++) {
+                for (int i = 0; i < extractedInts.length; i++) {
                     extractedInts[i] = bitVector[Math.floorMod(i + d.div, bitVector.length)];
                 }
             } else {
-                for (int i = 0; i < size / Integer.SIZE; i++) {
+                for (int i = 0; i < extractedInts.length; i++) {
                     extractedInts[i] = intExtWrapped(start + Integer.SIZE * i);
                 }
             }
         }
+        
         return new BitVector(extractedInts);
     }
 
