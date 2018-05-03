@@ -43,7 +43,7 @@ public final class Alu {
     }
 
     private static int packValueZNHC(int v, boolean Z, boolean N, boolean H, boolean C) {
-        return Bits.fuseInts((v << valueStart), maskZNHC(Z, N, H, C));
+        return (v << valueStart) | maskZNHC(Z, N, H, C);
     }
 
     /**
@@ -64,8 +64,7 @@ public final class Alu {
      * @return l'entier avec les fanions aux valeurs fournies
      */
     public static int maskZNHC(boolean Z, boolean N, boolean H, boolean C) {
-        return Bits.fuseInts((Z ? Flag.Z.mask() : 0), (N ? Flag.N.mask() : 0), (H ? Flag.H.mask() : 0),
-                (C ? Flag.C.mask() : 0));
+        return (Z ? Flag.Z.mask() : 0) | (N ? Flag.N.mask() : 0) | (H ? Flag.H.mask() : 0) | (C ? Flag.C.mask() : 0);
     }
 
     /**
@@ -445,7 +444,7 @@ public final class Alu {
      *             si l'entier n'est pas un entier sur 8 bits
      */
     public static int swap(int v) {
-        int swappedInt = (Bits.clip(4, Preconditions.checkBits8(v)) << 4) | Bits.extract(v, 4, 4);
+        int swappedInt = Bits.rotate(8, v, 4);
         return packValueZNHC(swappedInt, swappedInt == 0, false, false, false);
     }
 

@@ -61,6 +61,8 @@ public final class LcdController implements Component, Clocked {
     private QuickCopyInfo quickCopy = new QuickCopyInfo();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     
+    private long cyc, prevCyc;
+    
     //TODO SPRITE HEIGHT 
     //TODO fix sprites
 
@@ -116,9 +118,7 @@ public final class LcdController implements Component, Clocked {
             nextNonIdleCycle = cycle + 20;
             setMode(2);
             reallyCycle(cycle);
-        } else if (cycle != nextNonIdleCycle || !lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
-            return;
-        } else {
+        } else if (cycle == nextNonIdleCycle && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
             reallyCycle(cycle);
         }
     }
@@ -127,6 +127,8 @@ public final class LcdController implements Component, Clocked {
         int mode0 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE0) ? 1 : 0;
         int mode1 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE1) ? 1 : 0;
         int mode = mode0 | (mode1 << 1);
+        
+        cyc = cycle;//XXX
 
         if (mode == 0 && lcdRegs.get(LCDReg.LY) == LCD_HEIGHT - 1) {
             displayedImage = nextImageBuilder.build();
@@ -307,17 +309,13 @@ public final class LcdController implements Component, Clocked {
             boolean vFlip = Bits.test(AddressMap.OAM_START + spriteIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.MISC.ordinal(), MISC.FLIP_V.index());
             int spriteTileIndex = read(AddressMap.OAM_START + spriteIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.TILE_INDEX.ordinal());
             
-            /*if (hFlip) {
+            if (hFlip) {
                 spriteLineBuilder.setBytes(0, Bits.reverse8(tileLineMSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip)), 
                         Bits.reverse8(tileLineLSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip)));
             } else {
                 spriteLineBuilder.setBytes(0, tileLineMSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip),
                         tileLineLSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip));
-            }*/
-            //XXX
-            
-            spriteLineBuilder.setBytes(0, tileLineMSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip),
-                    tileLineLSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip));
+            }
             
             indSpriteLine = spriteLineBuilder.build().shift(-spriteX);
             
@@ -385,6 +383,7 @@ public final class LcdController implements Component, Clocked {
                 return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, TILE_SIZE) * 2;
             }
         }*/
+        //XXX
     }
     
     private Integer[] spritesIntersectingLine() {
@@ -411,6 +410,21 @@ public final class LcdController implements Component, Clocked {
         
         //TODO reverse order or natural order?
         Arrays.sort(intersectIndex, Comparator.<Integer>naturalOrder().reversed());
+        
+        /*if (cyc >= 30_000_000 - 17556 && cyc == nextNonIdleCycle) {
+            Integer[] intIndex = new Integer[intersectIndex.length];
+            boolean[] flipVer = new boolean[intersectIndex.length];
+            boolean[] flipHor = new boolean[intersectIndex.length];
+            
+            for(int i = 0; i < intIndex.length; ++i) {
+                intIndex[i] = Bits.clip(4, intersectIndex[i]);
+                flipVer[i] = Bits.test(AddressMap.OAM_START + intIndex[i] * SPRITE_ATTR_BYTES + SPRITE_ATTR.MISC.ordinal(), MISC.FLIP_V.index());
+                flipHor[i] = Bits.test(AddressMap.OAM_START + intIndex[i] * SPRITE_ATTR_BYTES + SPRITE_ATTR.MISC.ordinal(), MISC.FLIP_H.index());
+            }
+            System.out.println("Line index: " + lcdRegs.get(LCDReg.LY) + " sprite indexes " + Arrays.toString(intIndex));
+            System.out.println("Vertical flip: " + Arrays.toString(flipVer));
+            System.out.println("Horizontal flip: " + Arrays.toString(flipHor));
+        }*/ //XXX
         
         return intersectIndex;
     }

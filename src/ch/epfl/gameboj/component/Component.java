@@ -22,10 +22,8 @@ public interface Component {
      *            l'adresse
      * @return l'octet se trouvant à l'adresse donnée sous forme d'un entier ou
      *         NO_DATA (256)
-     * @throws IllegalArgumentException
-     *             si l'adresse donnée n'est pas une valeur de 16 bits
      */
-    int read(int address) throws IllegalArgumentException;
+    int read(int address);
     
     /**
      * Stocke la valeur donnée à l'adresse donnée dans le composant, ou ne fait
@@ -35,12 +33,8 @@ public interface Component {
      *            l'adresse
      * @param data
      *            la valeur à stocker
-     * @throws IllegalArgumentException
-     *             si l'adresse donnée n'est pas une valeur de 16 bits
-     *             si la valeur n'est pas une valeur de 8 bits
-     *             
      */
-    void write(int address, int data) throws IllegalArgumentException;
+    void write(int address, int data);
     
     
     

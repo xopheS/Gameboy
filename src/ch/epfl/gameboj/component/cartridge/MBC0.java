@@ -16,6 +16,7 @@ import ch.epfl.gameboj.component.memory.Rom;
 public class MBC0 implements Component {
 
     private final Rom rom;
+    private final static int MBC0_SIZE = 32768;
 
     /**
      * Ceci est le constructeur publique de MBC0, qui effectue l'empaquetage d'une
@@ -32,7 +33,7 @@ public class MBC0 implements Component {
      *             si la ROM fournie est null
      */
     public MBC0(Rom rom) {
-        if (rom.size() != 32768) {
+        if (rom.size() != MBC0_SIZE) {
             throw new IllegalArgumentException("The provided ROM must have a capacity of 32768.");
         }
 

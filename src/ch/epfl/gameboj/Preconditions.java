@@ -9,7 +9,7 @@ package ch.epfl.gameboj;
  */
 
 public interface Preconditions {
-    int MAX_BYTE_VALUE = 255, MAX_SHORT_VALUE = 65535;
+    int MAX_DATA_VALUE = 255, MAX_ADDRESS_VALUE = 65535;
 
     /**
      * Check la validité de l'expression booléenne donnée en argument.
@@ -58,11 +58,8 @@ public interface Preconditions {
      *             si v n'est pas compris entre 0 et 0xFF (inclus)
      */
     static int checkBits8(int v) {
-        if (v >= 0 && v <= MAX_BYTE_VALUE) {
-            return v;
-        } else {
-            throw new IllegalArgumentException();
-        }
+        checkArgument(v >= 0 && v <= MAX_DATA_VALUE);
+        return v;
     }
 
     /**
@@ -76,10 +73,7 @@ public interface Preconditions {
      *             si v n'est pas compris entre 0 et 0xFF (inclus)
      */
     static int checkBits16(int v) {
-        if (v >= 0 && v <= MAX_SHORT_VALUE) {
-            return v;
-        } else {
-            throw new IllegalArgumentException();
-        }
+        checkArgument(v >= 0 && v <= MAX_ADDRESS_VALUE);
+        return v;
     }
 }

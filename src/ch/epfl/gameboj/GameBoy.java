@@ -19,7 +19,7 @@ import ch.epfl.gameboj.component.memory.RamController;
  * @author David Cian (287967)
  *
  */
-public class GameBoy {
+public final class GameBoy {
 
     private final Bus bus = new Bus();
     private final Ram workRam;

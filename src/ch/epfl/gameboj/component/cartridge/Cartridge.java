@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Objects;
+
+import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
 
@@ -19,7 +22,7 @@ public final class Cartridge implements Component {
     private final Component mbc;
 
     private Cartridge(Component mbc) {
-        this.mbc = mbc;
+        this.mbc = Objects.requireNonNull(mbc);
     }
 
     /**
@@ -54,7 +57,7 @@ public final class Cartridge implements Component {
      */
     @Override
     public int read(int address) {
-        return mbc.read(address);
+        return mbc.read(Preconditions.checkBits16(address));
     }
 
     /*
@@ -64,7 +67,7 @@ public final class Cartridge implements Component {
      */
     @Override
     public void write(int address, int data) {
-        mbc.write(address, data);
+        mbc.write(Preconditions.checkBits16(address), Preconditions.checkBits8(data));
     }
 
 }

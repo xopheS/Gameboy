@@ -34,6 +34,6 @@ public interface Bit {
      * @return le masque correspondant au bit de position l'index
      */
     default int mask() {
-        return 1 << index();
+        return Bits.mask(index());
     }
 }

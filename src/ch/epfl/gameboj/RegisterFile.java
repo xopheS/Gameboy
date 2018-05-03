@@ -17,7 +17,7 @@ import ch.epfl.gameboj.bits.Bits;
  */
 public final class RegisterFile<E extends Register> {
 
-    public int[] registerFile;
+    public final byte[] registerFile;
 
     /**
      * Constructeur qui initialise le banc avec plusieurs registres.
@@ -27,7 +27,7 @@ public final class RegisterFile<E extends Register> {
      */
     public RegisterFile(E[] allRegs) {
 
-        registerFile = new int[allRegs.length];
+        registerFile = new byte[allRegs.length];
     }
 
     /**
@@ -41,7 +41,7 @@ public final class RegisterFile<E extends Register> {
      * @see #get(int)
      */
     public int get(E reg) {
-        return registerFile[reg.index()];
+        return Byte.toUnsignedInt(registerFile[reg.index()]);
     }
 
     /**
@@ -55,7 +55,7 @@ public final class RegisterFile<E extends Register> {
      * @see #get(Register)
      */
     public int get(int index) {
-        return registerFile[Objects.checkIndex(index, registerFile.length)];
+        return Byte.toUnsignedInt(registerFile[Objects.checkIndex(index, registerFile.length)]);
     }
 
     /**
@@ -71,13 +71,11 @@ public final class RegisterFile<E extends Register> {
      *             si la valeur n'est pas sur 8 bits
      */
     public void set(E reg, int newValue) {
-        newValue &= 0xFF;
-        registerFile[reg.index()] = Preconditions.checkBits8(newValue);
+        registerFile[reg.index()] = (byte) Preconditions.checkBits8(newValue);
     }
 
     public void set(int index, int newValue) {
-        newValue &= 0xFF;
-        registerFile[index] = Preconditions.checkBits8(newValue);
+        registerFile[index] = (byte) Preconditions.checkBits8(newValue);
     }
 
     /**

@@ -16,8 +16,8 @@ import ch.epfl.gameboj.Preconditions;
 public final class RamController implements Component {
 
     private final Ram ram;
-    private int startAddress;
-    private int endAddress;
+    private final int startAddress;
+    private final int endAddress;
     
     /**
      * Construit un contrôleur pour la mémoire vive donnée en argument,

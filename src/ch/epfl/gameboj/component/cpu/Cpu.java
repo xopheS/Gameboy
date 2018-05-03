@@ -130,7 +130,7 @@ public final class Cpu implements Component, Clocked {
         int i = 31 - Integer.numberOfLeadingZeros(Integer.lowestOneBit(commonOnes));
         IF = Bits.set(IF, i, false);
         push16(PC);
-        PC = 0x40 + 8 * i;
+        PC = AddressMap.INTERRUPTS[i];
         nextNonIdleCycle += 5;
     }
 
@@ -147,9 +147,7 @@ public final class Cpu implements Component, Clocked {
         if (nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
             nextNonIdleCycle = cycle;
             reallyCycle();
-        } else if (cycle != nextNonIdleCycle) {
-            return;
-        } else {
+        } else if (cycle == nextNonIdleCycle) {
             reallyCycle();
         }
     }
@@ -166,8 +164,7 @@ public final class Cpu implements Component, Clocked {
             handleInterrupt();
         } else {
             int nextInstruction = bus.read(PC);
-            Opcode nextOpcode = nextInstruction == opcodePrefix ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()]
-                    : DIRECT_OPCODE_TABLE[nextInstruction];
+            Opcode nextOpcode = nextInstruction == opcodePrefix ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()] : DIRECT_OPCODE_TABLE[nextInstruction];
             dispatch(nextOpcode);
         }
     }
@@ -278,8 +275,7 @@ public final class Cpu implements Component, Clocked {
 
             // Add
             case ADD_A_R8: {
-                int sum = Alu.add(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)),
-                        getInitialCarry(opcode));
+                int sum = Alu.add(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0)), getInitialCarry(opcode));
                 setRegFlags(Reg.A, sum);
             }
                 break;
@@ -327,7 +323,6 @@ public final class Cpu implements Component, Clocked {
                 } else {
                     SP = Alu.unpackValue(sum);
                 }
-                combineAluFlags(sum, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
             }
                 break;
 
@@ -520,17 +515,17 @@ public final class Cpu implements Component, Clocked {
             case CHG_U3_R8: {
                 Reg r = extractReg(opcode, 0);
                 if (!extractSetValue(opcode)) {
-                    registers8.set(r, registers8.get(r) & Bits.complement8(1 << extractBitIndex(opcode)));
+                    registers8.set(r, registers8.get(r) & Bits.complement8(Bits.mask(extractBitIndex(opcode))));
                 } else {
-                    registers8.set(r, registers8.get(r) | (1 << extractBitIndex(opcode)));
+                    registers8.set(r, registers8.get(r) | Bits.mask(extractBitIndex(opcode)));
                 }
             }
                 break;
             case CHG_U3_HLR: {
                 if (!extractSetValue(opcode)) {
-                    write8AtHl(read8AtHl() & Bits.complement8(1 << extractBitIndex(opcode)));
+                    write8AtHl(read8AtHl() & Bits.complement8(Bits.mask(extractBitIndex(opcode))));
                 } else {
-                    write8AtHl(read8AtHl() | (1 << extractBitIndex(opcode)));
+                    write8AtHl(read8AtHl() | Bits.mask(extractBitIndex(opcode)));
                 }
             }
                 break;
@@ -590,7 +585,7 @@ public final class Cpu implements Component, Clocked {
                 break;
             case RST_U3: {
                 push16(nextPC);
-                nextPC = 8 * Bits.extract(opcode.encoding, 3, 3);
+                nextPC = AddressMap.RESETS[Bits.extract(opcode.encoding, 3, 3)];
             }
                 break;
             case RET: {
@@ -607,7 +602,7 @@ public final class Cpu implements Component, Clocked {
 
             // Interrupts
             case EDI: {
-                IME = Bits.test(opcode.encoding, 3) ? true : false;
+                IME = Bits.test(opcode.encoding, 3);
             }
                 break;
             case RETI: {
@@ -681,9 +676,8 @@ public final class Cpu implements Component, Clocked {
     }
 
     private void write16(int address, int v) {
-        assert address < 0xFFFF : "Adresse superieure a 16 bits";
-        bus.write(address + 1, Bits.extract(v, 8, 8));
-        bus.write(address, Bits.clip(8, v));
+        write8(address, Bits.clip(8, v));
+        write8(address + 1, Bits.extract(v, 8, 8));
     }
 
     private void write8AtHl(int v) {
@@ -717,8 +711,7 @@ public final class Cpu implements Component, Clocked {
         if (r == Reg16.AF) {
             SP = newV;
         } else {
-            registers8.set(r.b, Bits.clip(8, newV));
-            registers8.set(r.a, Bits.extract(newV, 8, 8));
+            setReg16(r, newV);
         }
     }
 
@@ -884,12 +877,14 @@ public final class Cpu implements Component, Clocked {
      */
     @Override
     public void write(int address, int data) {
+        Preconditions.checkBits8(data);
+        
         if (Preconditions.checkBits16(address) == AddressMap.REG_IE) {
-            IE = Preconditions.checkBits8(data);
+            IE = data;
         } else if (address == AddressMap.REG_IF) {
-            IF = Preconditions.checkBits8(data);
+            IF = data;
         } else if (address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END) {
-            highRam.write(address - AddressMap.HIGH_RAM_START, Preconditions.checkBits8(data));
+            highRam.write(address - AddressMap.HIGH_RAM_START, data);
         }
     }
 
