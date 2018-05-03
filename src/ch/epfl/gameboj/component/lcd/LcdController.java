@@ -36,18 +36,14 @@ public final class LcdController implements Component, Clocked {
     private static final int BG_SIZE = 256;
     private static final int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
-    private static final int LCD_TILE_WIDTH = LCD_WIDTH / TILE_SIZE;
-    private static final int LCD_TILE_HEIGHT = LCD_HEIGHT / TILE_SIZE;
-    private static final int WIN_WIDTH = LCD_WIDTH, WIN_TILE_WIDTH = LCD_TILE_WIDTH;
-    private static final int WIN_HEIGHT = LCD_WIDTH, WIN_TILE_HEIGHT = LCD_TILE_WIDTH;
+    private static final int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
     private static final int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     private static final int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
     private static final int SPRITE_XOFFSET = 8, SPRITE_YOFFSET = 16;
-    private static final int MAX_SPRITES = 10;
+    private static final int MAX_SPRITES = 10, OAM_SPRITES = 40;
     private static final int SPRITE_ATTR_BYTES = 4;
     private static final int TILE_BYTE_LENGTH = 16;
     private static final LcdImageLine EMPTY_LCD_LINE = new LcdImageLine(new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH));
-    private static final LcdImageLine EMPTY_BG_LINE = new LcdImageLine(new BitVector(BG_SIZE), new BitVector(BG_SIZE), new BitVector(BG_SIZE));
     private LcdImage displayedImage;
     private final Ram videoRam, oamRam;
     private final Cpu cpu;
@@ -61,9 +57,8 @@ public final class LcdController implements Component, Clocked {
     private QuickCopyInfo quickCopy = new QuickCopyInfo();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     
-    private long cyc, prevCyc;
+    private long cyc, prevCyc; //XXX
     
-    //TODO SPRITE HEIGHT 
     //TODO fix sprites
 
     private static class QuickCopyInfo {
@@ -272,14 +267,14 @@ public final class LcdController implements Component, Clocked {
     }
            
     private LcdImageLine computeWinLine() {
-        LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(BG_SIZE);
+        LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_SIZE);
         
         winY++;
           
-        for (int i = 0; i < WIN_TILE_WIDTH; ++i) {
+        for (int i = 0; i < WIN_TILE_SIZE; ++i) {
             int winAddress;
 
-            int winI = Math.floorDiv(winY, TILE_SIZE) * WIN_TILE_WIDTH + i;
+            int winI = Math.floorDiv(winY, TILE_SIZE) * WIN_TILE_SIZE + i;
 
             if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
                 winAddress = AddressMap.BG_DISPLAY_DATA[1] + winI;
@@ -302,12 +297,14 @@ public final class LcdController implements Component, Clocked {
         for (int i = 0; i < spriteInfo.length; ++i) {
             LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
             LcdImageLine indSpriteLine;
-            int spriteIndex = Bits.clip(Byte.SIZE, spriteInfo[i]);
-            int spriteX = Bits.extract(spriteInfo[i], Byte.SIZE, Byte.SIZE) - SPRITE_XOFFSET;
+            int spriteIndex = unpackIndex(spriteInfo[i]);
+            int spriteX = unpackX(spriteInfo[i]) - SPRITE_XOFFSET;
             boolean spritePalette = Bits.test(read(AddressMap.OAM_START + spriteIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.MISC.ordinal()), MISC.PALETTE.index());
-            boolean hFlip = Bits.test(AddressMap.OAM_START + spriteIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.MISC.ordinal(), MISC.FLIP_H.index());
-            boolean vFlip = Bits.test(AddressMap.OAM_START + spriteIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.MISC.ordinal(), MISC.FLIP_V.index());
-            int spriteTileIndex = read(AddressMap.OAM_START + spriteIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.TILE_INDEX.ordinal());
+            boolean hFlip = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.FLIP_H.index());
+            boolean vFlip = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.FLIP_V.index());
+            int spriteTileIndex = readAttr(spriteIndex, SPRITE_ATTR.TILE_INDEX);
+            
+            hFlip = true;
             
             if (hFlip) {
                 spriteLineBuilder.setBytes(0, Bits.reverse8(tileLineMSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip)), 
@@ -367,35 +364,25 @@ public final class LcdController implements Component, Clocked {
     
     private int tileTypeAddressS(int tileTypeIndex, int lineIndex, boolean vFlipped) {
         boolean isDouble = lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE);
+        int height = TILE_SIZE * (isDouble ? 2 : 1);
         
-        return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, TILE_SIZE) * 2; //XXX
-        
-        /*if (vFlipped) {
-            if (isDouble) {
-                return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + (TILE_SIZE * 2 - Math.floorMod(lineIndex, TILE_SIZE * 2)) * 2;
-            } else {
-                return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + (TILE_SIZE - Math.floorMod(lineIndex, TILE_SIZE)) * 2;
-            }
+        if (vFlipped) {
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + (height - Math.floorMod(lineIndex, height)) * 2;
         } else {
-            if (isDouble) {
-                return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, TILE_SIZE * 2) * 2;
-            } else {
-                return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, TILE_SIZE) * 2;
-            }
-        }*/
-        //XXX
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, height) * 2;
+        }
     }
     
     private Integer[] spritesIntersectingLine() {
         int scanIndex = 0, foundSprites = 0;
         int spriteHeight = lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 * TILE_SIZE : TILE_SIZE;
         
-        Integer[] intersect = new Integer[10];
+        Integer[] intersect = new Integer[MAX_SPRITES];
         
-        while (foundSprites < 10 && scanIndex < 40) {
+        while (foundSprites < MAX_SPRITES && scanIndex < OAM_SPRITES) {
             int spriteY = read(AddressMap.OAM_START + scanIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.Y_COORD.ordinal()) - SPRITE_YOFFSET;
             if (lcdRegs.get(LCDReg.LY) >= spriteY && lcdRegs.get(LCDReg.LY) < spriteY + spriteHeight) {
-                intersect[foundSprites] = read(AddressMap.OAM_START + scanIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.X_COORD.ordinal()) << Byte.SIZE | scanIndex;
+                intersect[foundSprites] = packSpriteInfo(scanIndex);
                 foundSprites++;
             }
             
@@ -427,6 +414,22 @@ public final class LcdController implements Component, Clocked {
         }*/ //XXX
         
         return intersectIndex;
+    }
+    
+    private int packSpriteInfo(int spriteIndex) {
+        return readAttr(spriteIndex, SPRITE_ATTR.X_COORD) << Byte.SIZE | spriteIndex;
+    }
+    
+    private int unpackX(int spriteInfo) {
+        return Bits.extract(spriteInfo, Byte.SIZE, Byte.SIZE);
+    }
+    
+    private int unpackIndex(int spriteInfo) {
+        return Bits.clip(Byte.SIZE, spriteInfo);
+    }
+    
+    private int readAttr(int spriteIndex, SPRITE_ATTR attr) {
+        return read(AddressMap.OAM_START + Objects.checkIndex(spriteIndex, OAM_SPRITES) * SPRITE_ATTR_BYTES + attr.ordinal());
     }
     
     private BitVector computeMeldOpacity(LcdImageLine below, LcdImageLine over) {
