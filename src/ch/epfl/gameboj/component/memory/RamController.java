@@ -7,7 +7,7 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 
 /**
- * RamController : une mémoire vive dont le contenu peut changer au cours du temps
+ * RamController : une mémoire vive dont le contenu peut changer au cours du temps.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -16,12 +16,12 @@ import ch.epfl.gameboj.Preconditions;
 public final class RamController implements Component {
 
     private final Ram ram;
-    private int startAddress;
-    private int endAddress;
+    private final int startAddress;
+    private final int endAddress;
     
     /**
      * Construit un contrôleur pour la mémoire vive donnée en argument,
-     * accessible entre deux adresses données
+     * accessible entre deux adresses données.
      * 
      * @param ram
      *            mémoire vive
@@ -50,7 +50,7 @@ public final class RamController implements Component {
      * Appelle le premier constructeur en lui passant une adresse de fin telle
      * que la totalité de la mémoire vive soit accessible au travers du
      * contrôleur (l'adresse de fin est l'adresse de début + la taille de la
-     * mémoire vive)
+     * mémoire vive).
      * 
      * @param ram
      *            mémoire vive
@@ -72,7 +72,7 @@ public final class RamController implements Component {
     /**
      * Retourne l'octet se trouvant à l'adresse donnée dans la mémoire vive sous
      * la forme d'un entier ou NO_DATA (256) si l'adresse n'est pas dans
-     * l'intervalle de contrôle du RamController
+     * l'intervalle de contrôle du RamController.
      * 
      * @param address l'adresse
      * @throws IllegalArgumentException
@@ -80,14 +80,16 @@ public final class RamController implements Component {
      */
     @Override
     public int read(int address) {
-        if(Preconditions.checkBits16(address) < startAddress || address >= endAddress) return NO_DATA;
+        if (Preconditions.checkBits16(address) < startAddress || address >= endAddress) {
+            return NO_DATA;
+        }
         return ram.read(address - startAddress);
     }
 
     /**
      * Modifie le contenu de la mémoire vive à l'adresse donnée pour qu'il soit
      * égal à la valeur donnée si celle-ci se trouve dans l'intervalle de
-     * contrôle du RamController
+     * contrôle du RamController.
      * 
      * @param address
      *            l'adresse
@@ -100,8 +102,7 @@ public final class RamController implements Component {
      */
     @Override
     public void write(int address, int data) {
-        if(Preconditions.checkBits16(address) >= startAddress && address < endAddress)
-        {
+        if (Preconditions.checkBits16(address) >= startAddress && address < endAddress) {
             ram.write(address - startAddress, Preconditions.checkBits8(data));
         }  
     }

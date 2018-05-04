@@ -1,10 +1,8 @@
 package ch.epfl.gameboj.bits;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
-
-import ch.epfl.gameboj.bits.BitVector;
 
 class BitVectorTestAM {
     
@@ -49,54 +47,56 @@ class BitVectorTestAM {
     }
     
     @Test
-    void TEST2() {
+    void test2() {
         BitVector v1 = new BitVector(32, true);
         BitVector v2 = v1.extractZeroExtended(-57, 128);
         BitVector v3 = v2.extractWrapped(11, 128);
-        assertEquals("00000000000000000000000000000000000000011111111111111111111111111111111000000000000000000000000000000000000000000000000000000000", v2.toString());
-        assertEquals("00000000000000000000000000000000000000000000000000111111111111111111111111111111110000000000000000000000000000000000000000000000", v3.toString());
+        assertEquals("0000000000000000000000000000000000000001111111111111111111111111"
+                + "1111111000000000000000000000000000000000000000000000000000000000", v2.toString());
+        assertEquals("0000000000000000000000000000000000000000000000000011111111111111"
+                + "1111111111111111110000000000000000000000000000000000000000000000", v3.toString());
     }
+    
     @Test
-    void TEST3() {
+    void test3() {
         BitVector v1 = new BitVector(64, true);
         BitVector v2 = v1.extractZeroExtended(-32, 64);
         BitVector v3 = v2.extractWrapped(-32, 96);
         assertEquals("1111111111111111111111111111111111111111111111111111111111111111", v1.toString());
         assertEquals("1111111111111111111111111111111100000000000000000000000000000000", v2.toString());
-        assertEquals("111111111111111111111111111111110000000000000000000000000000000011111111111111111111111111111111", v3.toString());
+        assertEquals("1111111111111111111111111111111100000000000000000000000000000000"
+                + "11111111111111111111111111111111", v3.toString());
     }
     
     @Test
     void testBuilder() {
         BitVector v = new BitVector.Builder(32)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
                 .build();
-              assertEquals("11001100000000001010101011110000", v.toString());
+        assertEquals("11001100000000001010101011110000", v.toString());
     }
     
     @Test
     void testBuilder2() {
         BitVector v = new BitVector.Builder(64)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
-                .setByte(7, 0b1111_1111)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
+                .setByte(7 * Byte.SIZE, 0b1111_1111)
                 .build();
-              assertEquals("1111111100000000000000000000000011001100000000001010101011110000", v.toString());
+        assertEquals("1111111100000000000000000000000011001100000000001010101011110000", v.toString());
     }
     
     @Test
     void testBuilder3() {
         BitVector v = new BitVector.Builder(32)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
-                .setByte(3, 0b0011_1111)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
+                .setByte(3 * Byte.SIZE, 0b0011_1111)
                 .build();
-              assertEquals("00111111000000001010101011110000", v.toString());
+        assertEquals("00111111000000001010101011110000", v.toString());
     }
-    
-
 }

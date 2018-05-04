@@ -6,11 +6,11 @@ import java.util.Random;
 
 public interface TestRandomizer {
     // Fix random seed to guarantee reproducibility.
-    public final static long SEED = 2018;
+    long SEED = 2018;
 
-    public final static int RANDOM_ITERATIONS = 100;
+    int RANDOM_ITERATIONS = 100;
 
-    public static Random newRandom() {
+    static Random newRandom() {
         return new Random(SEED);
     }
 }

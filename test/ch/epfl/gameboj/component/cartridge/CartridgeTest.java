@@ -17,6 +17,13 @@ import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.ComponentTest;
 
 public final class CartridgeTest implements ComponentTest {
+    /**
+     * Charge une cartouche à partir d'un tableau d'octets.
+     * 
+     * @param romData
+     * le tableau d'octets
+     * @return
+     */
     public static Cartridge cartridgeWithData(byte[] romData) {
         try {
             File tempPath = Files.createTempFile("TestROM_", ".gb").toFile();
