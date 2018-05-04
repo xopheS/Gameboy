@@ -24,8 +24,8 @@ public class LcdImageLine {
      */
     public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
 
-        Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(),
-                "The three BitVectors must have the same length");
+        Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(), "The three BitVectors must have the same length");
+        
         this.LSB = lsb;
         this.MSB = msb;
         this.opacity = opacity;
@@ -52,8 +52,7 @@ public class LcdImageLine {
     }
 
     public LcdImageLine extractWrapped(int pixel, int size) {
-        return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size),
-                opacity.extractWrapped(pixel, size));
+        return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size), opacity.extractWrapped(pixel, size));
     }
 
     /**
@@ -64,14 +63,12 @@ public class LcdImageLine {
      * @return la ligne coloriée
      */
     public LcdImageLine mapColors(int palette) {
-        Preconditions.checkBits8(palette);
-
-        if (palette == 0b11100100) {
+        if (Preconditions.checkBits8(palette) == 0b11100100) {
             return this;
         }
-
-        BitVector msbCopy = MSB.extractZeroExtended(0, size()), lsbCopy = LSB.extractZeroExtended(0, size());
+        
         BitVector mask = null;
+        LcdImageLine coloredLine = this;
 
         for (int i = 0; i < 4; i++) {
 
@@ -79,51 +76,48 @@ public class LcdImageLine {
 
             switch (i) {
                 case 0:
-                    mask = MSB.or(LSB).not();
+                    mask = MSB.not().and(LSB.not());
                     break;
                 case 1:
                     mask = MSB.not().and(LSB);
                     break;
                 case 2:
-                    mask = LSB.not().and(MSB);
+                    mask = MSB.and(LSB.not());
                     break;
                 case 3:
-                    mask = LSB.and(MSB);
-                    break;
-                default:
+                    mask = MSB.and(LSB);
                     break;
             }
-
-            switch (color) {
-                case 0: {
-                    msbCopy = msbCopy.and(mask.not());
-                    lsbCopy = lsbCopy.and(mask.not());
-                }
-                    break;
-                case 1: {
-                    msbCopy = msbCopy.and(mask.not());
-                    lsbCopy = lsbCopy.or(mask);
-                }
-                    break;
-
-                case 2: {
-                    msbCopy = msbCopy.or(mask);
-                    lsbCopy = lsbCopy.and(mask.not());
-                }
-                    break;
-
-                case 3: {
-                    msbCopy = msbCopy.or(mask);
-                    lsbCopy = lsbCopy.or(mask);
-                }
-                    break;
-                default:
-                    break;
-
-            }
+            
+            coloredLine = coloredLine.setColor(mask, color);
         }
 
-        return new LcdImageLine(msbCopy, lsbCopy, opacity);
+        return coloredLine;
+    }
+    
+    private LcdImageLine setColor(BitVector mask, int color) {  
+        BitVector msbCopy = MSB.extractZeroExtended(0, size()), lsbCopy = LSB.extractZeroExtended(0, size());
+        
+        switch(Objects.checkIndex(color, 4)) {
+        case 0:
+            msbCopy.setBits(mask, false);
+            lsbCopy.setBits(mask, false);
+            break;
+        case 1:
+            msbCopy.setBits(mask, false);
+            lsbCopy.setBits(mask, true);
+            break;
+        case 2:
+            msbCopy.setBits(mask, true);
+            lsbCopy.setBits(mask, false);
+            break;
+        case 3:
+            msbCopy.setBits(mask, true);
+            lsbCopy.setBits(mask, true);
+            break;               
+        }
+        
+        return new LcdImageLine(msbCopy, lsbCopy, msbCopy.or(lsbCopy));
     }
 
     // other & opacity | this & notOpacity
@@ -137,10 +131,10 @@ public class LcdImageLine {
     public LcdImageLine below(LcdImageLine other) {
         Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
 
-        BitVector newOpacity = opacity.or(other.opacity);
         BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
         BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
-        return new LcdImageLine(newMSB, newLSB, newOpacity);
+        
+        return new LcdImageLine(newMSB, newLSB, newLSB.or(newMSB));
     }
 
     /**
@@ -153,9 +147,12 @@ public class LcdImageLine {
      * @return la nouvelle ligne
      */
     public LcdImageLine below(LcdImageLine other, BitVector opacity) {
-        Preconditions.checkArgument(other.size() == size() && opacity.size() == size(), "The line and the opacity vector must have the same length");
+        Preconditions.checkArgument(other.size() == size() && opacity.size() == size(), "The two lines and the opacity vector must have the same length");
+        
+        BitVector newMSB = MSB.and(opacity.not()).or(other.MSB.and(opacity));
+        BitVector newLSB = LSB.and(opacity.not()).or(other.LSB.and(opacity));
 
-        return new LcdImageLine(MSB.and(opacity.not()).or(other.MSB.and(opacity)), LSB.and(opacity.not()).or(other.LSB.and(opacity)), this.opacity);
+        return new LcdImageLine(newMSB, newLSB, newMSB.or(newLSB));
     }
 
     /**
@@ -172,11 +169,10 @@ public class LcdImageLine {
         Preconditions.checkArgument(other.size() == size, "The two image lines must have the same length");
         Objects.checkIndex(n, size);
         
-        BitVector lsbModified = LSB.shift(size - n).or(other.LSB.shift(-n));
-        BitVector msbModified = MSB.shift(size - n).or(other.MSB.shift(-n));
-        BitVector opacityModified = opacity.shift(size - n).or(other.opacity.shift(-n));
+        BitVector msbModified = MSB.shift(size - n).or(other.MSB.shift(n));
+        BitVector lsbModified = LSB.shift(size - n).or(other.LSB.shift(n));
 
-        return new LcdImageLine(msbModified, lsbModified, opacityModified);
+        return new LcdImageLine(msbModified, lsbModified, msbModified.or(lsbModified));
     }
 
     @Override
@@ -195,9 +191,9 @@ public class LcdImageLine {
         BitVector.Builder msbBuilder;
         BitVector.Builder lsbBuilder;
 
-        public Builder(int size) {
-            msbBuilder = new BitVector.Builder(size);
-            lsbBuilder = new BitVector.Builder(size);
+        public Builder(int width) {
+            msbBuilder = new BitVector.Builder(width);
+            lsbBuilder = new BitVector.Builder(width);
         }
 
         /**
@@ -225,7 +221,7 @@ public class LcdImageLine {
         public LcdImageLine build() {
             BitVector lsb = lsbBuilder.build();
             BitVector msb = msbBuilder.build();
-            return new LcdImageLine(msb, lsb, msb.and(lsb));
+            return new LcdImageLine(msb, lsb, msb.or(lsb));
         }
     }
 }

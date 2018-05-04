@@ -179,6 +179,10 @@ public final class BitVector {
 
         return new BitVector(orVector);
     }
+    
+    public BitVector setBits(BitVector mask, boolean value) {
+        return value ? this.or(mask) : this.and(mask.not());
+    }
 
     public BitVector extractZeroExtended(int start, int size) {
         return extract(start, size, true);
@@ -232,7 +236,9 @@ public final class BitVector {
             if (vector == null) {
                 throw new IllegalStateException();
             }
+            
             Objects.checkIndex(index, vector.length * Integer.SIZE - Byte.SIZE + 1);
+            
             int intIndex = Math.floorDiv(index, Integer.SIZE);
             int startPosition = Math.floorMod(index, Integer.SIZE);
             vector[intIndex] &= ~(0b1111_1111 << startPosition);
