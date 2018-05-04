@@ -72,8 +72,8 @@ class BitVectorTestAM {
     void testBuilder() {
         BitVector v = new BitVector.Builder(32)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
                 .build();
         assertEquals("11001100000000001010101011110000", v.toString());
     }
@@ -82,9 +82,9 @@ class BitVectorTestAM {
     void testBuilder2() {
         BitVector v = new BitVector.Builder(64)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
-                .setByte(7, 0b1111_1111)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
+                .setByte(7 * Byte.SIZE, 0b1111_1111)
                 .build();
         assertEquals("1111111100000000000000000000000011001100000000001010101011110000", v.toString());
     }
@@ -93,9 +93,9 @@ class BitVectorTestAM {
     void testBuilder3() {
         BitVector v = new BitVector.Builder(32)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
-                .setByte(3, 0b0011_1111)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
+                .setByte(3 * Byte.SIZE, 0b0011_1111)
                 .build();
         assertEquals("00111111000000001010101011110000", v.toString());
     }

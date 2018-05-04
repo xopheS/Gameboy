@@ -1,50 +1,45 @@
-package ch.epfl.gameboj.lcd;
+package ch.epfl.gameboj.component.lcd;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ch.epfl.gameboj.component.lcd.LcdController;
-
-class LcdControllerTest {
+class LcdImageTest {
+    LcdImage lcdImage;
     
-    @BeforeAll
-    void
-
     @BeforeEach
     void setupBeforeEach() {
-        LcdController lcdController = new LcdController()
+        
     }
-    
+
     @Test
-    void testLcdController() {
+    void testHashCode() {
         fail("Not yet implemented");
     }
 
     @Test
-    void testCurrentImage() {
+    void testLcdImage() {
         fail("Not yet implemented");
     }
 
     @Test
-    void testCycle() {
+    void testGetWidth() {
         fail("Not yet implemented");
     }
 
     @Test
-    void testAttachTo() {
+    void testGetHeight() {
         fail("Not yet implemented");
     }
 
     @Test
-    void testRead() {
+    void testGet() {
         fail("Not yet implemented");
     }
 
     @Test
-    void testWrite() {
+    void testEqualsObject() {
         fail("Not yet implemented");
     }
 

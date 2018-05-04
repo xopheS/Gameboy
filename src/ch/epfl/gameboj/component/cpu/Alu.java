@@ -162,8 +162,7 @@ public final class Alu {
      */
     public static int add16L(int l, int r) {
         int lAdd = add(Bits.clip(8, Preconditions.checkBits16(l)), Bits.clip(8, Preconditions.checkBits16(r)));
-        return packValueZNHC(Bits.clip(16, l + r), false, false, Bits.test(lAdd, Flag.H.index()),
-                Bits.test(lAdd, Flag.C.index()));
+        return packValueZNHC(Bits.clip(16, l + r), false, false, Bits.test(lAdd, Flag.H.index()), Bits.test(lAdd, Flag.C.index()));
     }
 
     /**

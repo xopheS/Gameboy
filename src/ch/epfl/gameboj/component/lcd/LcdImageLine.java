@@ -88,7 +88,7 @@ public class LcdImageLine {
                     mask = MSB.and(LSB);
                     break;
             }
-            
+
             coloredLine = coloredLine.setColor(mask, color);
         }
 
@@ -100,24 +100,24 @@ public class LcdImageLine {
         
         switch(Objects.checkIndex(color, 4)) {
         case 0:
-            msbCopy.setBits(mask, false);
-            lsbCopy.setBits(mask, false);
+            msbCopy = msbCopy.setBits(mask, false);
+            lsbCopy = lsbCopy.setBits(mask, false);
             break;
         case 1:
-            msbCopy.setBits(mask, false);
-            lsbCopy.setBits(mask, true);
+            msbCopy = msbCopy.setBits(mask, false);
+            lsbCopy = lsbCopy.setBits(mask, true);
             break;
         case 2:
-            msbCopy.setBits(mask, true);
-            lsbCopy.setBits(mask, false);
+            msbCopy = msbCopy.setBits(mask, true);
+            lsbCopy = lsbCopy.setBits(mask, false);
             break;
         case 3:
-            msbCopy.setBits(mask, true);
-            lsbCopy.setBits(mask, true);
+            msbCopy = msbCopy.setBits(mask, true);
+            lsbCopy = lsbCopy.setBits(mask, true);
             break;               
         }
-        
-        return new LcdImageLine(msbCopy, lsbCopy, msbCopy.or(lsbCopy));
+
+        return new LcdImageLine(msbCopy, lsbCopy, opacity);
     }
 
     // other & opacity | this & notOpacity
@@ -130,9 +130,9 @@ public class LcdImageLine {
      */
     public LcdImageLine below(LcdImageLine other) {
         Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
-
-        BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
+        
         BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
+        BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
         
         return new LcdImageLine(newMSB, newLSB, newLSB.or(newMSB));
     }

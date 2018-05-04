@@ -59,7 +59,7 @@ public final class LcdController implements Component, Clocked {
     
     private long cyc, prevCyc; //XXX
     
-    //TODO fix sprites
+    //TODO fix sprites: sprite_priority shadows not how they should be
     //TODO Optimiser avec equals?
 
     private static class QuickCopyInfo {
@@ -174,7 +174,6 @@ public final class LcdController implements Component, Clocked {
                 if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) {
                     cpu.requestInterrupt(Interrupt.LCD_STAT);
                 }
-                System.out.println("vblank at cycle " + cyc);
                 cpu.requestInterrupt(Interrupt.VBLANK);
                 break;
             case 2:
@@ -394,8 +393,6 @@ public final class LcdController implements Component, Clocked {
             System.out.println("Vertical flip: " + Arrays.toString(flipVer));
             System.out.println("Horizontal flip: " + Arrays.toString(flipHor));
         }*/ //XXX
-        
-        //FONCTIONNE PARFAITEMENT D'APRES PIAZZA
         
         return intersectIndex;
     }

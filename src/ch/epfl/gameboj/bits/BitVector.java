@@ -52,7 +52,7 @@ public final class BitVector {
         if (methodZeroExtended) {
             if (Math.floorMod(start, Integer.SIZE) == 0) {
                 for (int i = 0; i < extractedInts.length; i++) {
-                    extractedInts[i] = (i <= -d.div || i >= bitVector.length - d.div) ? 0 : bitVector[i + d.div];
+                    extractedInts[i] = (i < -d.div || i >= bitVector.length - d.div) ? 0 : bitVector[i + d.div];
                 }
             } else {
                 for (int i = 0; i < extractedInts.length; i++) {
@@ -93,8 +93,7 @@ public final class BitVector {
     private int intExtWrapped(int start) {
         FloorEuclideanDiv f = new FloorEuclideanDiv(start, Integer.SIZE);
         int startIntIndex = Math.floorDiv((Math.floorMod(start, size())), Integer.SIZE);
-        return (bitVector[startIntIndex] >>> f.mod)
-                | (bitVector[Math.floorMod((startIntIndex + 1), bitVector.length)] << (Integer.SIZE - f.mod));
+        return (bitVector[startIntIndex] >>> f.mod) | (bitVector[Math.floorMod((startIntIndex + 1), bitVector.length)] << (Integer.SIZE - f.mod));
     }
 
     // Constructeur privé
@@ -146,8 +145,7 @@ public final class BitVector {
      * @return la conjonction
      */
     public BitVector and(BitVector otherVector) {
-        Preconditions.checkArgument(
-                size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
+        Preconditions.checkArgument(size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
                 "Two bit vectors of different sizes cannot be compared.");
 
         int[] andVector = new int[bitVector.length];
@@ -167,8 +165,7 @@ public final class BitVector {
      * @return la disjonction
      */
     public BitVector or(BitVector otherVector) {
-        Preconditions.checkArgument(
-                size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
+        Preconditions.checkArgument(size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
                 "Two bit vectors of different sizes cannot be compared.");
 
         int[] orVector = new int[bitVector.length];

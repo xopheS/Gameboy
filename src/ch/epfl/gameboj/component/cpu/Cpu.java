@@ -323,6 +323,7 @@ public final class Cpu implements Component, Clocked {
                 } else {
                     SP = Alu.unpackValue(sum);
                 }
+                setFlags(Alu.unpackFlags(sum));
             }
                 break;
 
@@ -781,28 +782,25 @@ public final class Cpu implements Component, Clocked {
 
     private void combineAluFlags(int vf, FlagSrc z, FlagSrc n, FlagSrc h, FlagSrc c) {
         FlagSrc[] tableFlag = { c, h, n, z };
-        for (int i = tableFlag.length; i < Flag.values().length; i++) {
-            switch (tableFlag[i - tableFlag.length]) {
-                case V0: {
-                    registers8.setBit(Reg.F, Flag.values()[i], false);
-                }
+        for (int i = 0; i < tableFlag.length; i++) {
+            switch (tableFlag[i]) {
+                case V0:
+                    registers8.setBit(Reg.F, Flag.values()[4 + i], false);
                     break;
-                case V1: {
-                    registers8.setBit(Reg.F, Flag.values()[i], true);
-                }
+                case V1:
+                    registers8.setBit(Reg.F, Flag.values()[4 + i], true);
                     break;
-                case ALU: {
-                    registers8.setBit(Reg.F, Flag.values()[i], Bits.test(Alu.unpackFlags(vf), Flag.values()[i]));
-                }
+                case ALU:
+                    registers8.setBit(Reg.F, Flag.values()[4 + i], Bits.test(Alu.unpackFlags(vf), Flag.values()[4 + i]));
                     break;
-                case CPU: {
-                    registers8.setBit(Reg.F, Flag.values()[i], Bits.test(registers8.get(Reg.F), Flag.values()[i]));
-                }
+                case CPU:
+                    registers8.setBit(Reg.F, Flag.values()[4 + i], Bits.test(registers8.get(Reg.F), Flag.values()[4 + i]));
                     break;
                 default:
                     break;
             }
         }
+        
         registers8.set(Reg.F, registers8.get(Reg.F) & 0b1111_0000);
     }
 

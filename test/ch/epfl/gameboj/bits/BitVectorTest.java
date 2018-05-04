@@ -18,25 +18,25 @@ class BitVectorTest {
     void initAll() {
         v1 = new BitVector.Builder(64)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
-                .setByte(6, 0b1111_1111)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
+                .setByte(6 * Byte.SIZE, 0b1111_1111)
                 .build();
         //0000000011111111000000000000000011001100000000001010101011110000
         //0000000000000000110011000000000010101010111100000000000000000000  
         v2 = new BitVector.Builder(64)
                 .setByte(0, 0b1101_1100)
-                .setByte(1, 0b1000_1000)
-                .setByte(3, 0b1101_1110)
-                .setByte(6, 0b0011_0110)
+                .setByte(1 * Byte.SIZE, 0b1000_1000)
+                .setByte(3 * Byte.SIZE, 0b1101_1110)
+                .setByte(6 * Byte.SIZE, 0b0011_0110)
                 .build();
         //0000000000110110000000000000000011011110000000001000100011011100  
         
         v3 = new BitVector.Builder(64)
                 .setByte(0, 0b1101_1100)
-                .setByte(1, 0b1000_1000)
-                .setByte(3, 0b1101_1110)
-                .setByte(6, 0b0011_0110)
+                .setByte(1 * Byte.SIZE, 0b1000_1000)
+                .setByte(3 * Byte.SIZE, 0b1101_1110)
+                .setByte(6 * Byte.SIZE, 0b0011_0110)
                 .build();
     }
     
@@ -51,13 +51,13 @@ class BitVectorTest {
         BitVector.Builder b = new BitVector.Builder(64);
         b.build();
         assertThrows(IllegalStateException.class, () -> { 
-            b.setByte(8, 0b0001_1100); });
+            b.setByte(8 * Byte.SIZE, 0b0001_1100); });
     }
     
     @Test
     void builderSetByteWorks() {
         BitVector.Builder b = new BitVector.Builder(64);
-        b.setByte(7, 0b1110_1100);
+        b.setByte(7 * Byte.SIZE, 0b1110_1100);
         assertEquals("1110110000000000000000000000000000000000000000000000000000000000", b.build().toString());
     }   
     
@@ -86,7 +86,7 @@ class BitVectorTest {
     
     @Test
     void shiftWorks() {
-        assertEquals("0000000000000000110011000000000010101010111100000000000000000000", v1.shift(16).toString());
+        assertEquals("0000000000000000110011000000000010101010111100000000000000000000", v1.shift(-16).toString());
     }
     
     @Test
@@ -117,8 +117,8 @@ class BitVectorTest {
     void shinz2() {
         BitVector v = new BitVector.Builder(32)
                 .setByte(0, 0b1111_0000)
-                .setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100)
+                .setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100)
                 .build();
         assertEquals("11001100000000001010101011110000", v.toString());
     }
@@ -139,11 +139,11 @@ class BitVectorTest {
         BitVector v1 = new BitVector(32, true);
         BitVector v2 = new BitVector(32);
         // 11001100000000001010101011110000
-        BitVector v3 = new BitVector.Builder(32).setByte(0, 0b1111_0000).setByte(1, 0b1010_1010)
-                .setByte(3, 0b1100_1100).build();
+        BitVector v3 = new BitVector.Builder(32).setByte(0, 0b1111_0000).setByte(1 * Byte.SIZE, 0b1010_1010)
+                .setByte(3 * Byte.SIZE, 0b1100_1100).build();
         // 00000000110101011111111000000000
-        BitVector v4 = new BitVector.Builder(32).setByte(0, 0b0000_0000).setByte(1, 0b1111_1110)
-                .setByte(2, 0b1101_0101).build();
+        BitVector v4 = new BitVector.Builder(32).setByte(0, 0b0000_0000).setByte(1 * Byte.SIZE, 0b1111_1110)
+                .setByte(2 * Byte.SIZE, 0b1101_0101).build();
         
         BitVector v5 = v1.extractZeroExtended(-4, 64);
         assertEquals("0000000000000000000000000000111111111111111111111111111111110000", v5.toString());
