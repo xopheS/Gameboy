@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.component;
 
+import java.util.Objects;
+
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
@@ -28,7 +30,7 @@ public final class Joypad implements Component {
      *            le cpu avec lequel le Joypad interagit
      */
     public Joypad(Cpu cpu) {
-        this.cpu = cpu;
+        this.cpu = Objects.requireNonNull(cpu);
     }
 
     /**

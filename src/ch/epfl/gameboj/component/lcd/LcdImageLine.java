@@ -117,7 +117,7 @@ public class LcdImageLine {
             break;               
         }
 
-        return new LcdImageLine(msbCopy, lsbCopy, opacity);
+        return new LcdImageLine(msbCopy, lsbCopy, msbCopy.or(lsbCopy)); //TODO opacity or msb or lsb?
     }
 
     // other & opacity | this & notOpacity

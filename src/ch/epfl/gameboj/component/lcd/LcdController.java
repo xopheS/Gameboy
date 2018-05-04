@@ -43,6 +43,7 @@ public final class LcdController implements Component, Clocked {
     private static final int MAX_SPRITES = 10, OAM_SPRITES = 40;
     private static final int SPRITE_ATTR_BYTES = 4;
     private static final int TILE_BYTE_LENGTH = 16;
+    private static final int WX_OFFSET = 7;
     private static final LcdImageLine EMPTY_LCD_LINE = new LcdImageLine(new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH));
     private LcdImage displayedImage;
     private final Ram videoRam, oamRam;
@@ -52,7 +53,6 @@ public final class LcdController implements Component, Clocked {
     private long lineStartT = 0;
     private boolean winActive = false;
     private int winY = 0;
-    private int adjustedWX = -7;
     private LcdImage.Builder nextImageBuilder;
     private QuickCopyInfo quickCopy = new QuickCopyInfo();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
@@ -103,8 +103,10 @@ public final class LcdController implements Component, Clocked {
 
     @Override
     public void cycle(long cycle) {
+        cyc = cycle;//XXX
+        System.out.println(Integer.toBinaryString(lcdRegs.get(LCDReg.LCDC)));
         if (quickCopy.isActive) {
-            if (quickCopy.currentIndex < 159) {
+            if (quickCopy.currentIndex < 160) {
                 write(AddressMap.OAM_START + quickCopy.currentIndex, bus.read(quickCopy.startAddress + quickCopy.currentIndex));
                 quickCopy.currentIndex++;
             } else {
@@ -112,7 +114,7 @@ public final class LcdController implements Component, Clocked {
             }
             nextNonIdleCycle++; 
         } else if (nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
-            nextNonIdleCycle = cycle + 20;
+            nextNonIdleCycle = cycle + MODE2_DURATION;
             setMode(2);
         } else if (cycle == nextNonIdleCycle && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
             reallyCycle(cycle);
@@ -123,8 +125,6 @@ public final class LcdController implements Component, Clocked {
         int mode0 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE0) ? 1 : 0;
         int mode1 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE1) ? 1 : 0;
         int mode = mode0 | (mode1 << 1);
-        
-        cyc = cycle;//XXX
 
         //TODO replace with a switch?
         if (mode == 0 && lcdRegs.get(LCDReg.LY) == LCD_HEIGHT - 1) {
@@ -190,6 +190,8 @@ public final class LcdController implements Component, Clocked {
         LcdImageLine nextLine = EMPTY_LCD_LINE, bgSpriteLine = EMPTY_LCD_LINE, fgSpriteLine = EMPTY_LCD_LINE;
         int lineIndex = lcdRegs.get(LCDReg.LY);
         
+        int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
+        
         if (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ)) {
             List<Integer> bgSpriteInfoL = new ArrayList<>(10);
             List<Integer> fgSpriteInfoL = new ArrayList<>(10);
@@ -219,7 +221,7 @@ public final class LcdController implements Component, Clocked {
         }
         
         if (lineIndex >= lcdRegs.get(LCDReg.WY) && winActive) {
-            nextLine = nextLine.join(computeWinLine(), adjustedWX);
+            nextLine = nextLine.join(computeWinLine(adjustedWX), adjustedWX);
         }
         
         nextLine = nextLine.below(fgSpriteLine);
@@ -250,7 +252,7 @@ public final class LcdController implements Component, Clocked {
         return nextBGLineBuilder.build().extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH).mapColors(lcdRegs.get(LCDReg.BGP));
     }
            
-    private LcdImageLine computeWinLine() {
+    private LcdImageLine computeWinLine(int adjustedWX) {
         LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_SIZE);
         
         winY++;
@@ -286,14 +288,15 @@ public final class LcdController implements Component, Clocked {
             boolean spritePalette = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.PALETTE.index());
             boolean hFlip = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.FLIP_H.index());
             boolean vFlip = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.FLIP_V.index());
+            if(vFlip) System.out.println("sss");
             int spriteTileIndex = readAttr(spriteIndex, SPRITE_ATTR.TILE_INDEX);
             
             if (hFlip) {
-                spriteLineBuilder.setBytes(0, tileLineMSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip),
-                        tileLineLSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip));
+                spriteLineBuilder.setBytes(0, tileLineMSB(spriteTileIndex, spriteIndex, lcdRegs.get(LCDReg.LY), vFlip),
+                        tileLineLSB(spriteTileIndex, spriteIndex, lcdRegs.get(LCDReg.LY), vFlip));
             } else {
-                spriteLineBuilder.setBytes(0, Bits.reverse8(tileLineMSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip)), 
-                        Bits.reverse8(tileLineLSB(spriteTileIndex, lcdRegs.get(LCDReg.LY), vFlip)));
+                spriteLineBuilder.setBytes(0, Bits.reverse8(tileLineMSB(spriteTileIndex, spriteIndex, lcdRegs.get(LCDReg.LY), vFlip)), 
+                        Bits.reverse8(tileLineLSB(spriteTileIndex, spriteIndex, lcdRegs.get(LCDReg.LY), vFlip)));
             }
             
             indSpriteLine = spriteLineBuilder.build().shift(-spriteX);
@@ -318,16 +321,16 @@ public final class LcdController implements Component, Clocked {
         return read(tileTypeAddress(tileTypeIndex, lineIndex) + 1);
     }
     
-    private int tileLineMSB(int tileTypeIndex, int lineIndex, boolean vFlipped) {
-        return read(tileTypeAddressS(tileTypeIndex, lineIndex, vFlipped) + 1);
+    private int tileLineMSB(int tileTypeIndex, int tileIndex, int lineIndex, boolean vFlipped) {
+        return read(tileTypeAddressS(tileTypeIndex, tileIndex, lineIndex, vFlipped) + 1);  //TODO FIGURE OUT -SPRITEY
     }
       
     private int tileLineLSB(int tileTypeIndex, int lineIndex) {
         return read(tileTypeAddress(tileTypeIndex, lineIndex));
     }
     
-    private int tileLineLSB(int tileTypeIndex, int lineIndex, boolean vFlipped) {
-        return read(tileTypeAddressS(tileTypeIndex, lineIndex, vFlipped));
+    private int tileLineLSB(int tileTypeIndex, int tileIndex, int lineIndex, boolean vFlipped) {
+        return read(tileTypeAddressS(tileTypeIndex, tileIndex, lineIndex, vFlipped));  //TODO FIGURE OUT -SPRITEY
     }
         
     private int tileTypeAddress(int tileTypeIndex, int lineIndex) {
@@ -344,19 +347,20 @@ public final class LcdController implements Component, Clocked {
         }
     }
     
-    private int tileTypeAddressS(int tileTypeIndex, int lineIndex, boolean vFlipped) {
-        int height = TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1);
+    private int tileTypeAddressS(int tileTypeIndex, int tileIndex, int lineIndex, boolean vFlipped) {
+        int height = TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1); //TODO FIGURE OUT -SPRITEY
+        int spriteY = read(AddressMap.OAM_START + tileIndex * 4);
         
         if (vFlipped) {
             return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + (height - Math.floorMod(lineIndex, height)) * 2;
         } else {
-            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, height) * 2;
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex - spriteY, height) * 2;
         }
     }
     
     private Integer[] spritesIntersectingLine() {
         int scanIndex = 0, foundSprites = 0;
-        int spriteHeight = TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1);
+        int spriteHeight = TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1);//TODO util method
         
         Integer[] intersect = new Integer[MAX_SPRITES];
         
@@ -378,7 +382,7 @@ public final class LcdController implements Component, Clocked {
         
         Arrays.sort(intersectIndex);
         
-        /*if (cyc >= 30_000_000 + (2 * (1L << 20)) - 17556) {
+        if (cyc >= 30_000_000 + (2 * (1L << 20)) - 17556) {
             Integer[] intIndex = new Integer[intersectIndex.length];
             boolean[] flipVer = new boolean[intersectIndex.length];
             boolean[] flipHor = new boolean[intersectIndex.length];
@@ -392,7 +396,7 @@ public final class LcdController implements Component, Clocked {
             System.out.println("Line index: " + lcdRegs.get(LCDReg.LY) + " sprite indexes " + Arrays.toString(intIndex));
             System.out.println("Vertical flip: " + Arrays.toString(flipVer));
             System.out.println("Horizontal flip: " + Arrays.toString(flipHor));
-        }*/ //XXX
+        } //XXX
         
         return intersectIndex;
     }
@@ -418,9 +422,10 @@ public final class LcdController implements Component, Clocked {
     }
        
     private void toggleWindow() {
-        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && !winActive) {
+        int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
+        if (adjustedWX >= 0 && adjustedWX < 160 && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && !winActive) {
             winActive = true;
-        } else if (!lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && winActive) {
+        } else if (!(adjustedWX >= 0 && adjustedWX < 160 && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN)) && winActive) {
             winY = lcdRegs.get(LCDReg.LY);
             winActive = false;
         }
@@ -454,6 +459,7 @@ public final class LcdController implements Component, Clocked {
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
             oamRam.write(address - AddressMap.OAM_START, data);
         } else if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
+            //TODO switch
             if (address == AddressMap.REGS_LCDC_START + LCDReg.LCDC.index()) {
                 lcdRegs.set(LCDReg.LCDC, data);
                 if (!lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
@@ -461,7 +467,6 @@ public final class LcdController implements Component, Clocked {
                     modifyLYorLYC(LCDReg.LY, 0);
                     nextNonIdleCycle = Long.MAX_VALUE;
                 }
-                toggleWindow();
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.STAT.index()) {
                 lcdRegs.set(LCDReg.STAT, (data & 0b1111_1000) | (lcdRegs.get(LCDReg.STAT) & 0b0000_0111));
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LY.index()) {
@@ -473,16 +478,11 @@ public final class LcdController implements Component, Clocked {
                 quickCopy.start(data);
             } else if (address == AddressMap.REGS_LCDC_START + LCDReg.WX.index()) {
                 lcdRegs.set(LCDReg.WX, data);
-                adjustedWX = lcdRegs.get(LCDReg.WX) - 7;
-                if (adjustedWX >= 0 && adjustedWX < 160 && !winActive) {
-                    winActive = true;
-                } else if (!(adjustedWX >= 0 && adjustedWX < 160) && winActive) {
-                    winY = lcdRegs.get(LCDReg.LY);
-                    winActive = false;
-                }
             } else {
                 lcdRegs.set(address - AddressMap.REGS_LCDC_START, data);
             }
+            
+            toggleWindow();
         }
     }
 

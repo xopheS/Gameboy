@@ -28,6 +28,7 @@ public final class JoypadVersion2 implements Component {
         case 3 : P1 = P1 | (0b11 << 4); break;
         }
     }
+    /////////////
     
     public JoypadVersion2(Cpu cpu) {
         
@@ -47,7 +48,7 @@ public final class JoypadVersion2 implements Component {
         if(index < lineSize) line1 = Bits.set(line1, index, true);
         else line2 = Bits.set(line2, index % lineSize, true);
         
-        setP1(true);
+        updateP1(true);
         
         if(Bits.clip(4, P1) != Bits.clip(4, lastP1)) cpu.requestInterrupt(Interrupt.JOYPAD); 
     }
@@ -60,11 +61,11 @@ public final class JoypadVersion2 implements Component {
         if(index < lineSize) line1 = Bits.set(line1, index, false);
         else line2 = Bits.set(line2, index % lineSize, false); 
         
-        setP1(false);
+        updateP1(false);
     }
     
     
-    private void setP1(boolean pressed) {
+    private void updateP1(boolean pressed) {
                 
         switch(Bits.extract(P1, 4, 2)) {
         case 0b00 : break;
@@ -82,9 +83,8 @@ public final class JoypadVersion2 implements Component {
 
     @Override
     public void write(int address, int data) throws IllegalArgumentException {
-        int lastP1 = P1;
         if(Preconditions.checkBits16(address) == AddressMap.REG_P1) 
-            P1 = (lastP1 & 0b0000_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
+            P1 = (P1 & 0b0000_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
     }
 
 }

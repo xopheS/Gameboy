@@ -19,7 +19,7 @@ import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 
 @DisplayName("Testinator 2000")
-class CpuTest {
+class CpuTest2 {
     
     Cpu cpu;
     Ram ram;
