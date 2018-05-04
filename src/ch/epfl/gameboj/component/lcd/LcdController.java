@@ -104,7 +104,6 @@ public final class LcdController implements Component, Clocked {
     @Override
     public void cycle(long cycle) {
         cyc = cycle;//XXX
-        System.out.println(Integer.toBinaryString(lcdRegs.get(LCDReg.LCDC)));
         if (quickCopy.isActive) {
             if (quickCopy.currentIndex < 160) {
                 write(AddressMap.OAM_START + quickCopy.currentIndex, bus.read(quickCopy.startAddress + quickCopy.currentIndex));
@@ -288,7 +287,6 @@ public final class LcdController implements Component, Clocked {
             boolean spritePalette = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.PALETTE.index());
             boolean hFlip = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.FLIP_H.index());
             boolean vFlip = Bits.test(readAttr(spriteIndex, SPRITE_ATTR.MISC), MISC.FLIP_V.index());
-            if(vFlip) System.out.println("sss");
             int spriteTileIndex = readAttr(spriteIndex, SPRITE_ATTR.TILE_INDEX);
             
             if (hFlip) {
@@ -352,7 +350,7 @@ public final class LcdController implements Component, Clocked {
         int spriteY = read(AddressMap.OAM_START + tileIndex * 4);
         
         if (vFlipped) {
-            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + (height - Math.floorMod(lineIndex, height)) * 2;
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + (height - Math.floorMod(lineIndex - spriteY, height)) * 2;
         } else {
             return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex - spriteY, height) * 2;
         }
@@ -382,7 +380,7 @@ public final class LcdController implements Component, Clocked {
         
         Arrays.sort(intersectIndex);
         
-        if (cyc >= 30_000_000 + (2 * (1L << 20)) - 17556) {
+        /*if (cyc >= 30_000_000 + (2 * (1L << 20)) - 17556) {
             Integer[] intIndex = new Integer[intersectIndex.length];
             boolean[] flipVer = new boolean[intersectIndex.length];
             boolean[] flipHor = new boolean[intersectIndex.length];
@@ -396,7 +394,7 @@ public final class LcdController implements Component, Clocked {
             System.out.println("Line index: " + lcdRegs.get(LCDReg.LY) + " sprite indexes " + Arrays.toString(intIndex));
             System.out.println("Vertical flip: " + Arrays.toString(flipVer));
             System.out.println("Horizontal flip: " + Arrays.toString(flipHor));
-        } //XXX
+        }*/ //XXX
         
         return intersectIndex;
     }
