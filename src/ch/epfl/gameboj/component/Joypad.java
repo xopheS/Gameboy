@@ -25,7 +25,7 @@ public final class Joypad implements Component {
      * Construit un Joypad.
      * 
      * @param cpu
-     * le cpu avec lequel le Joypad interagit
+     *            le cpu avec lequel le Joypad interagit
      */
     public Joypad(Cpu cpu) {
         this.cpu = cpu;
@@ -35,7 +35,7 @@ public final class Joypad implements Component {
      * Permet de simuler l'appui d'une touche.
      * 
      * @param k
-     * la touche appuyée
+     *            la touche appuyée
      */
     public void keyPressed(Key k) {
         int tmp = P1;
@@ -56,8 +56,8 @@ public final class Joypad implements Component {
     /**
      * Permet de simuler l'éliberation d'une touche.
      * 
-     * @param k 
-     * la touche libérée
+     * @param k
+     *            la touche libérée
      */
     public void keyReleased(Key k) {        
         if (k.ordinal() < LINE_LENGTH) {
@@ -69,6 +69,7 @@ public final class Joypad implements Component {
         updateP1();
     }
 
+    //Dans update P on reset la valeur des 4 premiers bits??
     private void updateP1() {               
         if (Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
             P1 = (P1 & 0b1111_0000) | line0;
@@ -80,6 +81,8 @@ public final class Joypad implements Component {
             P1 &= 0b1111_0000;
         }
     }
+    
+    
     
     @Override
     public int read(int address) throws IllegalArgumentException {
