@@ -7,7 +7,7 @@ import ch.epfl.gameboj.component.Component;
 
 /**
  * Bus : relie les éléments les uns aux autres et leur permet de communiquer
- * entre eux
+ * entre eux.
  *
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -17,7 +17,7 @@ public final class Bus {
     private final ArrayList<Component> attachedComponents = new ArrayList<Component>();
        
     /**
-     * Attache un composant au bus (en le rajoutant au tableau des composants)
+     * Attache un composant au bus (en le rajoutant au tableau des composants).
      * 
      * @param component
      *            le composant
@@ -31,7 +31,7 @@ public final class Bus {
     /**
      * Retourne la valeur stockée à l'adresse donnée si au moins un des
      * composants attaché au bus possède une valeur à cette adresse ou 0xFF
-     * sinon
+     * sinon.
      * 
      * @param address
      *            l'adresse
@@ -40,9 +40,9 @@ public final class Bus {
      *             si l'adresse n'est pas une valeur 16 bits
      */
     public int read(int address) {   
-    	Preconditions.checkBits16(address);   
-        for(Component c : attachedComponents) {
-            if(c.read(address) != Component.NO_DATA) {
+        Preconditions.checkBits16(address);
+        for (Component c : attachedComponents) {
+            if (c.read(address) != Component.NO_DATA) {
                 return c.read(address);
             }
         }
@@ -53,7 +53,7 @@ public final class Bus {
     
     /**
      * Ecrit la valeur à l'adresse donnée dans tous les composants connectés au
-     * bus 
+     * bus.
      * 
      * @param address
      *            l'adresse
@@ -64,9 +64,9 @@ public final class Bus {
      *             n'est pas une valeur 8 bits
      */
     public void write(int address, int data) {
-    	Preconditions.checkBits16(address);
-    	Preconditions.checkBits8(data);
-        for(Component c : attachedComponents) {
+        Preconditions.checkBits16(address);
+        Preconditions.checkBits8(data);
+        for (Component c : attachedComponents) {
             c.write(address, data);
         }
     }

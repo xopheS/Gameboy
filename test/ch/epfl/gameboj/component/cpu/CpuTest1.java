@@ -1,6 +1,6 @@
 package ch.epfl.gameboj.component.cpu;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import org.junit.jupiter.api.Test;
 
@@ -18,8 +18,9 @@ class CpuTest1 {
     }
 
     private void cycleCpu(Cpu cpu, long cycles) {
-        for (long c = 0; c < cycles; ++c)
+        for (long c = 0; c < cycles; ++c) {
             cpu.cycle(c);
+        }
     }
 
     @Test
@@ -52,7 +53,8 @@ class CpuTest1 {
         b.write(1, 0x11);
         b.write(2, Opcode.LD_B_A.encoding);
         cycleCpu(c, Opcode.LD_A_N8.cycles + Opcode.LD_B_A.cycles);
-        assertArrayEquals(new int[] {Opcode.LD_A_N8.totalBytes + Opcode.LD_B_A.totalBytes,0,0x11,0,0x11,0,0,0,0,0}, c._testGetPcSpAFBCDEHL());
+        assertArrayEquals(new int[] {Opcode.LD_A_N8.totalBytes 
+                + Opcode.LD_B_A.totalBytes,0,0x11,0,0x11,0,0,0,0,0}, c._testGetPcSpAFBCDEHL());
     }
     
     @Test

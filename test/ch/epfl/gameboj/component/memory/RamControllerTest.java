@@ -23,15 +23,16 @@ class RamControllerTest implements ComponentTest {
 
     Ram newRamFF() {
         Ram r = new Ram(0xFF + 1);
-        for (int i = 0; i <= 0xFF; ++i)
+        for (int i = 0; i <= 0xFF; ++i) {
             r.write(i, i);
+        }
         return r;
     }
 
     @Test
     void constructorFailsForNullRam() {
         assertThrows(NullPointerException.class,
-                () -> new RamController(null, 0));
+            () -> new RamController(null, 0));
     }
 
     @Test
@@ -41,7 +42,7 @@ class RamControllerTest implements ComponentTest {
             Ram r = newRamFF();
             int a = rng.nextInt(0x1000);
             assertThrows(IllegalArgumentException.class,
-                    () -> new RamController(r, a, a + r.size() + 1 + rng.nextInt(10)));
+                () -> new RamController(r, a, a + r.size() + 1 + rng.nextInt(10)));
         }
     }
 
@@ -52,8 +53,9 @@ class RamControllerTest implements ComponentTest {
             Ram r = newRamFF();
             int a = rng.nextInt(0xFFFF - r.size());
             RamController c = new RamController(r, a);
-            for (int j = 0; j < 256; ++j)
+            for (int j = 0; j < 256; ++j) {
                 assertEquals(j, c.read(a + j));
+            }
         }
     }
 
@@ -79,10 +81,12 @@ class RamControllerTest implements ComponentTest {
             int a = rng.nextInt(0xFFFF - r.size());
             RamController c = new RamController(r, a);
             int xor = 0b1010_0101;
-            for (int j = 0; j < 256; ++j)
+            for (int j = 0; j < 256; ++j) {
                 c.write(a + j, j ^ xor);
-            for (int j = 0; j < 256; ++j)
+            }
+            for (int j = 0; j < 256; ++j) {
                 assertEquals(j ^ xor, r.read(j));
+            }
         }
     }
 
@@ -96,8 +100,9 @@ class RamControllerTest implements ComponentTest {
             int a = rng.nextInt(o);
             c.write(a, 0xDA);
         }
-        for (int i = 0; i < r.size(); ++i)
+        for (int i = 0; i < r.size(); ++i) {
             assertEquals(i, r.read(i));
+        }
     }
 }
 

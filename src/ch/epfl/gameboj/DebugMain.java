@@ -1,4 +1,5 @@
 package ch.epfl.gameboj;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -8,6 +9,10 @@ import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
 
 public final class DebugMain {
+    private DebugMain() {
+        
+    }
+    
     //First argument: name of ROM file, second argument: number of cycles to execute (30 000 000)
     public static void main(String[] args) throws IOException {
         File romFile = new File(args[0]);
