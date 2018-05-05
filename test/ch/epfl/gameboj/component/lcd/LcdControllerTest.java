@@ -1,6 +1,11 @@
 package ch.epfl.gameboj.component.lcd;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.hamcrest.*;
+import org.hamcrest.core.*;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,16 +15,20 @@ import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.lcd.LcdController;
 
 class LcdControllerTest {
+    static final int LCD_WIDTH = 160;
+    static final int LCD_HEIGHT = 144;
+    
     Cpu mockCpu;
     LcdController lcdController;
     
     @BeforeAll
     void setupBeforeAll() {
-        mockCpu = new Cpu();
+        mockCpu = mock(Cpu.class);
     }
 
     @BeforeEach
     void setupBeforeEach() {
+        mockCpu = mock(Cpu.class);
         lcdController = new LcdController(mockCpu);
     }
     
@@ -29,8 +38,8 @@ class LcdControllerTest {
     }
 
     @Test
-    void testCurrentImage() {
-        fail("Not yet implemented");
+    void testCurrentImageInitiallyBlank() {
+        assertThat(lcdController.currentImage(), is(equalTo(new LcdImageLine(new BitVector())));
     }
 
     @Test

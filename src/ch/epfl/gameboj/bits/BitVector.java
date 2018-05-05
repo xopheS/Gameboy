@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.bits;
 
+import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -15,6 +17,8 @@ import ch.epfl.gameboj.Preconditions;
 
 public final class BitVector {
 
+    public static final BitVector BLANK_LCD_VECTOR = new BitVector(LCD_WIDTH);
+    
     private final int[] bitVector;
 
     // TEST FUNCTION////////////////////////////////////////////

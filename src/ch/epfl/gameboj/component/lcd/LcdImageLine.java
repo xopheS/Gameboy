@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.component.lcd;
 
+import static ch.epfl.gameboj.bits.BitVector.BLANK_LCD_VECTOR;
+
 import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.Bits;
 
@@ -8,6 +10,9 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 
 public class LcdImageLine {
+    
+    public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR, BLANK_LCD_VECTOR);
+    
     private final BitVector LSB;
     private final BitVector MSB;
     private final BitVector opacity;

@@ -1,8 +1,10 @@
 package ch.epfl.gameboj.component.lcd;
 
+import static ch.epfl.gameboj.component.lcd.LcdImageLine.BLANK_LCD_IMAGE_LINE;
+import static ch.epfl.gameboj.component.lcd.LcdImage.BLANK_LCD_IMAGE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,13 +46,11 @@ public final class LcdController implements Component, Clocked {
     private static final int SPRITE_ATTR_BYTES = 4;
     private static final int TILE_BYTE_LENGTH = 16;
     private static final int WX_OFFSET = 7;
-    private static final LcdImageLine EMPTY_LCD_LINE = new LcdImageLine(new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH), new BitVector(LCD_WIDTH));
-    private LcdImage displayedImage;
+    private LcdImage displayedImage = BLANK_LCD_IMAGE;
     private final Ram videoRam, oamRam;
     private final Cpu cpu;
     private Bus bus;
     private long nextNonIdleCycle = Long.MAX_VALUE;
-    private long lineStartT = 0;
     private boolean winActive = false;
     private int winY = 0;
     private LcdImage.Builder nextImageBuilder;
@@ -88,12 +88,6 @@ public final class LcdController implements Component, Clocked {
 
         ArrayList<LcdImageLine> imgLines = new ArrayList<>(LCD_HEIGHT);
 
-        for (int i = 0; i < LCD_HEIGHT; ++i) {
-            imgLines.add(EMPTY_LCD_LINE);
-        }
-
-        displayedImage = new LcdImage(LCD_WIDTH, LCD_HEIGHT, imgLines);
-
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
     }
 
@@ -130,7 +124,6 @@ public final class LcdController implements Component, Clocked {
             displayedImage = nextImageBuilder.build();
             modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
             setMode(1);
-            lineStartT = cycle;
             nextNonIdleCycle += LINE_CYCLE_DURATION;
         } else if (mode == 2) {
             nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine());
@@ -141,7 +134,6 @@ public final class LcdController implements Component, Clocked {
             nextNonIdleCycle += MODE0_DURATION;
         } else if (mode == 0) {
             modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
-            lineStartT = cycle;
             setMode(2);
             nextNonIdleCycle += MODE2_DURATION;
         } else if (mode == 1) {
@@ -186,7 +178,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeLine() {  
-        LcdImageLine nextLine = EMPTY_LCD_LINE, bgSpriteLine = EMPTY_LCD_LINE, fgSpriteLine = EMPTY_LCD_LINE;
+        LcdImageLine nextLine = BLANK_LCD_IMAGE_LINE, bgSpriteLine = BLANK_LCD_IMAGE_LINE, fgSpriteLine = BLANK_LCD_IMAGE_LINE;
         int lineIndex = lcdRegs.get(LCDReg.LY);
         
         int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
@@ -277,7 +269,7 @@ public final class LcdController implements Component, Clocked {
     
     private LcdImageLine computeSpriteLine(Integer[] spriteInfo) { 
         LcdImageLine[] spriteLines = new LcdImageLine[spriteInfo.length];
-        LcdImageLine spriteLine = EMPTY_LCD_LINE;
+        LcdImageLine spriteLine = BLANK_LCD_IMAGE_LINE;
         
         for (int i = 0; i < spriteInfo.length; ++i) {
             LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);

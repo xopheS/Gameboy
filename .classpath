@@ -12,5 +12,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/mockito-core-2.9.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

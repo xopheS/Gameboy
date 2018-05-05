@@ -1,5 +1,9 @@
 package ch.epfl.gameboj.component.lcd;
 
+import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
+import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
+import static ch.epfl.gameboj.component.lcd.LcdImageLine.BLANK_LCD_IMAGE_LINE;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,6 +12,9 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 
 public class LcdImage {
+    
+    public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT, Collections.nCopies(LCD_HEIGHT, BLANK_LCD_IMAGE_LINE));
+    
     private final int width;
     private final int height;
     private final List<LcdImageLine> imageLines;
