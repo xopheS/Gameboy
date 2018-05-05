@@ -358,7 +358,7 @@ public final class LcdController implements Component, Clocked {
     
     private Integer[] spritesIntersectingLine() {
         int scanIndex = 0, foundSprites = 0;
-        int spriteHeight = getHeight();//TODO util method
+        int spriteHeight = getHeight();
         
         Integer[] intersect = new Integer[MAX_SPRITES];
         
@@ -372,11 +372,7 @@ public final class LcdController implements Component, Clocked {
             scanIndex++;
         }
         
-        Integer[] intersectIndex = new Integer[foundSprites];
-        
-        for (int i = 0; i < foundSprites; ++i) {
-            intersectIndex[i] = intersect[i];
-        }
+        Integer[] intersectIndex = trimIntArray(intersect, foundSprites);
         
         Arrays.sort(intersectIndex);
         
@@ -395,6 +391,16 @@ public final class LcdController implements Component, Clocked {
             System.out.println("Vertical flip: " + Arrays.toString(flipVer));
             System.out.println("Horizontal flip: " + Arrays.toString(flipHor));
         }*/ //XXX
+        
+        return intersectIndex;
+    }
+    
+    private Integer[] trimIntArray(Integer[] array, int trimIndex) {
+        Integer[] intersectIndex = new Integer[trimIndex];
+        
+        for (int i = 0; i < trimIndex; ++i) {
+            intersectIndex[i] = array[i];
+        }
         
         return intersectIndex;
     }
