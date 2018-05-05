@@ -346,7 +346,7 @@ public final class LcdController implements Component, Clocked {
     }
     
     private int tileTypeAddressS(int tileTypeIndex, int tileIndex, int lineIndex, boolean vFlipped) {
-        int height = TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1); //TODO FIGURE OUT -SPRITEY
+        int height = getHeight();
         int spriteY = read(AddressMap.OAM_START + tileIndex * 4);
         
         if (vFlipped) {
@@ -358,7 +358,7 @@ public final class LcdController implements Component, Clocked {
     
     private Integer[] spritesIntersectingLine() {
         int scanIndex = 0, foundSprites = 0;
-        int spriteHeight = TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1);//TODO util method
+        int spriteHeight = getHeight();//TODO util method
         
         Integer[] intersect = new Integer[MAX_SPRITES];
         
@@ -397,6 +397,10 @@ public final class LcdController implements Component, Clocked {
         }*/ //XXX
         
         return intersectIndex;
+    }
+    
+    private int getHeight() {
+        return TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1);
     }
     
     private int packSpriteInfo(int spriteIndex) {

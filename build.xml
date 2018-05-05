@@ -3,6 +3,10 @@
 		Ant complete build file for the gameboj project.
 	</description>
 	
+	<dependency org='org.mockito' name='mockito-android' rev='2.18.5'>
+	  <artifact name='mockito-android' ext='pom' />
+	</dependency>
+	
 	<attribute name="src.dir" value="src"/>
 	
 	<attribute name="build.dir" value="build"/>
