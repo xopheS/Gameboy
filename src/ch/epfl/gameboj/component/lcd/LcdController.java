@@ -53,7 +53,7 @@ public final class LcdController implements Component, Clocked {
     private long nextNonIdleCycle = Long.MAX_VALUE;
     private boolean winActive = false;
     private int winY = 0;
-    private LcdImage.Builder nextImageBuilder;
+    private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
     private QuickCopyInfo quickCopy = new QuickCopyInfo();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     
@@ -85,10 +85,6 @@ public final class LcdController implements Component, Clocked {
         this.cpu = Objects.requireNonNull(cpu);
         videoRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
         oamRam = new Ram(AddressMap.OAM_RAM_SIZE);
-
-        ArrayList<LcdImageLine> imgLines = new ArrayList<>(LCD_HEIGHT);
-
-        nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
     }
 
     public LcdImage currentImage() {
@@ -107,6 +103,7 @@ public final class LcdController implements Component, Clocked {
             }
             nextNonIdleCycle++; 
         } else if (nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
+            System.out.println("pow on " + cyc);
             nextNonIdleCycle = cycle + MODE2_DURATION;
             setMode(2);
         } else if (cycle == nextNonIdleCycle && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
@@ -123,6 +120,7 @@ public final class LcdController implements Component, Clocked {
         if (mode == 0 && lcdRegs.get(LCDReg.LY) == LCD_HEIGHT - 1) {
             displayedImage = nextImageBuilder.build();
             modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
+            System.out.println("xxx");
             setMode(1);
             nextNonIdleCycle += LINE_CYCLE_DURATION;
         } else if (mode == 2) {
@@ -165,6 +163,7 @@ public final class LcdController implements Component, Clocked {
                 if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) {
                     cpu.requestInterrupt(Interrupt.LCD_STAT);
                 }
+                System.out.println("inter");
                 cpu.requestInterrupt(Interrupt.VBLANK);
                 break;
             case 2:
@@ -438,7 +437,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     @Override
-    public int read(int address) throws IllegalArgumentException {
+    public int read(int address) {
         if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
             return videoRam.read(address - AddressMap.VIDEO_RAM_START);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
@@ -451,7 +450,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     @Override
-    public void write(int address, int data) throws IllegalArgumentException {
+    public void write(int address, int data) {
         Preconditions.checkBits8(data);
 
         if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
@@ -493,9 +492,7 @@ public final class LcdController implements Component, Clocked {
 
         if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
             lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
-            if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_LYC)) {
-                cpu.requestInterrupt(Interrupt.LCD_STAT);
-            }
+            cpu.requestInterrupt(Interrupt.LCD_STAT);
         } else {
             lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, false);
         }

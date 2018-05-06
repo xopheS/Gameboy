@@ -13,7 +13,7 @@ public final class Joypad implements Component {
 
     private final Cpu cpu;
 
-    public int P1 = 0;
+    private int P1 = 0;
     private int line0 = 0;
     private int line1 = 0;
 
@@ -50,16 +50,17 @@ public final class Joypad implements Component {
         
         updateP1();
         
-        if (Bits.clip(4, P1) < Bits.clip(4, tmp)) {
+        if (Bits.clip(4, P1) > Bits.clip(4, tmp)) {
+            //System.out.println("joypad");
             cpu.requestInterrupt(Interrupt.JOYPAD);
         }
     }
 
     /**
-     * Permet de simuler l'Ã©liberation d'une touche.
+     * Permet de simuler l'éliberation d'une touche.
      * 
      * @param k
-     *            la touche libÃ©rÃ©e
+     *            la touche libérée
      */
     public void keyReleased(Key k) {        
         if (k.ordinal() < LINE_LENGTH) {
@@ -71,36 +72,26 @@ public final class Joypad implements Component {
         updateP1();
     }
 
-    //Dans update P on reset la valeur des 4 premiers bits??
-    private void updateP1() {               
+    private void updateP1() {    
+        P1 &= 0b1111_0000;
         if (Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
-            P1 = (P1 & 0b1111_0000) | line0;
+            P1 |= line0;
         } else if (!Bits.test(P1, KBState.LINE0) && Bits.test(P1, KBState.LINE1)) {
-            P1 = (P1 & 0b1111_0000) | line1;
+            P1 |= line1;
         } else if (Bits.test(P1, KBState.LINE0) && Bits.test(P1, KBState.LINE1)) {
-            P1 = (P1 & 0b1111_0000) | line0 | line1;
-        } else if (!Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
-            P1 &= 0b1111_0000;
+            P1 |= line0 | line1;
         }
     }
-    
-    
-    
+       
     @Override
-    public int read(int address) throws IllegalArgumentException {
-        if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
-            return Bits.complement8(P1);
-        }
-        
-        return NO_DATA;
+    public int read(int address) {  
+        return Preconditions.checkBits16(address) == AddressMap.REG_P1 ? Bits.complement8(P1) : NO_DATA;
     }
 
     @Override
-    public void write(int address, int data) throws IllegalArgumentException {
+    public void write(int address, int data) {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
-            if (!Bits.test(data, KBState.LINE0) || !Bits.test(data, KBState.LINE1)) {
-                P1 = (P1 & 0b0000_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
-            }
+            P1 = (P1 & 0b1100_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
         }
     }
 }

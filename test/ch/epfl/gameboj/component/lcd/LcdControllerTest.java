@@ -1,67 +1,134 @@
 package ch.epfl.gameboj.component.lcd;
 
-import static org.junit.Assert.assertThat;
+import static ch.epfl.gameboj.component.lcd.LcdImage.BLANK_LCD_IMAGE;
+import static ch.epfl.gameboj.component.Component.NO_DATA;
+
 import static org.junit.jupiter.api.Assertions.*;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.CoreMatchers.*;
+
 import static org.mockito.Mockito.*;
 
-import org.hamcrest.*;
-import org.hamcrest.core.*;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ch.epfl.gameboj.AddressMap;
+import ch.epfl.gameboj.Bus;
+import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu;
+import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 import ch.epfl.gameboj.component.lcd.LcdController;
 
 class LcdControllerTest {
     static final int LCD_WIDTH = 160;
     static final int LCD_HEIGHT = 144;
     
-    Cpu mockCpu;
+    static Cpu mockCpu;  
+    static Bus mockBus;
     LcdController lcdController;
     
     @BeforeAll
-    void setupBeforeAll() {
-        mockCpu = mock(Cpu.class);
+    static void setupBeforeAll() {   
+        
     }
 
     @BeforeEach
     void setupBeforeEach() {
         mockCpu = mock(Cpu.class);
+        
+        mockBus = mock(Bus.class);
+        
         lcdController = new LcdController(mockCpu);
-    }
-    
-    @Test
-    void testLcdController() {
-        fail("Not yet implemented");
+        
+        lcdController.attachTo(mockBus);
     }
 
     @Test
     void testCurrentImageInitiallyBlank() {
-        assertThat(lcdController.currentImage(), is(equalTo(new LcdImageLine(new BitVector())));
+        assertThat(lcdController.currentImage(), is(equalTo(BLANK_LCD_IMAGE)));
+    }
+    
+    @Test
+    void testQuickCopyWorks() {        
+        int[] busMem = new int[500];
+        int startAddressMSB = 0b01101101;
+        int startAddress = startAddressMSB << Byte.SIZE;
+        
+        for (int i = startAddress; i < startAddress + 500; ++i) {
+            busMem[i - startAddress] = Bits.clip(8, i);
+            when(mockBus.read(i)).thenReturn(Bits.clip(8, i));
+        }
+        
+        lcdController.write(AddressMap.REGS_LCDC_START + 6, startAddressMSB);
+
+        for (int i = 0; i < 160; ++i) {
+            lcdController.cycle(i);
+            assertThat(lcdController.read(AddressMap.OAM_START + i), is(equalTo(busMem[i])));
+        }
     }
 
     @Test
-    void testCycle() {
+    void testCycleVBLANKAtCorrectInstants() {
         long[] firstTenVBLANK = new long[] { 83302, 100858, 118414, 135970, 153526, 171082, 188638, 206194, 223750, 241306 };
-        long[] detectedVBLANK = new long[10];
-        fail("Not yet implemented");
+        int vblankNum = 0;
+        
+        for (int i = 0; i < 241307; ++i) {
+            lcdController.cycle(i);
+            if (i == firstTenVBLANK[vblankNum]) {
+                verify(mockCpu, times(vblankNum + 1)).requestInterrupt(Interrupt.VBLANK);
+            }
+        }
     }
 
     @Test
     void testAttachTo() {
-        fail("Not yet implemented");
+        verify(mockBus).attach(lcdController);
     }
 
     @Test
-    void testRead() {
-        fail("Not yet implemented");
+    void testReadReturnsNO_DATAWhenOtherAddress() {
+        lcdController.write(AddressMap.VIDEO_RAM_START + 5, 0x45);
+        assertThat(lcdController.read(0x5), is(equalTo(NO_DATA)));
+    }
+    
+    @Test
+    void testReadReturnsVRAMWhenVRAMAddress() {
+        lcdController.write(AddressMap.VIDEO_RAM_START + 5, 0x45);
+        assertThat(lcdController.read(AddressMap.VIDEO_RAM_START + 5), is(equalTo(0x45)));
+    }
+    
+    @Test
+    void testReadReturnsOAMWhenOAMAddress() {
+        lcdController.write(AddressMap.OAM_START + 5, 0x46);
+        assertThat(lcdController.read(AddressMap.OAM_START + 5), is(equalTo(0x46)));
+    }
+    
+    @Test
+    void testReadReturnsRegsWhenRegsAddress() {
+        lcdController.write(AddressMap.REGS_LCDC_START + 5, 0b11);
+        assertThat(lcdController.read(AddressMap.REGS_LCDC_START + 5), is(equalTo(0b11)));
     }
 
     @Test
-    void testWrite() {
-        fail("Not yet implemented");
+    void testWriteDoesNothingWhenOtherAddress() {
+        lcdController.write(0, 0x43);
+        //TODO
     }
 
+    @Test
+    void testWriteWritesToVRAMWhenCorrectAddress() {
+        lcdController.write(AddressMap.VIDEO_RAM_START + 50, 0x23);
+        assertThat(lcdController.read(AddressMap.VIDEO_RAM_START + 50), is(equalTo(0x23)));
+    }
+    
+    @Test
+    void testWriteWritesToOAMWhenCorrectAddress() {
+        lcdController.write(AddressMap.OAM_START + 50, 0x25);
+        assertThat(lcdController.read(AddressMap.OAM_START + 50), is(equalTo(0x25)));
+    }
 }

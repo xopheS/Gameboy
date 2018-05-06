@@ -63,7 +63,7 @@ public final class Bits {
      *             et 32 (exclus))
      */
     public static boolean test(int bits, int index) {
-        return !((bits >> Objects.checkIndex(index, Integer.SIZE)) % 2 == 0);
+        return (bits & mask(Objects.checkIndex(index, Integer.SIZE))) != 0;
     }
 
     /**
@@ -128,7 +128,8 @@ public final class Bits {
      *             (inclus)
      */
     public static int clip(int size, int bits) {
-        return Objects.checkIndex(size, Integer.SIZE + 1) == 0 ? 0 : (bits << (Integer.SIZE - size)) >>> (Integer.SIZE - size);
+        Preconditions.checkArgument(size >= 0 && size <= Integer.SIZE, "The size must be between 0 (inclusive) and 32 (inclusive)");
+        return size == 0 ? 0 : (bits << (Integer.SIZE - size)) >>> (Integer.SIZE - size);
     }
 
     /**
@@ -169,9 +170,9 @@ public final class Bits {
      *             la valeur donnée n'est pas une valeur de size bits
      */
     public static int rotate(int size, int bits, int distance) {
-        Preconditions.checkArgument(clip(size, bits) == bits);
+        Preconditions.checkArgument(bits == clip(size, bits) && size > 0 && size <= Integer.SIZE);
         if (distance != 0) {
-            int reducedDistance = Math.floorMod(distance, Objects.checkIndex(size, Integer.SIZE + 1));
+            int reducedDistance = Math.floorMod(distance, size);
             int bits1 = bits << reducedDistance;
             int bits2 = bits >>> size - reducedDistance;
 
@@ -192,9 +193,7 @@ public final class Bits {
      *             si la valeur donnée n'est pas une valeur de 8 bits
      */
     public static int signExtend8(int b) {
-        byte y = (byte) Preconditions.checkBits8(b);
-        int z = y;
-        return z;
+        return (byte) Preconditions.checkBits8(b);
     }
 
     /**
@@ -224,7 +223,7 @@ public final class Bits {
      *             si la valeur donnée n'est pas une valeur de 8 bits 
      */
     public static int complement8(int b) {
-        return Preconditions.checkBits8(b) ^ 0b00000000_00000000_00000000_11111111;
+        return Bits.clip(8, ~Preconditions.checkBits8(b));
     }
 
     /**
@@ -241,6 +240,6 @@ public final class Bits {
      *             si la valeur donnée n'est pas une valeur de 8 bits 
      */
     public static int make16(int highB, int lowB) {
-        return Preconditions.checkBits8(highB) << 8 | Preconditions.checkBits8(lowB);
+        return Preconditions.checkBits8(highB) << Byte.SIZE | Preconditions.checkBits8(lowB);
     }
 }
