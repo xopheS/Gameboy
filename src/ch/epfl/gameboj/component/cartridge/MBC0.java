@@ -47,10 +47,10 @@ public class MBC0 implements Component {
      */
     @Override
     public int read(int address) {
-        if (Preconditions.checkBits16(address) < 0 || address >= 32768) {
-            return NO_DATA;
+        if (Preconditions.checkBits16(address) >= 0 && address < MBC0_SIZE) {
+            return rom.read(address);
         }
-        return rom.read(address);
+        return NO_DATA;
     }
 
     /*
@@ -60,8 +60,6 @@ public class MBC0 implements Component {
      */
     @Override
     public void write(int address, int data) {
-        Preconditions.checkBits16(address);
-        Preconditions.checkBits8(data);
-        // Impossible to alter a ROM
+        throw new UnsupportedOperationException("Cannot write to a ROM");
     }
 }

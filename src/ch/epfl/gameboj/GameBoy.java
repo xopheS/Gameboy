@@ -22,18 +22,19 @@ import ch.epfl.gameboj.component.memory.RamController;
 public final class GameBoy {
 
     private final Bus bus = new Bus();
-    private final Ram workRam;
-    private final RamController workRamController, workRamEchoController;
+    private final Ram workRam = new Ram(AddressMap.WORK_RAM_SIZE);
+    private final RamController workRamController = new RamController(workRam, AddressMap.WORK_RAM_START, AddressMap.WORK_RAM_END);
+    private final RamController workRamEchoController = new RamController(workRam, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
     private final BootRomController bootRomController;
-    private final Timer timer;
-    private final Cpu cpu;
-    private final LcdController lcdController;
-    private final Joypad joypad;
+    private final Cpu cpu = new Cpu();
+    private final Timer timer = new Timer(cpu);
+    private final LcdController lcdController = new LcdController(cpu);
+    private final Joypad joypad = new Joypad(cpu);
 
     public static final long CYCLES_PER_SECOND = (long) Math.pow(2, 20);
     public static final double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / Math.pow(10, 9);
 
-    private long cycles;
+    private long currentCycle;
 
     /**
      * Constructeur qui initialise une Gameboy avec une cartouche donnée.
@@ -45,27 +46,18 @@ public final class GameBoy {
      *             si la cartouche est null
      */
     public GameBoy(Cartridge cartridge) {
-        workRam = new Ram(AddressMap.WORK_RAM_SIZE);
-
         bootRomController = new BootRomController(Objects.requireNonNull(cartridge));
         bootRomController.attachTo(bus);
-
-        workRamController = new RamController(workRam, AddressMap.WORK_RAM_START, AddressMap.WORK_RAM_END);
-        workRamEchoController = new RamController(workRam, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
 
         workRamController.attachTo(bus);
         workRamEchoController.attachTo(bus);
 
-        cpu = new Cpu();
         cpu.attachTo(bus);
 
-        timer = new Timer(cpu);
         timer.attachTo(bus);
 
-        lcdController = new LcdController(cpu);
         lcdController.attachTo(bus);
 
-        joypad = new Joypad(cpu);
         joypad.attachTo(bus);
     }
 
@@ -80,13 +72,12 @@ public final class GameBoy {
      *             si le cycle à atteindre est strictement inférieur au cycle actuel
      */
     public void runUntil(long cycle) {
-        Preconditions.checkArgument(cycles <= cycle);
-        while (cycles < cycle) {
-            timer.cycle(cycles);
-            lcdController.cycle(cycles);
-            cpu.cycle(cycles);
-            //System.out.println(joypad.P1);
-            cycles++;
+        Preconditions.checkArgument(currentCycle <= cycle);
+        while (currentCycle < cycle) {
+            timer.cycle(currentCycle);
+            lcdController.cycle(currentCycle);
+            cpu.cycle(currentCycle);
+            currentCycle++;
         }
     }
 
@@ -96,7 +87,7 @@ public final class GameBoy {
      * @return le cycle actuel
      */
     public long cycles() {
-        return cycles;
+        return currentCycle;
     }
 
     /**
@@ -143,5 +134,4 @@ public final class GameBoy {
     public Joypad joypad() {
         return joypad;
     }
-
 }

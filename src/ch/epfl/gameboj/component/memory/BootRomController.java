@@ -59,7 +59,7 @@ public final class BootRomController implements Component {
     @Override
     public int read(int address) {
         if ((Preconditions.checkBits16(address) >= AddressMap.BOOT_ROM_START) && address < AddressMap.BOOT_ROM_END && isActivated) {
-            return bootRom.read(address);
+            return bootRom.read(address - AddressMap.BOOT_ROM_START);
         }
         return cartridge.read(address);    
     }
@@ -76,7 +76,7 @@ public final class BootRomController implements Component {
      */
     @Override
     public void write(int address, int data) {
-        if (address == AddressMap.REG_BOOT_ROM_DISABLE) {
+        if (address == AddressMap.REG_BOOT_ROM_DISABLE && !isActivated) {
             isActivated = false;
         } else {
             cartridge.write(address, data);

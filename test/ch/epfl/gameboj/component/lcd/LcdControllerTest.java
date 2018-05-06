@@ -16,6 +16,8 @@ import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
@@ -31,6 +33,9 @@ class LcdControllerTest {
     static Cpu mockCpu;  
     static Bus mockBus;
     LcdController lcdController;
+    
+    int vblankNum = 0;
+    long currentCycle = 0;
     
     @BeforeAll
     static void setupBeforeAll() {   
@@ -75,14 +80,26 @@ class LcdControllerTest {
     @Test
     void testCycleVBLANKAtCorrectInstants() {
         long[] firstTenVBLANK = new long[] { 83302, 100858, 118414, 135970, 153526, 171082, 188638, 206194, 223750, 241306 };
-        int vblankNum = 0;
+        long[] firstTenVBLANKActual = new long[10];
+        long powerOn = firstTenVBLANK[0] - 16416;
+        
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock arg0) {
+                firstTenVBLANKActual[vblankNum] = currentCycle;
+                return null;
+            }           
+        }).when(mockCpu).requestInterrupt(Interrupt.VBLANK);
         
         for (int i = 0; i < 241307; ++i) {
+            currentCycle = i;
+            if (i == powerOn) lcdController.write(AddressMap.REGS_LCDC_START, 0b1000_0000);
             lcdController.cycle(i);
             if (i == firstTenVBLANK[vblankNum]) {
-                verify(mockCpu, times(vblankNum + 1)).requestInterrupt(Interrupt.VBLANK);
+                vblankNum++;
             }
         }
+        
+        assertThat(firstTenVBLANKActual, is(equalTo(firstTenVBLANK)));
     }
 
     @Test

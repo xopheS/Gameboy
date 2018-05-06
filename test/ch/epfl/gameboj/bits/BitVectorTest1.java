@@ -10,7 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class BitVectorTest {
+class BitVectorTest1 {
 
     BitVector v1, v2, v3;
     
