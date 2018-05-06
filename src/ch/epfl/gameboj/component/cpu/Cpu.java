@@ -27,7 +27,7 @@ public final class Cpu implements Component, Clocked {
     private static final int opcodePrefix = 0xCB;
 
     private Bus bus;
-    private Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
+    private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
 
     // PC = program counter, stores the address of the next instruction
     private int PC = 0;
@@ -64,51 +64,11 @@ public final class Cpu implements Component, Clocked {
      * l'ordre dans lequel elles apparaissent dans les registres IF et IE.
      *
      */
-    public enum Interrupt implements Bit {
-        VBLANK, LCD_STAT, TIMER, SERIAL, JOYPAD
-    }
+    public enum Interrupt implements Bit { VBLANK, LCD_STAT, TIMER, SERIAL, JOYPAD }
 
     private final RegisterFile<Register> registers8 = new RegisterFile<>(Reg.values());
 
     private long nextNonIdleCycle;
-
-    // TEST Functions
-    /**
-     * Set f.
-     * @param Z
-     * Z
-     * @param C
-     * C
-     */
-    public void setF(boolean Z, boolean C) {
-        registers8.setBit(Reg.F, Flag.UNUSED_0, false);
-        registers8.setBit(Reg.F, Flag.UNUSED_1, false);
-        registers8.setBit(Reg.F, Flag.UNUSED_2, false);
-        registers8.setBit(Reg.F, Flag.UNUSED_3, false);
-        registers8.setBit(Reg.F, Flag.Z, Z);
-        registers8.setBit(Reg.F, Flag.N, false);
-        registers8.setBit(Reg.F, Flag.H, false);
-        registers8.setBit(Reg.F, Flag.C, C);
-    }
-
-    public void setF(int a) {
-        Preconditions.checkBits8(a);
-        registers8.set(Reg.F, a);
-    }
-
-    public boolean getIME() {
-        return IME;
-    }
-
-    public void setIE(int a) {
-        IE = a;
-    }
-
-    public void setIF(int a) {
-        IF = a;
-    }
-
-    ////////////////////////////////////////////////////////////////////////
 
     private static Opcode[] buildOpcodeTable(Opcode.Kind opKind) {
         Opcode[] opcodeTable = new Opcode[256];
@@ -853,8 +813,8 @@ public final class Cpu implements Component, Clocked {
             return IE;
         } else if (address == AddressMap.REG_IF) {
             return IF;
-        } else if (address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END) {
-            return highRam.read(address - AddressMap.HIGH_RAM_START);
+        } else if (address >= AddressMap.HRAM_START && address < AddressMap.HRAM_END) {
+            return highRam.read(address - AddressMap.HRAM_START);
         }
         return NO_DATA;
     }
@@ -881,8 +841,8 @@ public final class Cpu implements Component, Clocked {
             IE = data;
         } else if (address == AddressMap.REG_IF) {
             IF = data;
-        } else if (address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END) {
-            highRam.write(address - AddressMap.HIGH_RAM_START, data);
+        } else if (address >= AddressMap.HRAM_START && address < AddressMap.HRAM_END) {
+            highRam.write(address - AddressMap.HRAM_START, data);
         }
     }
 

@@ -74,7 +74,7 @@ class CpuTest2 {
         assertArrayEquals(new int[] {0x2222, 0, 0, 0, 0, 0, 0, 0, 0, 0}, cpu._testGetPcSpAFBCDEHL());
     }
     
-    @Nested 
+    /*@Nested 
     class JP_CC_N16worksCorrectly {
         
         @RepeatedTest(5)
@@ -395,5 +395,5 @@ class CpuTest2 {
                     new int[] {3, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
                     cpu._testGetPcSpAFBCDEHL());
         }
-    }   
+    }*/   
 }

@@ -27,7 +27,7 @@ public final class LcdController implements Component, Clocked {
 
     private enum LCDReg implements Register { LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX }
 
-    private enum LCDC implements Bit { BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS }
+    private enum LCDC implements Bit { BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS } 
 
     private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED }
     
@@ -38,11 +38,13 @@ public final class LcdController implements Component, Clocked {
     private static final int TILE_SIZE = 8;
     private static final int BG_SIZE = 256;
     private static final int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
+    //Resolution: 160 x 144, 20 x 18 tiles
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
     private static final int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
     private static final int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     private static final int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
     private static final int SPRITE_XOFFSET = 8, SPRITE_YOFFSET = 16;
+    //Max sprites: 40 per screen, 10 per line
     private static final int MAX_SPRITES = 10, OAM_SPRITES = 40;
     private static final int SPRITE_ATTR_BYTES = 4;
     private static final int TILE_BYTE_LENGTH = 16;
@@ -83,7 +85,7 @@ public final class LcdController implements Component, Clocked {
     public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
         
-        videoRamController = new RamController(new Ram(AddressMap.VIDEO_RAM_SIZE), AddressMap.VIDEO_RAM_START);
+        videoRamController = new RamController(new Ram(AddressMap.VRAM_SIZE), AddressMap.VRAM_START);
         oamRamController = new RamController(new Ram(AddressMap.OAM_RAM_SIZE), AddressMap.OAM_START);
     }
 
@@ -103,8 +105,9 @@ public final class LcdController implements Component, Clocked {
             }
             nextNonIdleCycle++; 
         } else if (nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
-            nextNonIdleCycle = cycle + MODE2_DURATION;
+            nextNonIdleCycle = cycle;
             setMode(2);
+            reallyCycle(cycle);
         } else if (cycle == nextNonIdleCycle && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
             reallyCycle(cycle);
         }
@@ -144,6 +147,14 @@ public final class LcdController implements Component, Clocked {
                 nextNonIdleCycle += LINE_CYCLE_DURATION;
             }
         }
+    }
+    
+    private void turnOff() {
+        //TODO power off only possible during VBLANK
+    }
+    
+    private void turnOn() {
+        //TODO
     }
 
     private void setMode(int mode) {
@@ -395,6 +406,7 @@ public final class LcdController implements Component, Clocked {
     }
     
     private int getHeight() {
+        //Sprite size: 8 x 8 or 8 x 16
         return TILE_SIZE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1);
     }
     
@@ -436,7 +448,7 @@ public final class LcdController implements Component, Clocked {
 
     @Override
     public int read(int address) {
-        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
+        if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
             return videoRamController.read(address);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
             return oamRamController.read(address);
@@ -451,7 +463,7 @@ public final class LcdController implements Component, Clocked {
     public void write(int address, int data) {
         Preconditions.checkBits8(data);
 
-        if (Preconditions.checkBits16(address) >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
+        if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
             videoRamController.write(address, data);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
             oamRamController.write(address, data);

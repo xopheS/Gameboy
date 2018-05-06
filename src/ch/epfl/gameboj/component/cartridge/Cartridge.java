@@ -66,7 +66,7 @@ public final class Cartridge implements Component {
      * @see ch.epfl.gameboj.component.Component#write(int, int)
      */
     @Override
-    public void write(int address, int data) {
+    public void write(int address, int data) { 
         mbc.write(Preconditions.checkBits16(address), Preconditions.checkBits8(data));
     }
 

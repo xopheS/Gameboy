@@ -109,14 +109,14 @@ class LcdControllerTest {
 
     @Test
     void testReadReturnsNO_DATAWhenOtherAddress() {
-        lcdController.write(AddressMap.VIDEO_RAM_START + 5, 0x45);
+        lcdController.write(AddressMap.VRAM_START + 5, 0x45);
         assertThat(lcdController.read(0x5), is(equalTo(NO_DATA)));
     }
     
     @Test
     void testReadReturnsVRAMWhenVRAMAddress() {
-        lcdController.write(AddressMap.VIDEO_RAM_START + 5, 0x45);
-        assertThat(lcdController.read(AddressMap.VIDEO_RAM_START + 5), is(equalTo(0x45)));
+        lcdController.write(AddressMap.VRAM_START + 5, 0x45);
+        assertThat(lcdController.read(AddressMap.VRAM_START + 5), is(equalTo(0x45)));
     }
     
     @Test
@@ -139,8 +139,8 @@ class LcdControllerTest {
 
     @Test
     void testWriteWritesToVRAMWhenCorrectAddress() {
-        lcdController.write(AddressMap.VIDEO_RAM_START + 50, 0x23);
-        assertThat(lcdController.read(AddressMap.VIDEO_RAM_START + 50), is(equalTo(0x23)));
+        lcdController.write(AddressMap.VRAM_START + 50, 0x23);
+        assertThat(lcdController.read(AddressMap.VRAM_START + 50), is(equalTo(0x23)));
     }
     
     @Test

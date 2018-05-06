@@ -76,7 +76,7 @@ public final class BootRomController implements Component {
      */
     @Override
     public void write(int address, int data) {
-        if (address == AddressMap.REG_BOOT_ROM_DISABLE && !isActivated) {
+        if (address == AddressMap.REG_BOOT_ROM_DISABLE && isActivated) {
             isActivated = false;
         } else {
             cartridge.write(address, data);

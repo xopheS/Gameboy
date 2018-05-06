@@ -60,6 +60,7 @@ public class MBC0 implements Component {
      */
     @Override
     public void write(int address, int data) {
-        throw new UnsupportedOperationException("Cannot write to a ROM");
+        Preconditions.checkBits16(address);
+        Preconditions.checkBits8(data);
     }
 }
