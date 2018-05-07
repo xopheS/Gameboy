@@ -52,7 +52,9 @@ public final class LcdController implements Component, Clocked {
     //Cycle durations
     private static final int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     public static final int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
-    public static final int IMAGE_CYCLE_DURATION = 154 * LINE_CYCLE_DURATION; //TODO 154 or 144?
+    public static final int IMAGE_CYCLE_DURATION = 154 * LINE_CYCLE_DURATION;
+    private static final long END_LINE_DRAW = 16416; //TODO 114*144 + 1?
+    private static final long IMAGE_DRAW = IMAGE_CYCLE_DURATION; //XXX
     private LcdImage displayedImage = BLANK_LCD_IMAGE;
     private final RamController videoRamController, oamRamController;
     private final Cpu cpu;
@@ -61,12 +63,11 @@ public final class LcdController implements Component, Clocked {
     private boolean winActive = false;
     private int winY = 0;
     private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-    private QuickCopyInfo quickCopy = new QuickCopyInfo();
+    private QuickCopyUtil quickCopy = QuickCopyUtil.getQuickCopyUtil();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
     
     long cycFromPowOn;
-    long currentImage;
     long cycFromImg;
     int currentLine;
     long cycFromLn;
@@ -74,15 +75,51 @@ public final class LcdController implements Component, Clocked {
     private long cyc, prevCyc; //XXX
 
     //TODO can only access HRAM during quick copy
-    private static class QuickCopyInfo {
-        boolean isActive = false;
-        int startAddress;
-        int currentIndex = 0;
+    private static class QuickCopyUtil {
+        public final static int COPY_LENGTH = 160; //XXX set private
+        private final static QuickCopyUtil quickCopy = new QuickCopyUtil();
+        private static Bus bus;
+        private boolean isActive = false;
+        private int startAddress;
+        private int currentIndex = 0;
+        
+        private QuickCopyUtil() {
+            
+        }
+        
+        static QuickCopyUtil getQuickCopyUtil() {
+            return quickCopy;
+        }
+        
+        void setBus(Bus bus) {
+            this.bus = bus;
+        }
         
         void start(int addressMSB) {
-            if (isActive) throw new IllegalStateException("A quick copy is already taking place");
+            if (bus == null) throw new IllegalStateException("The bus has not been set");
+            //if (isActive) throw new IllegalStateException("A quick copy is already taking place"); TODO: can a quick copy be initiated while another one is going on?
             isActive = true;
             startAddress = Preconditions.checkBits8(addressMSB) << Byte.SIZE;
+        }
+        
+        void copy() {
+            if (!isActive) throw new IllegalStateException("Cannot copy when quick copy is inactive");
+            if (currentIndex < COPY_LENGTH) {
+                bus.write(AddressMap.OAM_START + currentIndex, bus.read(startAddress + currentIndex));
+                incrementIndex();
+            }
+        }
+        
+        private void incrementIndex() {
+            if (++currentIndex == COPY_LENGTH) {
+                end();
+            }
+        }
+        
+        private void end() {
+            isActive = false;
+            currentIndex = 0;
+            startAddress = 0;
         }
     }
     
@@ -100,75 +137,132 @@ public final class LcdController implements Component, Clocked {
     }
 
     public LcdImage currentImage() {
-        return Objects.requireNonNull(displayedImage, "fatal: attempt to display a null image");
+        return Objects.requireNonNull(displayedImage, "Displayed image cannot be null");
     }
 
     @Override
-    public void cycle(long cycle) {
-        cyc = cycle;//XXX
+    public void cycle(long cycle) {       
+        if (nextNonIdleCycle == Long.MAX_VALUE && isOn()) {
+            turnOn(cycle);
+        }
         
-        cycFromPowOn = cycle - lcdOnCycle; //TODO why add 114 here???
-        currentImage = Math.floorDiv(cycFromPowOn, IMAGE_CYCLE_DURATION);
+        /*cyc = cycle;//XXX
+        
         cycFromImg = Math.floorMod(cycFromPowOn, IMAGE_CYCLE_DURATION);
-        currentLine = (int) (Math.floorDiv(cycFromImg, LINE_CYCLE_DURATION));
-        cycFromLn = Math.floorMod(cycFromImg, LINE_CYCLE_DURATION);
+        cycFromLn = Math.floorMod(cycFromImg, LINE_CYCLE_DURATION); */
         
-        /*if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
-            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
-            //TODO request STAT interrupt if appropriate, clean up code
-        }*/
+        compareLYandLYC(); //TODO correct?
         
         if (quickCopy.isActive) {
-            if (quickCopy.currentIndex < 160) {
-                write(AddressMap.OAM_START + quickCopy.currentIndex, bus.read(quickCopy.startAddress + quickCopy.currentIndex));
-                quickCopy.currentIndex++;
-            } else {
-                quickCopy = new QuickCopyInfo();
-            }
-            nextNonIdleCycle++; 
-        } else if (nextNonIdleCycle == Long.MAX_VALUE && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
-            lcdOnCycle = cycle;
-            nextNonIdleCycle = cycle + MODE2_DURATION;
-        } else if (cycle == nextNonIdleCycle && lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
+            quickCopy.copy();
+        } 
+        
+        cycFromPowOn = cycle - lcdOnCycle; //TODO can move???
+        
+        if (cycFromPowOn == nextNonIdleCycle && isOn()) {
+            currentLine = (int) (cycFromPowOn / LINE_CYCLE_DURATION);
             reallyCycle(cycle);
-        }
+        }       
     }
 
     private void reallyCycle(long cycle) {
-        //System.out.println("reallyCycle: cycFromImg " + cycFromImg + " cycFromLn " + cycFromLn + " nextNonIdleCycle " + nextNonIdleCycle);
-        System.out.println("line index: " + currentLine);
+        /*//System.out.println("reallyCycle: cycFromImg " + cycFromImg + " cycFromLn " + cycFromLn + " nextNonIdleCycle " + nextNonIdleCycle);
+        //System.out.println("current cycle: " + cycle + " line index: " + currentLine + ", current mode: " + Bits.clip(2, lcdRegs.get(LCDReg.STAT)));
         if (currentLine <= 143) {
             if (cycFromLn == MODE2_DURATION) {
-                //System.out.println("switch to mode 3");
+                //System.out.println("switch to mode 3, elapsed cycles: " + (cyc - prevCyc));
                 nextImageBuilder.setLine(currentLine, computeLine(currentLine));
                 nextNonIdleCycle += MODE3_DURATION;
                 setMode(3);
             } else if (cycFromLn == MODE2_DURATION + MODE3_DURATION) {
-                //System.out.println("switch to mode 0");
+                //System.out.println("switch to mode 0, elapsed cycles: " + (cyc - prevCyc));
                 nextNonIdleCycle += MODE0_DURATION;
                 setMode(0);
             } else if (cycFromLn == 0) {
                 if (currentLine == 143) {
-                    //System.out.println(cycFromImg + " vs " + IMAGE_CYCLE_DURATION);
-                    //System.out.println("switch to mode 1");
+                    //System.out.println("switch to mode 1, elapsed cycles: " + (cyc - prevCyc));
+                    displayedImage = nextImageBuilder.build();
+                    lcdRegs.increment(LCDReg.LY);
                     nextNonIdleCycle += LINE_CYCLE_DURATION;
                     setMode(1);
                 } else {
-                    //System.out.println(cycFromImg + " vs " + IMAGE_CYCLE_DURATION);
-                    //System.out.println("switch to mode 2");
+                    //System.out.println("switch to mode 2, elapsed cycles: " + (cyc - prevCyc));
+                    lcdRegs.increment(LCDReg.LY);
                     nextNonIdleCycle += MODE2_DURATION;
                     setMode(2);
                 }
             }
         } else {
-            if (currentLine == 0) {
-                //System.out.println("switch to mode 2 from VBLANK");
+            if (currentLine == 153) {
+                //System.out.println("switch to mode 2 from VBLANK, elapsed cycles: " + (cyc - prevCyc));
+                lcdRegs.set(LCDReg.LY, 0);
                 nextNonIdleCycle += MODE2_DURATION;
-                displayedImage = nextImageBuilder.build();
                 setMode(2);
             } else {
+                //System.out.println("draw virtual line, elapsed cycles: " + (cyc - prevCyc));
+                lcdRegs.increment(LCDReg.LY);
                 nextNonIdleCycle += LINE_CYCLE_DURATION;
             }
+        }
+        
+        prevCyc = cyc;//XXX*/
+        
+        //////////////////////////////////////////
+        
+        if (nextNonIdleCycle == IMAGE_DRAW) {
+            nextNonIdleCycle = Long.MAX_VALUE;
+            currentLine = 0;
+            winY = 0;
+            return;
+        }
+
+        if (nextNonIdleCycle >= END_LINE_DRAW) {
+            if (nextNonIdleCycle == END_LINE_DRAW) {
+                displayedImage = nextImageBuilder.build();
+            }
+            nextNonIdleCycle += LINE_CYCLE_DURATION;
+            changeLy(currentLine + 1);
+            setMode(1);
+
+            return;
+        }
+
+        if (nextNonIdleCycle == 0) {
+            nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+        }
+
+        switch ((int) (nextNonIdleCycle % LINE_CYCLE_DURATION)) {
+
+        case 0:
+            nextNonIdleCycle += 20;
+            changeLy(currentLine + 1);
+            setMode(2);
+            break;
+
+        case 20:
+            nextNonIdleCycle += 43;
+            nextImageBuilder.setLine(currentLine, computeLine(lcdRegs.get(LCDReg.LY)));
+            setMode(3);
+            break;
+
+        case 63:
+            nextNonIdleCycle += 51;
+            setMode(0);
+            break;
+
+        }
+    }
+    
+    private void changeLy(int val) {
+        modifyLYorLYC(LCDReg.LY, val);
+    }
+    
+    private void compareLYandLYC() {
+        lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, false);
+        
+        if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
+            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
+            //TODO request STAT interrupt if appropriate, clean up code
         }
     }
     
@@ -179,8 +273,15 @@ public final class LcdController implements Component, Clocked {
         nextNonIdleCycle = Long.MAX_VALUE;
     }
     
-    private void turnOn() {
-        //TODO
+    private void turnOn(long cycle) {
+        lcdOnCycle = cycle;
+        //nextNonIdleCycle = cycle + MODE2_DURATION;
+        //setMode(2);
+        nextNonIdleCycle = 0;
+    }
+    
+    private boolean isOn() {
+        return lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS);
     }
 
     private void setMode(int mode) {
@@ -218,7 +319,7 @@ public final class LcdController implements Component, Clocked {
         if (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ)) {
             List<Integer> bgSpriteInfoL = new ArrayList<>(10);
             List<Integer> fgSpriteInfoL = new ArrayList<>(10);
-            Integer[] spriteInfo = spritesIntersectingLine();
+            Integer[] spriteInfo = spritesIntersectingLine(lineIndex);
             
             for (int i = 0; i < spriteInfo.length; ++i) {
                 boolean isInBG = Bits.test(readAttr(i, SPRITE_ATTR.MISC), MISC.BEHIND_BG);
@@ -381,7 +482,7 @@ public final class LcdController implements Component, Clocked {
         }
     }
     
-    private Integer[] spritesIntersectingLine() {
+    private Integer[] spritesIntersectingLine(int lineIndex) {
         int scanIndex = 0, foundSprites = 0;
         int spriteHeight = getHeight();
         
@@ -389,7 +490,7 @@ public final class LcdController implements Component, Clocked {
         
         while (foundSprites < MAX_SPRITES && scanIndex < OAM_SPRITES) {
             int spriteY = readAttr(scanIndex, SPRITE_ATTR.Y_COORD) - SPRITE_YOFFSET;
-            if (lcdRegs.get(LCDReg.LY) >= spriteY && lcdRegs.get(LCDReg.LY) < spriteY + spriteHeight) {
+            if (lineIndex >= spriteY && lineIndex < spriteY + spriteHeight) {
                 intersect[foundSprites] = packSpriteInfo(scanIndex);
                 foundSprites++;
             }
@@ -455,12 +556,12 @@ public final class LcdController implements Component, Clocked {
         return below.getOpacity().and(over.getOpacity().not()).not();
     }
        
-    private void toggleWindow() {
+    private void toggleWindow(int lineIndex) {
         int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
         if (adjustedWX >= 0 && adjustedWX < 160 && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && !winActive) {
             winActive = true;
         } else if (!(adjustedWX >= 0 && adjustedWX < 160 && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN)) && winActive) {
-            winY = lcdRegs.get(LCDReg.LY);
+            winY = lineIndex;
             winActive = false;
         }
     }
@@ -469,6 +570,7 @@ public final class LcdController implements Component, Clocked {
     public void attachTo(Bus bus) {
         this.bus = bus;
         bus.attach(this);
+        quickCopy.setBus(bus);
     }
 
     @Override
@@ -516,7 +618,7 @@ public final class LcdController implements Component, Clocked {
                 lcdRegs.set(LCDReg.SCX, data);
                 break;
             case AddressMap.REG_LY:
-                modifyLYorLYC(LCDReg.LY, 0); //TODO write data or reset?
+                modifyLYorLYC(LCDReg.LY, 0);
                 break;
             case AddressMap.REG_LYC:
                 modifyLYorLYC(LCDReg.LYC, data);
@@ -542,7 +644,7 @@ public final class LcdController implements Component, Clocked {
                 break;
             }
                         
-            toggleWindow(); //TODO does this work?          
+            toggleWindow(lcdRegs.get(LCDReg.LY)); //TODO does this work?          
         }
     }
 

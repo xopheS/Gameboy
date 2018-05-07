@@ -77,6 +77,10 @@ public final class RegisterFile<E extends Register> {
     public void set(int index, int newValue) {
         registerFile[index] = (byte) Preconditions.checkBits8(newValue);
     }
+    
+    public void increment(E reg) {
+        registerFile[reg.index()]++;
+    }
 
     /**
      * Teste l'état d'un bit donné du registre spécifié.

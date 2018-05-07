@@ -92,7 +92,7 @@ class LcdControllerTest {
             }           
         }).when(mockCpu).requestInterrupt(Interrupt.VBLANK);
         
-        for (int i = 0; i < 83303; ++i) {
+        for (int i = 0; i < 241307; ++i) {
             currentCycle = i;
             if (i == powerOn) {
                 System.out.println("attempting to power on at cycle " + i);
@@ -103,6 +103,8 @@ class LcdControllerTest {
                 vblankNum++;
             }
         }
+        
+        verify(mockCpu, times(10)).requestInterrupt(Interrupt.VBLANK);
         
         assertThat(firstTenVBLANKActual, is(equalTo(firstTenVBLANK)));
     }
