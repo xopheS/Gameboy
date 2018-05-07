@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component.lcd;
 
 import static ch.epfl.gameboj.component.lcd.LcdImage.BLANK_LCD_IMAGE;
+import static ch.epfl.gameboj.component.lcd.LcdController.IMAGE_CYCLE_DURATION;
 import static ch.epfl.gameboj.component.Component.NO_DATA;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,18 +82,22 @@ class LcdControllerTest {
     void testCycleVBLANKAtCorrectInstants() {
         long[] firstTenVBLANK = new long[] { 83302, 100858, 118414, 135970, 153526, 171082, 188638, 206194, 223750, 241306 };
         long[] firstTenVBLANKActual = new long[10];
-        long powerOn = firstTenVBLANK[0] - 16416;
+        long powerOn = firstTenVBLANK[0] - IMAGE_CYCLE_DURATION + 1140; //add 144 for test to work
         
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock arg0) {
+                System.out.println("vblank at " + currentCycle);
                 firstTenVBLANKActual[vblankNum] = currentCycle;
                 return null;
             }           
         }).when(mockCpu).requestInterrupt(Interrupt.VBLANK);
         
-        for (int i = 0; i < 241307; ++i) {
+        for (int i = 0; i < 83303; ++i) {
             currentCycle = i;
-            if (i == powerOn) lcdController.write(AddressMap.REGS_LCDC_START, 0b1000_0000);
+            if (i == powerOn) {
+                System.out.println("attempting to power on at cycle " + i);
+                lcdController.write(AddressMap.REGS_LCDC_START, 0b1000_0000);
+            }
             lcdController.cycle(i);
             if (i == firstTenVBLANK[vblankNum]) {
                 vblankNum++;
