@@ -5,6 +5,7 @@ import static ch.epfl.gameboj.component.lcd.LcdImage.BLANK_LCD_IMAGE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 

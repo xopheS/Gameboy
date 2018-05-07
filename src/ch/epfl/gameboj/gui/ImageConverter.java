@@ -6,6 +6,8 @@ import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
+import javafx.scene.image.PixelWriter;
 
 public final class ImageConverter {
     
@@ -26,5 +28,25 @@ public final class ImageConverter {
     
     public static Image convert(LcdImage lcdImage) {
         Preconditions.checkArgument(lcdImage.getWidth() == LCD_WIDTH && lcdImage.getHeight() == LCD_HEIGHT);
+        
+        WritableImage wImage = new WritableImage(LCD_WIDTH, LCD_HEIGHT);
+        PixelWriter pWriter = wImage.getPixelWriter();
+        
+        for (int y = 0; y < lcdImage.getHeight(); ++y) {
+            
+            for (int x = 0; x < lcdImage.getWidth(); ++x) {
+                
+                int color = 0;
+                switch(lcdImage.get(x, y)) {
+                  case 0 : color = 0xFFFFFFFF; break;
+                  case 1 : color = 0xFFD3D3D3; break;
+                  case 2 : color = 0xFFA9A9A9; break;
+                  case 3 : color = 0xFF000000; break;
+                }
+                pWriter.setArgb(x, y, color);
+            }
+        }
+        
+        return wImage; 
     }
 }
