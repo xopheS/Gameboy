@@ -45,7 +45,7 @@ public final class Cpu implements Component, Clocked {
     };
 
     private enum Reg16 implements Register {
-        AF(Reg.A, Reg.F), BC(Reg.B, Reg.C), DE(Reg.D, Reg.E), HL(Reg.H, Reg.L),;
+        AF(Reg.A, Reg.F), BC(Reg.B, Reg.C), DE(Reg.D, Reg.E), HL(Reg.H, Reg.L);
 
         private Reg a, b;
 
@@ -87,7 +87,7 @@ public final class Cpu implements Component, Clocked {
     private void handleInterrupt() {
         int commonOnes = IF & IE;
         IME = false;
-        int i = 31 - Integer.numberOfLeadingZeros(Integer.lowestOneBit(commonOnes));
+        int i = Integer.numberOfTrailingZeros(commonOnes);
         IF = Bits.set(IF, i, false);
         push16(PC);
         PC = AddressMap.INTERRUPTS[i];
@@ -104,10 +104,11 @@ public final class Cpu implements Component, Clocked {
      */
     @Override
     public void cycle(long cycle) {
-        if (nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
+        if (!isPowerOn() && pendingInterrupt()) {
             nextNonIdleCycle = cycle;
-            reallyCycle();
-        } else if (cycle == nextNonIdleCycle) {
+        }
+        
+        if (cycle == nextNonIdleCycle) {
             reallyCycle();
         }
     }
@@ -587,6 +588,10 @@ public final class Cpu implements Component, Clocked {
         nextNonIdleCycle += opcode.cycles + (instructionDone ? opcode.additionalCycles : 0);
     }
 
+    private boolean isPowerOn() {
+        return !(nextNonIdleCycle == Long.MAX_VALUE);
+    }
+    
     /**
      * Cette méthode est une redéfinition de attachTo qui permet de connaître le bus
      * auquel le processeur a été attaché.

@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
@@ -21,6 +22,9 @@ public final class Timer implements Component, Clocked {
 
     private final Cpu cpu;
     private int regDIV = 0, regTIMA = 0, regTMA = 0, regTAC = 0;
+    
+    //00: 1024, 01: 16, 10: 64, 11: 256
+    private enum TAC implements Bit { CLK_SEL_0, CLK_SEL_1, TM_ENABLE }
 
     /**
      * Constructeur qui initialise un timer en spécifiant le processeur avec lequel

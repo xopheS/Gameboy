@@ -29,13 +29,14 @@ public final class LcdController implements Component, Clocked {
 
     private enum LCDC implements Bit { BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS } 
 
-    private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED }
+    private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED7 }
     
     private enum SPRITE_ATTR { Y_COORD, X_COORD, TILE_INDEX, MISC }
     
-    private enum MISC implements Bit { UNUSED0, UNUSED1, UNUSED2, UNUSED3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG }
+    private enum MISC implements Bit { P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG }
 
     private static final int TILE_SIZE = 8;
+    //Background size: 256 x 256, 32 x 32 tiles
     private static final int BG_SIZE = 256;
     private static final int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
     //Resolution: 160 x 144, 20 x 18 tiles
@@ -64,6 +65,7 @@ public final class LcdController implements Component, Clocked {
     
     //TODO Optimiser avec equals?
 
+    //TODO can only access HRAM during quick copy
     private static class QuickCopyInfo {
         boolean isActive = false;
         int startAddress;
@@ -96,6 +98,12 @@ public final class LcdController implements Component, Clocked {
     @Override
     public void cycle(long cycle) {
         cyc = cycle;//XXX
+        
+        if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
+            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
+            //TODO request STAT interrupt if appropriate, clean up code
+        }
+        
         if (quickCopy.isActive) {
             if (quickCopy.currentIndex < 160) {
                 write(AddressMap.OAM_START + quickCopy.currentIndex, bus.read(quickCopy.startAddress + quickCopy.currentIndex));
@@ -117,26 +125,26 @@ public final class LcdController implements Component, Clocked {
         int mode0 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE0) ? 1 : 0;
         int mode1 = lcdRegs.testBit(LCDReg.STAT, STAT.MODE1) ? 1 : 0;
         int mode = mode0 | (mode1 << 1);
+        
+        int lineIndex = lcdRegs.get(LCDReg.LY);
+        
+        if(lineIndex == 144) cpu.requestInterrupt(Interrupt.VBLANK); //TODO clean this up, refactor
 
-        //TODO replace with a switch?
-        if (mode == 0 && lcdRegs.get(LCDReg.LY) == LCD_HEIGHT - 1) {
-            displayedImage = nextImageBuilder.build();
-            modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
-            setMode(1);
-            nextNonIdleCycle += LINE_CYCLE_DURATION;
-        } else if (mode == 2) {
-            nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine());
-            setMode(3);
-            nextNonIdleCycle += MODE3_DURATION;
-        } else if (mode == 3) {
-            setMode(0);
-            nextNonIdleCycle += MODE0_DURATION;
-        } else if (mode == 0) {
-            modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
-            setMode(2);
-            nextNonIdleCycle += MODE2_DURATION;
-        } else if (mode == 1) {
-            if (lcdRegs.get(LCDReg.LY) == 153) {
+        switch(mode) {
+        case 0:
+            if (lineIndex < LCD_HEIGHT - 1) {
+                modifyLYorLYC(LCDReg.LY, lineIndex + 1);
+                setMode(2);
+                nextNonIdleCycle += MODE2_DURATION;
+            } else {
+                displayedImage = nextImageBuilder.build();
+                modifyLYorLYC(LCDReg.LY, lineIndex + 1);
+                setMode(1);
+                nextNonIdleCycle += LINE_CYCLE_DURATION; 
+            }
+            break;
+        case 1:
+            if (lineIndex == 153) {
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
                 modifyLYorLYC(LCDReg.LY, 0);
                 setMode(2);
@@ -146,11 +154,24 @@ public final class LcdController implements Component, Clocked {
                 modifyLYorLYC(LCDReg.LY, lcdRegs.get(LCDReg.LY) + 1);
                 nextNonIdleCycle += LINE_CYCLE_DURATION;
             }
+            break;
+        case 2:
+            nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY), computeLine(lineIndex));
+            setMode(3);
+            nextNonIdleCycle += MODE3_DURATION;
+            break;
+        case 3:
+            setMode(0);
+            nextNonIdleCycle += MODE0_DURATION;
+            break;
         }
     }
     
     private void turnOff() {
         //TODO power off only possible during VBLANK
+        setMode(0);
+        modifyLYorLYC(LCDReg.LY, 0);
+        nextNonIdleCycle = Long.MAX_VALUE;
     }
     
     private void turnOn() {
@@ -172,7 +193,7 @@ public final class LcdController implements Component, Clocked {
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) {
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
             }
-            cpu.requestInterrupt(Interrupt.VBLANK);
+            //TODO VBLANK goes here? tested, works
             break;
         case 2:
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE2)) {
@@ -184,9 +205,8 @@ public final class LcdController implements Component, Clocked {
         }
     }
 
-    private LcdImageLine computeLine() {  
+    private LcdImageLine computeLine(int lineIndex) {  
         LcdImageLine nextLine = BLANK_LCD_IMAGE_LINE, bgSpriteLine = BLANK_LCD_IMAGE_LINE, fgSpriteLine = BLANK_LCD_IMAGE_LINE;
-        int lineIndex = lcdRegs.get(LCDReg.LY);
         
         int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
         
@@ -360,10 +380,10 @@ public final class LcdController implements Component, Clocked {
         int scanIndex = 0, foundSprites = 0;
         int spriteHeight = getHeight();
         
-        Integer[] intersect = new Integer[MAX_SPRITES];
+        Integer[] intersect = new Integer[MAX_SPRITES]; //TODO replace with list?
         
         while (foundSprites < MAX_SPRITES && scanIndex < OAM_SPRITES) {
-            int spriteY = read(AddressMap.OAM_START + scanIndex * SPRITE_ATTR_BYTES + SPRITE_ATTR.Y_COORD.ordinal()) - SPRITE_YOFFSET;
+            int spriteY = readAttr(scanIndex, SPRITE_ATTR.Y_COORD) - SPRITE_YOFFSET;
             if (lcdRegs.get(LCDReg.LY) >= spriteY && lcdRegs.get(LCDReg.LY) < spriteY + spriteHeight) {
                 intersect[foundSprites] = packSpriteInfo(scanIndex);
                 foundSprites++;
@@ -374,7 +394,7 @@ public final class LcdController implements Component, Clocked {
         
         Integer[] intersectIndex = trimIntArray(intersect, foundSprites);
         
-        Arrays.sort(intersectIndex);
+        Arrays.sort(intersectIndex); //TODO replace with System.sortarray call?
         
         /*if (cyc >= 30_000_000 + (2 * (1L << 20)) - 17556) {
             Integer[] intIndex = new Integer[intersectIndex.length];
@@ -448,6 +468,8 @@ public final class LcdController implements Component, Clocked {
 
     @Override
     public int read(int address) {
+        //TODO if drawing, cpu cannot access VRAM and OAM
+        
         if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
             return videoRamController.read(address);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
@@ -462,36 +484,60 @@ public final class LcdController implements Component, Clocked {
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits8(data);
+        
+        //TODO if drawing, cpu cannot access VRAM and OAM
 
         if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
+            //TODO cannot access during mode 3
             videoRamController.write(address, data);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
+            //TODO cannot access during mode 2 or 3
             oamRamController.write(address, data);
         } else if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
-            //TODO switch
-            if (address == AddressMap.REGS_LCDC_START + LCDReg.LCDC.index()) {
+            switch(address) {
+            case AddressMap.REG_LCDC:
                 lcdRegs.set(LCDReg.LCDC, data);
                 if (!lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
-                    setMode(0);
-                    modifyLYorLYC(LCDReg.LY, 0);
-                    nextNonIdleCycle = Long.MAX_VALUE;
+                    turnOff();
                 }
-            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.STAT.index()) {
+                break;
+            case AddressMap.REG_LCD_STAT:
                 lcdRegs.set(LCDReg.STAT, (data & 0b1111_1000) | (lcdRegs.get(LCDReg.STAT) & 0b0000_0111));
-            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LY.index()) {
-                modifyLYorLYC(LCDReg.LY, data);
-            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.LYC.index()) {
+                break;
+            case AddressMap.REG_SCY:
+                lcdRegs.set(LCDReg.SCY, data);
+                break;
+            case AddressMap.REG_SCX:
+                lcdRegs.set(LCDReg.SCX, data);
+                break;
+            case AddressMap.REG_LY:
+                modifyLYorLYC(LCDReg.LY, 0); //TODO write data or reset?
+                break;
+            case AddressMap.REG_LYC:
                 modifyLYorLYC(LCDReg.LYC, data);
-            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.DMA.index()) {
+                break;
+            case AddressMap.REG_DMA:
                 lcdRegs.set(LCDReg.DMA, data);
                 quickCopy.start(data);
-            } else if (address == AddressMap.REGS_LCDC_START + LCDReg.WX.index()) {
-                lcdRegs.set(LCDReg.WX, data);
-            } else {
-                lcdRegs.set(address - AddressMap.REGS_LCDC_START, data);
+                break;
+            case AddressMap.REG_BGP:
+                lcdRegs.set(LCDReg.BGP, data);
+                break;
+            case AddressMap.REG_OBP0:
+                lcdRegs.set(LCDReg.OBP0, data);
+                break;
+            case AddressMap.REG_OBP1:
+                lcdRegs.set(LCDReg.OBP1, data);
+                break;
+            case AddressMap.REG_WY:
+                lcdRegs.set(LCDReg.WY, Objects.checkIndex(data, 145)); 
+                break;
+            case AddressMap.REG_WX:
+                lcdRegs.set(LCDReg.WX, Objects.checkIndex(data, 167));
+                break;
             }
-            
-            toggleWindow();
+                        
+            toggleWindow(); //TODO does this work?          
         }
     }
 

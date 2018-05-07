@@ -31,10 +31,32 @@ public interface AddressMap {
     
     int REGS_LCDC_START = 0xFF40;
     int REG_LCDC = 0xFF40;
-    
+    int REG_LCD_STAT = 0xFF41;
+    int REG_SCY = 0xFF42;
+    int REG_SCX = 0xFF43;
+    int REG_LY = 0xFF44;
+    int REG_LYC = 0xFF45;
+    int REG_DMA = 0xFF46;
+    int REG_BGP = 0xFF47;
+    int REG_OBP0 = 0xFF48;
+    int REG_OBP1 = 0xFF49;
+    int REG_WY = 0xFF4A;
+    int REG_WX = 0xFF4B;    
     int REGS_LCDC_END = 0xFF4C;
     
+    int REG_VBK = 0xFF4F;
+    
     int REG_BOOT_ROM_DISABLE = 0xFF50;
+    
+    int REG_HDMA1 = 0xFF51; //CGB only
+    int REG_HDMA2 = 0xFF52; //CGB only
+    int REG_HDMA3 = 0xFF53; //CGB only
+    int REG_HDMA4 = 0xFF54; //CGB only
+    int REG_HDMA5 = 0xFF55; //CGB only
+    
+    int REG_BGPI = 0xFF68; //CGB only
+    int REG_BGPD = 0xFF69; //CGB only
+    int REG_OBPI = 0xFF6A; //CGB only
     
     int REGS_END = 0xFF80;
     //High ram
@@ -48,13 +70,29 @@ public interface AddressMap {
     
     //Cartridge header
     int CARTRIDGE_HEADER_START = 0x0100, CARTRIDGE_HEADER_END = 0x0150, CARTRIDGE_HEADER_SIZE = CARTRIDGE_HEADER_END - CARTRIDGE_HEADER_START;
-
     
-    
+    int ENTRY_POINT_START = 0x100, ENTRY_POINT_END = 0x104;
+    int NINTENDO_LOGO_START = 0x104, NINTENDO_LOGO_END = 0x134;
+    int TITLE_START = 0x134, TITLE_END = 0x144;
+    //manufacturer code
+    //cgb flag
+    //New licensee code
+    //sgb flag
+    int CARTRIDGE_TYPE = 0x147;
+    int ROM_SIZE = 0x148;
+    int RAM_SIZE = 0x149;
+    int DEST_CODE = 0x14A;
+    int OLD_LIC_CODE = 0x14B;
+    int ROM_V_NUM = 0x14C;
+    int H_CHKSUM = 0x14D;
+    int G_CHKSUM_START = 0x14E, G_CHKSUM_END = 0x150;
     
     int BOOT_ROM_START = 0x0000, BOOT_ROM_END = 0x0100, BOOT_ROM_SIZE = BOOT_ROM_END - BOOT_ROM_START;
 
     // Video RAM
     int[] TILE_SOURCE = new int[] {0x8800, 0x8000};
     int[] BG_DISPLAY_DATA = new int[] {0x9800, 0x9C00};    
+    
+    //Destination code
+    //TODO: 00 japan, 01 not japan
 }

@@ -3,6 +3,7 @@ package ch.epfl.gameboj;
 import java.util.Objects;
 
 import ch.epfl.gameboj.component.Joypad;
+import ch.epfl.gameboj.component.SoundSystem;
 import ch.epfl.gameboj.component.Timer;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -30,6 +31,7 @@ public final class GameBoy {
     private final Timer timer = new Timer(cpu);
     private final LcdController lcdController = new LcdController(cpu);
     private final Joypad joypad = new Joypad(cpu);
+    private final SoundSystem soundSystem = new SoundSystem();
 
     public static final long CYCLES_PER_SECOND = (long) Math.pow(2, 20);
     public static final double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / Math.pow(10, 9);

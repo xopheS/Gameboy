@@ -73,13 +73,13 @@ public final class Joypad implements Component {
 
     private void updateP1() {    
         P1 &= 0b1111_0000;
-        //P1 |= 0b0010_0000;///TODO temp fix
-        if (Bits.test(P1, KBState.LINE0) && !Bits.test(P1, KBState.LINE1)) {
+        P1 |= 0b0010_0000;///TODO temp fix
+        if (Bits.test(P1, KBState.LINE0)) { 
             P1 |= line0;
-        } else if (!Bits.test(P1, KBState.LINE0) && Bits.test(P1, KBState.LINE1)) {
+        }
+        
+        if (Bits.test(P1, KBState.LINE1)) {
             P1 |= line1;
-        } else if (Bits.test(P1, KBState.LINE0) && Bits.test(P1, KBState.LINE1)) {
-            P1 |= line0 | line1;
         }
     }
        
@@ -93,12 +93,10 @@ public final class Joypad implements Component {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
             P1 = (P1 & 0b1100_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
             if(Bits.test(P1, KBState.LINE1)) {
-                //System.out.println("Line 1 enabled");
-                //keyPressed(Key.A);
                 if(Bits.test(P1, KBState.COL0)) {
                     System.out.println("A pressed!");
                 }
-            }           
+            } //XXX          
         }
     }
 }
