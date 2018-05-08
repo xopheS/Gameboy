@@ -24,7 +24,7 @@ public final class Cpu implements Component, Clocked {
     private static final Opcode[] DIRECT_OPCODE_TABLE = buildOpcodeTable(Opcode.Kind.DIRECT);
     private static final Opcode[] PREFIXED_OPCODE_TABLE = buildOpcodeTable(Opcode.Kind.PREFIXED);
 
-    private static final int opcodePrefix = 0xCB;
+    private static final int OPCODE_PREFIX = 0xCB;
 
     private Bus bus;
     private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
@@ -40,9 +40,7 @@ public final class Cpu implements Component, Clocked {
     // IF = interrupt flags, tells us if corresponding interrupt is happening
     private int IF = 0;
 
-    private enum Reg implements Register {
-        A, F, B, C, D, E, H, L
-    };
+    private enum Reg implements Register { A, F, B, C, D, E, H, L }
 
     private enum Reg16 implements Register {
         AF(Reg.A, Reg.F), BC(Reg.B, Reg.C), DE(Reg.D, Reg.E), HL(Reg.H, Reg.L);
@@ -55,9 +53,7 @@ public final class Cpu implements Component, Clocked {
         }
     };
 
-    private enum FlagSrc {
-        V0, V1, ALU, CPU
-    };
+    private enum FlagSrc { V0, V1, ALU, CPU };
 
     /**
      * Cette énumération donne les interruptions possibles du processeur, dans
@@ -125,7 +121,7 @@ public final class Cpu implements Component, Clocked {
             handleInterrupt();
         } else {
             int nextInstruction = bus.read(PC);
-            Opcode nextOpcode = nextInstruction == opcodePrefix ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()] : DIRECT_OPCODE_TABLE[nextInstruction];
+            Opcode nextOpcode = nextInstruction == OPCODE_PREFIX ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()] : DIRECT_OPCODE_TABLE[nextInstruction];
             dispatch(nextOpcode);
         }
     }

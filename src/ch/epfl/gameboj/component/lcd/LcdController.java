@@ -63,7 +63,7 @@ public final class LcdController implements Component, Clocked {
     private boolean winActive = false;
     private int winY = 0;
     private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-    private QuickCopyUtil quickCopy = QuickCopyUtil.getQuickCopyUtil();
+    private final DmaController dmaController = DmaController.getQuickCopyUtil();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
     
@@ -75,53 +75,6 @@ public final class LcdController implements Component, Clocked {
     private long cyc, prevCyc; //XXX
 
     //TODO can only access HRAM during quick copy
-    private static class QuickCopyUtil {
-        public final static int COPY_LENGTH = 160; //XXX set private
-        private final static QuickCopyUtil quickCopy = new QuickCopyUtil();
-        private static Bus bus;
-        private boolean isActive = false;
-        private int startAddress;
-        private int currentIndex = 0;
-        
-        private QuickCopyUtil() {
-            
-        }
-        
-        static QuickCopyUtil getQuickCopyUtil() {
-            return quickCopy;
-        }
-        
-        void setBus(Bus bus) {
-            this.bus = bus;
-        }
-        
-        void start(int addressMSB) {
-            if (bus == null) throw new IllegalStateException("The bus has not been set");
-            //if (isActive) throw new IllegalStateException("A quick copy is already taking place"); TODO: can a quick copy be initiated while another one is going on?
-            isActive = true;
-            startAddress = Preconditions.checkBits8(addressMSB) << Byte.SIZE;
-        }
-        
-        void copy() {
-            if (!isActive) throw new IllegalStateException("Cannot copy when quick copy is inactive");
-            if (currentIndex < COPY_LENGTH) {
-                bus.write(AddressMap.OAM_START + currentIndex, bus.read(startAddress + currentIndex));
-                incrementIndex();
-            }
-        }
-        
-        private void incrementIndex() {
-            if (++currentIndex == COPY_LENGTH) {
-                end();
-            }
-        }
-        
-        private void end() {
-            isActive = false;
-            currentIndex = 0;
-            startAddress = 0;
-        }
-    }
     
     /**
      * Construit un contrôleur LCD.
@@ -146,28 +99,28 @@ public final class LcdController implements Component, Clocked {
             turnOn(cycle);
         }
         
-        /*cyc = cycle;//XXX
+        if (dmaController.isActive()) {
+            dmaController.copy();
+        }
+        
+        cyc = cycle;//XXX
         
         cycFromImg = Math.floorMod(cycFromPowOn, IMAGE_CYCLE_DURATION);
-        cycFromLn = Math.floorMod(cycFromImg, LINE_CYCLE_DURATION); */
+        cycFromLn = Math.floorMod(cycFromImg, LINE_CYCLE_DURATION);
         
-        compareLYandLYC(); //TODO correct?
-        
-        if (quickCopy.isActive) {
-            quickCopy.copy();
-        } 
+        compareLYandLYC(); //TODO correct? 
         
         cycFromPowOn = cycle - lcdOnCycle; //TODO can move???
         
-        if (cycFromPowOn == nextNonIdleCycle && isOn()) {
-            currentLine = (int) (cycFromPowOn / LINE_CYCLE_DURATION);
+        if (cycle == nextNonIdleCycle && isOn()) {
+            currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
             reallyCycle(cycle);
         }       
     }
 
     private void reallyCycle(long cycle) {
-        /*//System.out.println("reallyCycle: cycFromImg " + cycFromImg + " cycFromLn " + cycFromLn + " nextNonIdleCycle " + nextNonIdleCycle);
-        //System.out.println("current cycle: " + cycle + " line index: " + currentLine + ", current mode: " + Bits.clip(2, lcdRegs.get(LCDReg.STAT)));
+        System.out.println("reallyCycle: cycFromImg " + cycFromImg + " cycFromLn " + cycFromLn + " nextNonIdleCycle " + nextNonIdleCycle);
+        System.out.println("current cycle: " + cycle + " line index: " + currentLine + ", current mode: " + Bits.clip(2, lcdRegs.get(LCDReg.STAT)));
         if (currentLine <= 143) {
             if (cycFromLn == MODE2_DURATION) {
                 //System.out.println("switch to mode 3, elapsed cycles: " + (cyc - prevCyc));
@@ -205,11 +158,11 @@ public final class LcdController implements Component, Clocked {
             }
         }
         
-        prevCyc = cyc;//XXX*/
+        prevCyc = cyc;//XXX
         
         //////////////////////////////////////////
         
-        if (nextNonIdleCycle == IMAGE_DRAW) {
+        /*if (nextNonIdleCycle == IMAGE_DRAW) {
             nextNonIdleCycle = Long.MAX_VALUE;
             currentLine = 0;
             winY = 0;
@@ -250,7 +203,7 @@ public final class LcdController implements Component, Clocked {
             setMode(0);
             break;
 
-        }
+        }*/
     }
     
     private void changeLy(int val) {
@@ -275,9 +228,9 @@ public final class LcdController implements Component, Clocked {
     
     private void turnOn(long cycle) {
         lcdOnCycle = cycle;
-        //nextNonIdleCycle = cycle + MODE2_DURATION;
+        nextNonIdleCycle = cycle + MODE2_DURATION;
         //setMode(2);
-        nextNonIdleCycle = 0;
+        //nextNonIdleCycle = 0;
     }
     
     private boolean isOn() {
@@ -570,7 +523,7 @@ public final class LcdController implements Component, Clocked {
     public void attachTo(Bus bus) {
         this.bus = bus;
         bus.attach(this);
-        quickCopy.setBus(bus);
+        dmaController.setBus(bus);
     }
 
     @Override
@@ -625,7 +578,7 @@ public final class LcdController implements Component, Clocked {
                 break;
             case AddressMap.REG_DMA:
                 lcdRegs.set(LCDReg.DMA, data);
-                quickCopy.start(data);
+                dmaController.start(data);
                 break;
             case AddressMap.REG_BGP:
                 lcdRegs.set(LCDReg.BGP, data);

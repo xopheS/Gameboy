@@ -2,13 +2,43 @@ package ch.epfl.gameboj;
 
 public interface AddressMap {
     //TODO CHECK FOR REDUNDANCY AND IMPRECISIONS
+    int BOOT_ROM_START = 0x0000;
+    //Jump vectors
+    int[] RESETS = new int[] { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
+    int[] INTERRUPTS = new int[] { 0x40, 0x48, 0x50, 0x58, 0x60 };
     
+    //Cartridge header
+    int CARTRIDGE_HEADER_START = 0x0100, CARTRIDGE_HEADER_END = 0x0150, CARTRIDGE_HEADER_SIZE = CARTRIDGE_HEADER_END - CARTRIDGE_HEADER_START;
+    
+    int ENTRY_POINT_START = 0x100, ENTRY_POINT_END = 0x104;
+    int NINTENDO_LOGO_START = 0x104, NINTENDO_LOGO_END = 0x134;
+    int TITLE_START = 0x134, TITLE_END = 0x144;
+    //manufacturer code
+    //cgb flag
+    //New licensee code
+    //sgb flag
+    int CARTRIDGE_TYPE = 0x147;
+    int ROM_SIZE = 0x148;
+    int RAM_SIZE = 0x149;
+    int DEST_CODE = 0x14A;
+    int OLD_LIC_CODE = 0x14B;
+    int ROM_V_NUM = 0x14C;
+    int H_CHKSUM = 0x14D;
+    int G_CHKSUM_START = 0x14E, G_CHKSUM_END = 0x150;
+    
+    int BOOT_ROM_END = 0x0150, BOOT_ROM_SIZE = BOOT_ROM_END - BOOT_ROM_START;
+    
+    int USER_AREA_START = 0x150;
     //From cartridge, fixed bank (EXTERNAL)
     int ROM_BANK_00_START = 0x0000, ROM_BANK_00_END = 0x4000, ROM_BANK_00_SIZE = ROM_BANK_00_END - ROM_BANK_00_START;
     //From cartridge, switchable bank via MBC (if any) (EXTERNAL)
     int ROM_BANK_01_START = 0x4000, ROM_BANK_01_END = 0x8000, ROM_BANK_01_SIZE = ROM_BANK_01_END - ROM_BANK_01_START;
+    int USER_AREA_END = 0x8000, USER_AREA_SIZE = USER_AREA_END - USER_AREA_START;
     //Only bank 0 in non-CGB mode, switchable bank 0/1 in CGB mode
     int VRAM_START = 0x8000, VRAM_END = 0xA000, VRAM_SIZE = VRAM_END - VRAM_START;
+    // Video RAM
+    int[] TILE_SOURCE = new int[] {0x8800, 0x8000};
+    int[] BG_DISPLAY_DATA = new int[] {0x9800, 0x9C00};   
     //In cartridge, switchable bank if any (EXTERNAL)
     int EXTERNAL_RAM_START = 0xA000, EXTERNAL_RAM_END = 0xC000, EXTERNAL_RAM_SIZE = EXTERNAL_RAM_END - EXTERNAL_RAM_START;
     //WRAM bank 0
@@ -23,11 +53,18 @@ public interface AddressMap {
     //I/O registers
     int REGS_START = 0xFF00;
     int REG_P1 = 0xFF00;
+    int REG_SB = 0xFF01;
+    int REG_SC = 0xFF02;
+    //-- unused register area --
     int REG_DIV = 0xFF04;
     int REG_TIMA = 0xFF05;
     int REG_TMA = 0xFF06;
     int REG_TAC = 0xFF07;
     int REG_IF = 0xFF0F;
+    int REGS_NR_START = 0xFF10;
+    int REGS_NR_END = 0xFF27;
+    int WAVE_RAM_START = 0xFF30;
+    int WAVE_RAM_END = 0xFF3F;
     
     int REGS_LCDC_START = 0xFF40;
     int REG_LCDC = 0xFF40;
@@ -60,38 +97,9 @@ public interface AddressMap {
     
     int REGS_END = 0xFF80;
     //High ram
-    int HRAM_START = 0xFF80, HRAM_END = 0xFFFF, HIGH_RAM_SIZE = HRAM_END - HRAM_START;
+    int HRAM_START = 0xFF80, HRAM_END = 0xFFFF, HIGH_RAM_SIZE = HRAM_END - HRAM_START; //TODO HRAM ends at 0xFFFE?
     //Interrupts enable register
-    int REG_IE = 0xFFFF;
-    
-    //Jump vectors
-    int[] RESETS = new int[] { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
-    int[] INTERRUPTS = new int[] { 0x40, 0x48, 0x50, 0x58, 0x60 };
-    
-    //Cartridge header
-    int CARTRIDGE_HEADER_START = 0x0100, CARTRIDGE_HEADER_END = 0x0150, CARTRIDGE_HEADER_SIZE = CARTRIDGE_HEADER_END - CARTRIDGE_HEADER_START;
-    
-    int ENTRY_POINT_START = 0x100, ENTRY_POINT_END = 0x104;
-    int NINTENDO_LOGO_START = 0x104, NINTENDO_LOGO_END = 0x134;
-    int TITLE_START = 0x134, TITLE_END = 0x144;
-    //manufacturer code
-    //cgb flag
-    //New licensee code
-    //sgb flag
-    int CARTRIDGE_TYPE = 0x147;
-    int ROM_SIZE = 0x148;
-    int RAM_SIZE = 0x149;
-    int DEST_CODE = 0x14A;
-    int OLD_LIC_CODE = 0x14B;
-    int ROM_V_NUM = 0x14C;
-    int H_CHKSUM = 0x14D;
-    int G_CHKSUM_START = 0x14E, G_CHKSUM_END = 0x150;
-    
-    int BOOT_ROM_START = 0x0000, BOOT_ROM_END = 0x0100, BOOT_ROM_SIZE = BOOT_ROM_END - BOOT_ROM_START;
-
-    // Video RAM
-    int[] TILE_SOURCE = new int[] {0x8800, 0x8000};
-    int[] BG_DISPLAY_DATA = new int[] {0x9800, 0x9C00};    
+    int REG_IE = 0xFFFF; 
     
     //Destination code
     //TODO: 00 japan, 01 not japan
