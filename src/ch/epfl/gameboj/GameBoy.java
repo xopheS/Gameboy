@@ -4,13 +4,13 @@ import java.util.Objects;
 
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.SoundSystem;
-import ch.epfl.gameboj.component.Timer;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
+import ch.epfl.gameboj.component.time.Timer;
 
 /**
  * Cette classe modélise la Gameboy en entier, avec tous ses composants

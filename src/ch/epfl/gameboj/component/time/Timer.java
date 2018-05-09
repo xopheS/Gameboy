@@ -1,4 +1,4 @@
-package ch.epfl.gameboj.component;
+package ch.epfl.gameboj.component.time;
 
 import java.util.Objects;
 
@@ -6,6 +6,8 @@ import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
+import ch.epfl.gameboj.component.Clocked;
+import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
@@ -21,6 +23,7 @@ public final class Timer implements Component, Clocked {
     private static final int maxSecondaryCounter = 0xFF, unitsPerCycle = 4;
 
     private final Cpu cpu;
+    
     private int regDIV = 0;
     //Timer counter
     private int regTIMA = 0;
@@ -29,7 +32,7 @@ public final class Timer implements Component, Clocked {
     //Timer control register
     private int regTAC = 0;
     
-    //00: 1024, 01: 16, 10: 64, 11: 256
+    //00: 1024, 01: 16, 10: 64, 11: 256 (controls the div register, it represents frequency)
     private enum TAC implements Bit { CLK_SEL_0, CLK_SEL_1, TM_ENABLE }
 
     /**

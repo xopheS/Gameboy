@@ -1,5 +1,6 @@
-package ch.epfl.gameboj;
+package ch.epfl.gameboj.Debug;
 
+import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Joypad.Key;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
