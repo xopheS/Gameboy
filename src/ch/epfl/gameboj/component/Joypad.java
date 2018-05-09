@@ -40,7 +40,9 @@ public final class Joypad implements Component {
      *            la touche appuyée
      */
     public void keyPressed(Key k) {
-        int tmp = P1;
+        cpu.requestInterrupt(Interrupt.JOYPAD);
+        
+        //System.out.println("p1 before " + Integer.toBinaryString(P1));
         
         if (k.ordinal() < LINE_LENGTH) {
             line0 = Bits.set(line0, k.ordinal(), true);
@@ -50,9 +52,7 @@ public final class Joypad implements Component {
         
         updateP1();
         
-        if (Bits.clip(4, P1) > Bits.clip(4, tmp)) {
-            cpu.requestInterrupt(Interrupt.JOYPAD);
-        }
+        //System.out.println("p1 after " + Integer.toBinaryString(P1));
     }
 
     /**
@@ -73,7 +73,6 @@ public final class Joypad implements Component {
 
     private void updateP1() {    
         P1 &= 0b1111_0000;
-        //P1 |= 0b0010_0000;///TODO temp fix
         if (Bits.test(P1, KBState.LINE0)) { 
             P1 |= line0;
         }
@@ -85,18 +84,19 @@ public final class Joypad implements Component {
        
     @Override
     public int read(int address) {  
+        /*if (address == AddressMap.REG_P1) {
+            System.out.println(Integer.toBinaryString(Bits.complement8(P1)));
+            if(Bits.test(P1, KBState.COL0)) {
+                System.out.println("A pressed!");
+            }
+        }*/
         return Preconditions.checkBits16(address) == AddressMap.REG_P1 ? Bits.complement8(P1) : NO_DATA;
     }
 
     @Override
     public void write(int address, int data) {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
-            P1 = (P1 & 0b1100_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
-            if(Bits.test(P1, KBState.LINE1)) {
-                if(Bits.test(P1, KBState.COL0)) {
-                    System.out.println("A pressed!");
-                }
-            } //XXX          
+            P1 = (P1 & 0b1100_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);        
         }
     }
 }
