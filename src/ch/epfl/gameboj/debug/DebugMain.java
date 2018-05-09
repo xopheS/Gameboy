@@ -1,4 +1,4 @@
-package ch.epfl.gameboj.Debug;
+package ch.epfl.gameboj.debug;
 
 import java.io.File;
 import java.io.IOException;

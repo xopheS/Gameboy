@@ -66,7 +66,7 @@ public interface AddressMap {
     int WAVE_RAM_START = 0xFF30;
     int WAVE_RAM_END = 0xFF3F;
     
-    int REGS_LCDC_START = 0xFF40;
+    int REGS_LCD_START = 0xFF40;
     int REG_LCDC = 0xFF40;
     int REG_LCD_STAT = 0xFF41;
     int REG_SCY = 0xFF42;
@@ -79,7 +79,7 @@ public interface AddressMap {
     int REG_OBP1 = 0xFF49;
     int REG_WY = 0xFF4A;
     int REG_WX = 0xFF4B;    
-    int REGS_LCDC_END = 0xFF4C;
+    int REGS_LCD_END = 0xFF4C;
     
     int REG_VBK = 0xFF4F;
     

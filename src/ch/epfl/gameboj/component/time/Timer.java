@@ -33,7 +33,7 @@ public final class Timer implements Component, Clocked {
     private int regTAC = 0;
     
     //00: 1024, 01: 16, 10: 64, 11: 256 (controls the div register, it represents frequency)
-    private enum TAC implements Bit { CLK_SEL_0, CLK_SEL_1, TM_ENABLE }
+    private enum TAC implements Bit { CLK_SEL_0, CLK_SEL_1, TM_ENABLE, UNUSED3, UNUSED4, UNUSED5, UNUSED6, UNUSED7 }
 
     /**
      * Constructeur qui initialise un timer en spécifiant le processeur avec lequel
@@ -107,9 +107,7 @@ public final class Timer implements Component, Clocked {
         Preconditions.checkBits8(data);
         switch (Preconditions.checkBits16(address)) {
             case AddressMap.REG_DIV:
-                change(() -> {
-                    regDIV = 0;
-                });
+                change(() -> regDIV = 0);
                 break;
             case AddressMap.REG_TIMA:
                 regTIMA = data;
@@ -156,11 +154,9 @@ public final class Timer implements Component, Clocked {
 
     private void incIfChange(boolean previousState) {
         if (previousState && !state()) {
-            if (regTIMA == maxSecondaryCounter) {
+            if (regTIMA++ == maxSecondaryCounter) {
                 cpu.requestInterrupt(Interrupt.TIMER);
                 regTIMA = regTMA;
-            } else {
-                regTIMA++;
             }
         }
     }

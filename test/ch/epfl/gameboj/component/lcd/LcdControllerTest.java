@@ -70,7 +70,7 @@ class LcdControllerTest {
             when(mockBus.read(i)).thenReturn(Bits.clip(8, i));
         }
         
-        lcdController.write(AddressMap.REGS_LCDC_START + 6, startAddressMSB);
+        lcdController.write(AddressMap.REGS_LCD_START + 6, startAddressMSB);
 
         for (int i = 0; i < 160; ++i) {
             lcdController.cycle(i);
@@ -96,7 +96,7 @@ class LcdControllerTest {
             currentCycle = i;
             if (i == powerOn) {
                 System.out.println("attempting to power on at cycle " + i);
-                lcdController.write(AddressMap.REGS_LCDC_START, 0b1000_0000);
+                lcdController.write(AddressMap.REGS_LCD_START, 0b1000_0000);
             }
             lcdController.cycle(i);
             if (i == firstTenVBLANK[vblankNum]) {
@@ -134,8 +134,8 @@ class LcdControllerTest {
     
     @Test
     void testReadReturnsRegsWhenRegsAddress() {
-        lcdController.write(AddressMap.REGS_LCDC_START + 5, 0b11);
-        assertThat(lcdController.read(AddressMap.REGS_LCDC_START + 5), is(equalTo(0b11)));
+        lcdController.write(AddressMap.REGS_LCD_START + 5, 0b11);
+        assertThat(lcdController.read(AddressMap.REGS_LCD_START + 5), is(equalTo(0b11)));
     }
 
     @Test

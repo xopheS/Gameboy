@@ -1,4 +1,4 @@
-package ch.epfl.gameboj.Debug;
+package ch.epfl.gameboj.debug;
 
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.component.Joypad;

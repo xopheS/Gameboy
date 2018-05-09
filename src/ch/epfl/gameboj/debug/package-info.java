@@ -5,4 +5,4 @@
  * @author David Cian (287967)
  *
  */
-package ch.epfl.gameboj.Debug;
+package ch.epfl.gameboj.debug;

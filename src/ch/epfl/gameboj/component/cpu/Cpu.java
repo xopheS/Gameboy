@@ -86,16 +86,23 @@ public final class Cpu implements Component, Clocked {
         }
         return opcodeTable;
     }
-
-    private boolean pendingInterrupt() {
-        return (IF & IE) != 0;
+    
+    private int pendingInterrupts() {
+        return IF & IE;
     }
 
-    private void handleInterrupt() {
-        int commonOnes = IF & IE;
-        IME = false;
-        int i = Integer.numberOfTrailingZeros(commonOnes);
+    private boolean isInterruptPending() {
+        return pendingInterrupts() != 0;
+    }
+    
+    private int prioritaryInterruptIndex() {
+        return Integer.numberOfTrailingZeros(pendingInterrupts());
+    }
+
+    private void handleInterrupt() { //TODO recheck for precision/fidelity
+        int i = prioritaryInterruptIndex();
         IF = Bits.set(IF, i, false);
+        IME = false;
         push16(PC);
         PC = AddressMap.INTERRUPTS[i];
         nextNonIdleCycle += 5;
@@ -111,9 +118,9 @@ public final class Cpu implements Component, Clocked {
      */
     @Override
     public void cycle(long cycle) {
-        boolean isInterruptPending = pendingInterrupt();
+        boolean isInterruptPending = isInterruptPending();
         
-        if (!isOn() && pendingInterrupt()) {
+        if (!isOn() && isInterruptPending) {
             nextNonIdleCycle = cycle;
         }
         

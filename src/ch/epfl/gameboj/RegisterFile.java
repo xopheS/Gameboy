@@ -78,7 +78,7 @@ public final class RegisterFile<E extends Register> {
         registerFile[index] = (byte) Preconditions.checkBits8(newValue);
     }
     
-    public void increment(E reg) {
+    public void increment(E reg) { //TODO remove this???
         registerFile[reg.index()]++;
     }
 

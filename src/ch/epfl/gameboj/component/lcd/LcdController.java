@@ -32,9 +32,9 @@ public final class LcdController implements Component, Clocked {
 
     private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED7 }
     
-    private enum SPRITE_ATTR { Y_COORD, X_COORD, TILE_INDEX, MISC }
+    private enum DISPLAY_DATA { Y_COORD, X_COORD, TILE_INDEX, ATTRIBUTES }
     
-    private enum MISC implements Bit { P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG }
+    private enum ATTRIBUTES implements Bit { P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG }
 
     private static final int TILE_SIZE = 8;
     //Background size: 256 x 256, 32 x 32 tiles
@@ -275,7 +275,7 @@ public final class LcdController implements Component, Clocked {
             Integer[] spriteInfo = spritesIntersectingLine(lineIndex);
             
             for (int i = 0; i < spriteInfo.length; ++i) {
-                boolean isInBG = Bits.test(readAttr(i, SPRITE_ATTR.MISC), MISC.BEHIND_BG);
+                boolean isInBG = Bits.test(readAttr(i, DISPLAY_DATA.ATTRIBUTES), ATTRIBUTES.BEHIND_BG);
                 if (isInBG) {
                     bgSpriteInfoL.add(spriteInfo[i]);
                 } else {
@@ -362,11 +362,11 @@ public final class LcdController implements Component, Clocked {
             LcdImageLine indSpriteLine;
             int spriteIndex = unpackIndex(spriteInfo[i]);
             int spriteX = unpackX(spriteInfo[i]) - SPRITE_XOFFSET;
-            int spriteAttrMisc = readAttr(spriteIndex, SPRITE_ATTR.MISC);
-            boolean spritePalette = Bits.test(spriteAttrMisc, MISC.PALETTE.index());
-            boolean hFlip = Bits.test(spriteAttrMisc, MISC.FLIP_H.index());
-            boolean vFlip = Bits.test(spriteAttrMisc, MISC.FLIP_V.index());
-            int spriteTileIndex = readAttr(spriteIndex, SPRITE_ATTR.TILE_INDEX);
+            int spriteAttrMisc = readAttr(spriteIndex, DISPLAY_DATA.ATTRIBUTES);
+            boolean spritePalette = Bits.test(spriteAttrMisc, ATTRIBUTES.PALETTE.index());
+            boolean hFlip = Bits.test(spriteAttrMisc, ATTRIBUTES.FLIP_H.index());
+            boolean vFlip = Bits.test(spriteAttrMisc, ATTRIBUTES.FLIP_V.index());
+            int spriteTileIndex = readAttr(spriteIndex, DISPLAY_DATA.TILE_INDEX);
             
             if (hFlip) {
                 spriteLineBuilder.setBytes(0, tileLineMSB(spriteTileIndex, spriteIndex, lineIndex, vFlip),
@@ -425,6 +425,7 @@ public final class LcdController implements Component, Clocked {
     }
     
     private int tileTypeAddressS(int tileTypeIndex, int tileIndex, int lineIndex, boolean vFlipped) {
+        //TODO When double character composition, only even-numbered indexes can be selected, when odd will be the same as even, how to do this?
         int height = getHeight();
         int spriteY = read(AddressMap.OAM_START + tileIndex * 4);
         
@@ -442,7 +443,7 @@ public final class LcdController implements Component, Clocked {
         Integer[] intersect = new Integer[MAX_SPRITES]; //TODO replace with list?
         
         while (foundSprites < MAX_SPRITES && scanIndex < OAM_SPRITES) {
-            int spriteY = readAttr(scanIndex, SPRITE_ATTR.Y_COORD) - SPRITE_YOFFSET;
+            int spriteY = readAttr(scanIndex, DISPLAY_DATA.Y_COORD) - SPRITE_YOFFSET;
             if (lineIndex >= spriteY && lineIndex < spriteY + spriteHeight) {
                 intersect[foundSprites] = packSpriteInfo(scanIndex);
                 foundSprites++;
@@ -490,7 +491,7 @@ public final class LcdController implements Component, Clocked {
     }
     
     private int packSpriteInfo(int spriteIndex) {
-        return readAttr(spriteIndex, SPRITE_ATTR.X_COORD) << Byte.SIZE | spriteIndex;
+        return readAttr(spriteIndex, DISPLAY_DATA.X_COORD) << Byte.SIZE | spriteIndex;
     }
     
     private int unpackX(int spriteInfo) {
@@ -501,7 +502,7 @@ public final class LcdController implements Component, Clocked {
         return Bits.clip(Byte.SIZE, spriteInfo);
     }
     
-    private int readAttr(int spriteIndex, SPRITE_ATTR attr) {
+    private int readAttr(int spriteIndex, DISPLAY_DATA attr) {
         return read(AddressMap.OAM_START + Objects.checkIndex(spriteIndex, OAM_SPRITES) * SPRITE_ATTR_BYTES + attr.ordinal());
     }
     
@@ -534,8 +535,8 @@ public final class LcdController implements Component, Clocked {
             return videoRamController.read(address);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
             return oamRamController.read(address);
-        } else if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
-            return lcdRegs.get(address - AddressMap.REGS_LCDC_START);
+        } else if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
+            return lcdRegs.get(address - AddressMap.REGS_LCD_START);
         } 
         
         return NO_DATA;
@@ -553,7 +554,7 @@ public final class LcdController implements Component, Clocked {
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
             //TODO cannot access during mode 2 or 3
             oamRamController.write(address, data);
-        } else if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
+        } else if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
             switch(address) {
             case AddressMap.REG_LCDC:
                 lcdRegs.set(LCDReg.LCDC, data);

@@ -1,4 +1,4 @@
-package ch.epfl.gameboj.Debug;
+package ch.epfl.gameboj.debug;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
