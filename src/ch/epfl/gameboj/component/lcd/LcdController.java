@@ -86,7 +86,7 @@ public final class LcdController implements Component, Clocked {
         this.cpu = Objects.requireNonNull(cpu);
         
         videoRamController = new RamController(new Ram(AddressMap.VRAM_SIZE), AddressMap.VRAM_START);
-        oamRamController = new RamController(new Ram(AddressMap.OAM_RAM_SIZE), AddressMap.OAM_START);
+        oamRamController = new RamController(new Ram(AddressMap.OAM_SIZE), AddressMap.OAM_START);
     }
 
     public LcdImage currentImage() {
@@ -105,23 +105,23 @@ public final class LcdController implements Component, Clocked {
         
         cyc = cycle;//XXX
         
-        cycFromImg = Math.floorMod(cycFromPowOn, IMAGE_CYCLE_DURATION);
-        cycFromLn = Math.floorMod(cycFromImg, LINE_CYCLE_DURATION);
+        //cycFromImg = Math.floorMod(cycFromPowOn, IMAGE_CYCLE_DURATION);
+        //cycFromLn = Math.floorMod(cycFromImg, LINE_CYCLE_DURATION);
         
-        compareLYandLYC(); //TODO correct? 
+        //compareLYandLYC(); //TODO correct? 
         
         cycFromPowOn = cycle - lcdOnCycle; //TODO can move???
         
-        if (cycle == nextNonIdleCycle && isOn()) {
-            currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
+        if (cycFromPowOn == nextNonIdleCycle && isOn()) {
+            currentLine = (int) (cycFromPowOn / LINE_CYCLE_DURATION);
             reallyCycle(cycle);
         }       
     }
 
     private void reallyCycle(long cycle) {
-        System.out.println("reallyCycle: cycFromImg " + cycFromImg + " cycFromLn " + cycFromLn + " nextNonIdleCycle " + nextNonIdleCycle);
-        System.out.println("current cycle: " + cycle + " line index: " + currentLine + ", current mode: " + Bits.clip(2, lcdRegs.get(LCDReg.STAT)));
-        if (currentLine <= 143) {
+        //System.out.println("reallyCycle: cycFromImg " + cycFromImg + " cycFromLn " + cycFromLn + " nextNonIdleCycle " + nextNonIdleCycle);
+        //System.out.println("current cycle: " + cycle + " line index: " + currentLine + ", current mode: " + Bits.clip(2, lcdRegs.get(LCDReg.STAT)));
+        /*if (currentLine <= 143) {
             if (cycFromLn == MODE2_DURATION) {
                 //System.out.println("switch to mode 3, elapsed cycles: " + (cyc - prevCyc));
                 nextImageBuilder.setLine(currentLine, computeLine(currentLine));
@@ -156,13 +156,13 @@ public final class LcdController implements Component, Clocked {
                 lcdRegs.increment(LCDReg.LY);
                 nextNonIdleCycle += LINE_CYCLE_DURATION;
             }
-        }
+        }*/
         
         prevCyc = cyc;//XXX
         
         //////////////////////////////////////////
         
-        /*if (nextNonIdleCycle == IMAGE_DRAW) {
+        if (nextNonIdleCycle == IMAGE_DRAW) {
             nextNonIdleCycle = Long.MAX_VALUE;
             currentLine = 0;
             winY = 0;
@@ -203,7 +203,7 @@ public final class LcdController implements Component, Clocked {
             setMode(0);
             break;
 
-        }*/
+        }
     }
     
     private void changeLy(int val) {
@@ -228,9 +228,9 @@ public final class LcdController implements Component, Clocked {
     
     private void turnOn(long cycle) {
         lcdOnCycle = cycle;
-        nextNonIdleCycle = cycle + MODE2_DURATION;
+        //nextNonIdleCycle = cycle + MODE2_DURATION;
         //setMode(2);
-        //nextNonIdleCycle = 0;
+        nextNonIdleCycle = 0;
     }
     
     private boolean isOn() {

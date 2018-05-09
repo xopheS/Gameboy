@@ -26,7 +26,7 @@ public interface AddressMap {
     int H_CHKSUM = 0x14D;
     int G_CHKSUM_START = 0x14E, G_CHKSUM_END = 0x150;
     
-    int BOOT_ROM_END = 0x0150, BOOT_ROM_SIZE = BOOT_ROM_END - BOOT_ROM_START;
+    int BOOT_ROM_END = 0x0100, BOOT_ROM_SIZE = BOOT_ROM_END - BOOT_ROM_START;
     
     int USER_AREA_START = 0x150;
     //From cartridge, fixed bank (EXTERNAL)
@@ -48,7 +48,7 @@ public interface AddressMap {
     //Mirror of 0xC000-0xDDFF
     int ECHO_RAM_START = 0xE000, ECHO_RAM_END = 0xFD00, ECHO_RAM_SIZE = ECHO_RAM_END - ECHO_RAM_START;
     //Sprite attribute table
-    int OAM_START = 0xFE00, OAM_END = 0xFEA0, OAM_RAM_SIZE = OAM_END - OAM_START;
+    int OAM_START = 0xFE00, OAM_END = 0xFEA0, OAM_SIZE = OAM_END - OAM_START;
     //-------------------------------- 0xFEA0 - 0xFF00: not usable ----------------------------------
     //I/O registers
     int REGS_START = 0xFF00;
