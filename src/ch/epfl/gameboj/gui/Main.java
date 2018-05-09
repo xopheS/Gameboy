@@ -36,14 +36,9 @@ public class Main extends Application {
             Key.START, "S",
             Key.SELECT, "Space"); //TODO use this, invert mapping
     
-    private static final int[] COLOR_MAP = new int[] {
-            0xFF_FF_FF, 0xD3_D3_D3, 0xA9_A9_A9, 0x00_00_00
-    };
-
-    
     public static void main(String[] args) {
         Application.launch(args);
-      }
+    }
 
     @Override
     public void start(Stage primaryStage) {
