@@ -56,10 +56,10 @@ public final class Joypad implements Component {
     }
 
     /**
-     * Permet de simuler l'éliberation d'une touche.
+     * Permet de simuler l'ï¿½liberation d'une touche.
      * 
      * @param k
-     *            la touche libérée
+     *            la touche libï¿½rï¿½e
      */
     public void keyReleased(Key k) {        
         if (k.ordinal() < LINE_LENGTH) {
