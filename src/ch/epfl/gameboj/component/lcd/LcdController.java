@@ -67,7 +67,7 @@ public final class LcdController implements Component, Clocked {
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
     
-    long cycFromPowOn;
+    long cycFromPowOn; //TODO still necessary?
     long cycFromImg;
     int currentLine;
     long cycFromLn;
