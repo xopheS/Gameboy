@@ -100,12 +100,14 @@ public final class Cpu implements Component, Clocked {
      */
     @Override
     public void cycle(long cycle) {
-        if (!isPowerOn() && pendingInterrupt()) {
+        boolean isInterruptPending = pendingInterrupt();
+        
+        if (!isOn() && pendingInterrupt()) {
             nextNonIdleCycle = cycle;
         }
         
         if (cycle == nextNonIdleCycle) {
-            reallyCycle();
+            reallyCycle(isInterruptPending);
         }
     }
 
@@ -116,8 +118,8 @@ public final class Cpu implements Component, Clocked {
      * avec l'opcode indiqué par le PC (program counter)
      *
      */
-    private void reallyCycle() {
-        if (IME && pendingInterrupt()) {
+    private void reallyCycle(boolean interruptPending) {
+        if (IME && interruptPending) {
             handleInterrupt();
         } else {
             int nextInstruction = bus.read(PC);
@@ -575,6 +577,7 @@ public final class Cpu implements Component, Clocked {
             }
                 break;
             case STOP:
+                //TODO halt system clock
                 throw new Error("STOP is not implemented");
             default:
                 break;
@@ -584,7 +587,7 @@ public final class Cpu implements Component, Clocked {
         nextNonIdleCycle += opcode.cycles + (instructionDone ? opcode.additionalCycles : 0);
     }
 
-    private boolean isPowerOn() {
+    private boolean isOn() {
         return !(nextNonIdleCycle == Long.MAX_VALUE);
     }
     
