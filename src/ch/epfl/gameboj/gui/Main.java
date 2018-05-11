@@ -60,14 +60,11 @@ public class Main extends Application {
         imgView.setFitWidth(2 * LCD_WIDTH);
         imgView.setFitHeight(2 * LCD_HEIGHT); //TODO fit stage/scene/imgview
         
-        BorderPane borderPane = new BorderPane();
-        borderPane.getChildren().add(imgView);
+        BorderPane borderPane = new BorderPane(imgView);
         
         Scene mainScene = new Scene(borderPane);
         setInput(mainScene, gameboj.joypad());
         
-        primaryStage.setWidth(2 * LCD_WIDTH + 50); //XXX
-        primaryStage.setHeight(2 * LCD_HEIGHT + 50); //XXX
         primaryStage.setScene(mainScene);       
         primaryStage.show();
         
@@ -91,7 +88,6 @@ public class Main extends Application {
         scene.setOnKeyPressed(e -> {
             switch (e.getCode()) {
             case A:
-                //gameboj.bus().write(AddressMap.REG_P1, 0b1101_1111);
                 jp.keyPressed(Key.A);
                 break;
             case B:
