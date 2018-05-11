@@ -46,6 +46,24 @@ public interface Preconditions {
             throw new IllegalArgumentException(msg);
         }
     }
+    
+    /**
+     * Vérifie la validité de l'expression booléenne donnée en argument, et exécute l'action spécifiée sinon.
+     *
+     * @param b
+     *            L'expression booléenne à tester
+     *
+     * @param msg
+     *            Le message à afficher en cas d'exception
+     *
+     * @throws IllegalArgumentException
+     *             Si l'évaluation de b retourne false
+     */
+    static void checkArgument(boolean b, Runnable r) {
+        if (!b) {
+            r.run();
+        }
+    }
 
     /**
      * Retourne son argument si celui-ci est compris entre 0 et 0xFF inclus (valeur

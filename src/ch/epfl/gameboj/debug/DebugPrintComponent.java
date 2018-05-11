@@ -1,4 +1,6 @@
-package ch.epfl.gameboj.component;
+package ch.epfl.gameboj.debug;
+
+import ch.epfl.gameboj.component.Component;
 
 public final class DebugPrintComponent implements Component {
 

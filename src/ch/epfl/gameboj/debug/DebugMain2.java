@@ -1,4 +1,4 @@
-package ch.epfl.gameboj;
+package ch.epfl.gameboj.debug;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 

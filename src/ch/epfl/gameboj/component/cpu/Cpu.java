@@ -12,6 +12,8 @@ import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Alu.Flag;
 import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 import ch.epfl.gameboj.component.memory.Ram;
+import ch.epfl.gameboj.input.InputPort;
+import ch.epfl.gameboj.input.OutputPort;
 
 /**
  * Cette classe modélise le processeur de la Gameboy.
@@ -24,10 +26,19 @@ public final class Cpu implements Component, Clocked {
     private static final Opcode[] DIRECT_OPCODE_TABLE = buildOpcodeTable(Opcode.Kind.DIRECT);
     private static final Opcode[] PREFIXED_OPCODE_TABLE = buildOpcodeTable(Opcode.Kind.PREFIXED);
 
-    private static final int opcodePrefix = 0xCB;
+    private static final int OPCODE_PREFIX = 0xCB;
 
     private Bus bus;
     private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
+    
+    private final CpuCore cpuCore = new CpuCore();
+    
+    private final InputPort P10 = new InputPort();
+    private final InputPort P11 = new InputPort();
+    private final InputPort P12 = new InputPort();
+    private final InputPort P13 = new InputPort();
+    private final OutputPort P14 = new OutputPort();
+    private final OutputPort P15 = new OutputPort();
 
     // PC = program counter, stores the address of the next instruction
     private int PC = 0;
@@ -40,12 +51,10 @@ public final class Cpu implements Component, Clocked {
     // IF = interrupt flags, tells us if corresponding interrupt is happening
     private int IF = 0;
 
-    private enum Reg implements Register {
-        A, F, B, C, D, E, H, L
-    };
+    private enum Reg implements Register { A, F, B, C, D, E, H, L }
 
     private enum Reg16 implements Register {
-        AF(Reg.A, Reg.F), BC(Reg.B, Reg.C), DE(Reg.D, Reg.E), HL(Reg.H, Reg.L),;
+        AF(Reg.A, Reg.F), BC(Reg.B, Reg.C), DE(Reg.D, Reg.E), HL(Reg.H, Reg.L);
 
         private Reg a, b;
 
@@ -55,9 +64,7 @@ public final class Cpu implements Component, Clocked {
         }
     };
 
-    private enum FlagSrc {
-        V0, V1, ALU, CPU
-    };
+    private enum FlagSrc { V0, V1, ALU, CPU };
 
     /**
      * Cette énumération donne les interruptions possibles du processeur, dans
@@ -79,16 +86,23 @@ public final class Cpu implements Component, Clocked {
         }
         return opcodeTable;
     }
-
-    private boolean pendingInterrupt() {
-        return (IF & IE) != 0;
+    
+    private int pendingInterrupts() {
+        return IF & IE;
     }
 
-    private void handleInterrupt() {
-        int commonOnes = IF & IE;
-        IME = false;
-        int i = 31 - Integer.numberOfLeadingZeros(Integer.lowestOneBit(commonOnes));
+    private boolean isInterruptPending() {
+        return pendingInterrupts() != 0;
+    }
+    
+    private int prioritaryInterruptIndex() {
+        return Integer.numberOfTrailingZeros(pendingInterrupts());
+    }
+
+    private void handleInterrupt() { //TODO recheck for precision/fidelity
+        int i = prioritaryInterruptIndex();
         IF = Bits.set(IF, i, false);
+        IME = false;
         push16(PC);
         PC = AddressMap.INTERRUPTS[i];
         nextNonIdleCycle += 5;
@@ -104,11 +118,14 @@ public final class Cpu implements Component, Clocked {
      */
     @Override
     public void cycle(long cycle) {
-        if (nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
+        boolean isInterruptPending = isInterruptPending();
+        
+        if (!isOn() && isInterruptPending) {
             nextNonIdleCycle = cycle;
-            reallyCycle();
-        } else if (cycle == nextNonIdleCycle) {
-            reallyCycle();
+        }
+        
+        if (cycle == nextNonIdleCycle) {
+            reallyCycle(isInterruptPending);
         }
     }
 
@@ -119,12 +136,12 @@ public final class Cpu implements Component, Clocked {
      * avec l'opcode indiqué par le PC (program counter)
      *
      */
-    private void reallyCycle() {
-        if (IME && pendingInterrupt()) {
+    private void reallyCycle(boolean interruptPending) {
+        if (IME && interruptPending) {
             handleInterrupt();
         } else {
             int nextInstruction = bus.read(PC);
-            Opcode nextOpcode = nextInstruction == opcodePrefix ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()] : DIRECT_OPCODE_TABLE[nextInstruction];
+            Opcode nextOpcode = nextInstruction == OPCODE_PREFIX ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()] : DIRECT_OPCODE_TABLE[nextInstruction];
             dispatch(nextOpcode);
         }
     }
@@ -578,6 +595,7 @@ public final class Cpu implements Component, Clocked {
             }
                 break;
             case STOP:
+                //TODO halt system clock
                 throw new Error("STOP is not implemented");
             default:
                 break;
@@ -587,6 +605,10 @@ public final class Cpu implements Component, Clocked {
         nextNonIdleCycle += opcode.cycles + (instructionDone ? opcode.additionalCycles : 0);
     }
 
+    private boolean isOn() {
+        return !(nextNonIdleCycle == Long.MAX_VALUE);
+    }
+    
     /**
      * Cette méthode est une redéfinition de attachTo qui permet de connaître le bus
      * auquel le processeur a été attaché.

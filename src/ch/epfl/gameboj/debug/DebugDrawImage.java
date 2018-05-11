@@ -1,4 +1,4 @@
-package ch.epfl.gameboj.component.lcd;
+package ch.epfl.gameboj.debug;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -8,6 +8,10 @@ import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
+
+import ch.epfl.gameboj.component.lcd.LcdImage;
+import ch.epfl.gameboj.component.lcd.LcdImageLine;
+import ch.epfl.gameboj.component.lcd.LcdImageLine.Builder;
 
 public final class DebugDrawImage {
     private DebugDrawImage() {
