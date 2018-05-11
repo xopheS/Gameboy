@@ -139,7 +139,7 @@ public class LcdImageLine {
         BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
         BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
         
-        return new LcdImageLine(newMSB, newLSB, newLSB.or(newMSB));
+        return new LcdImageLine(newMSB, newLSB, opacity.or(other.opacity));
     }
 
     /**
@@ -157,7 +157,7 @@ public class LcdImageLine {
         BitVector newMSB = MSB.and(opacity.not()).or(other.MSB.and(opacity));
         BitVector newLSB = LSB.and(opacity.not()).or(other.LSB.and(opacity));
 
-        return new LcdImageLine(newMSB, newLSB, newMSB.or(newLSB));
+        return new LcdImageLine(newMSB, newLSB, this.opacity.or(opacity));
     }
 
     /**
@@ -177,7 +177,7 @@ public class LcdImageLine {
         BitVector msbModified = MSB.shift(size - n).or(other.MSB.shift(n));
         BitVector lsbModified = LSB.shift(size - n).or(other.LSB.shift(n));
 
-        return new LcdImageLine(msbModified, lsbModified, msbModified.or(lsbModified));
+        return new LcdImageLine(msbModified, lsbModified, opacity.or(other.opacity));
     }
 
     @Override
