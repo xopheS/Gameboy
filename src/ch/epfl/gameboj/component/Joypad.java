@@ -39,8 +39,8 @@ public final class Joypad implements Component {
      * @param k
      *            la touche appuyée
      */
-    public void keyPressed(Key k) {
-        int tmp = P1;
+    public void keyPressed(Key k) {       
+        //System.out.println("p1 before " + Integer.toBinaryString(P1));
         
         if (k.ordinal() < LINE_LENGTH) {
             line0 = Bits.set(line0, k.ordinal(), true);
@@ -48,11 +48,9 @@ public final class Joypad implements Component {
             line1 = Bits.set(line1, k.ordinal() % LINE_LENGTH, true);
         }
         
-        updateP1();
+        updateP1(); //TODO
         
-        if (Bits.clip(4, P1) > Bits.clip(4, tmp)) {
-            cpu.requestInterrupt(Interrupt.JOYPAD);
-        }
+        //cpu.requestInterrupt(Interrupt.JOYPAD);
     }
 
     /**
@@ -68,12 +66,14 @@ public final class Joypad implements Component {
             line1 = Bits.set(line1, k.ordinal() % LINE_LENGTH, false);
         }
         
-        updateP1();
+        updateP1(); //TODO
     }
 
-    private void updateP1() {    
+    private void updateP1() { 
+        int tmp = P1; //TODO
+    	
         P1 &= 0b1111_0000;
-        P1 |= 0b0010_0000;///TODO temp fix
+        
         if (Bits.test(P1, KBState.LINE0)) { 
             P1 |= line0;
         }
@@ -81,10 +81,14 @@ public final class Joypad implements Component {
         if (Bits.test(P1, KBState.LINE1)) {
             P1 |= line1;
         }
+        
+        if (P1 > tmp) cpu.requestInterrupt(Interrupt.JOYPAD); //TODO
     }
        
     @Override
-    public int read(int address) {  
+    public int read(int address) {      	
+    	//updateP1(); TODO remove?
+    	
         return Preconditions.checkBits16(address) == AddressMap.REG_P1 ? Bits.complement8(P1) : NO_DATA;
     }
 
@@ -92,11 +96,7 @@ public final class Joypad implements Component {
     public void write(int address, int data) {
         if (Preconditions.checkBits16(address) == AddressMap.REG_P1) {
             P1 = (P1 & 0b1100_1111) | (Bits.complement8(Preconditions.checkBits8(data)) & 0b0011_0000);
-            if(Bits.test(P1, KBState.LINE1)) {
-                if(Bits.test(P1, KBState.COL0)) {
-                    System.out.println("A pressed!");
-                }
-            } //XXX          
+            updateP1();
         }
     }
 }

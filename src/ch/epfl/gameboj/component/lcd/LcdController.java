@@ -67,10 +67,7 @@ public final class LcdController implements Component, Clocked {
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
     
-    long cycFromPowOn; //TODO still necessary?
-    long cycFromImg;
-    int currentLine;
-    long cycFromLn;
+    long cycFromPowOn;
     
     private long cyc, prevCyc; //XXX
 
@@ -112,98 +109,63 @@ public final class LcdController implements Component, Clocked {
         
         cycFromPowOn = cycle - lcdOnCycle; //TODO can move???
         
-        if (cycFromPowOn == nextNonIdleCycle && isOn()) {
-            currentLine = (int) (cycFromPowOn / LINE_CYCLE_DURATION);
-            reallyCycle(cycle);
+        if (cycle == nextNonIdleCycle && isOn()) {
+            int cycFromImg = (int) (cycFromPowOn % IMAGE_CYCLE_DURATION);
+            int currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
+            int cycFromLn = cycFromImg % LINE_CYCLE_DURATION;
+            reallyCycle(cycle, currentLine, cycFromLn);
         }       
     }
 
-    private void reallyCycle(long cycle) {
-        //System.out.println("reallyCycle: cycFromImg " + cycFromImg + " cycFromLn " + cycFromLn + " nextNonIdleCycle " + nextNonIdleCycle);
-        //System.out.println("current cycle: " + cycle + " line index: " + currentLine + ", current mode: " + Bits.clip(2, lcdRegs.get(LCDReg.STAT)));
-        /*if (currentLine <= 143) {
-            if (cycFromLn == MODE2_DURATION) {
-                //System.out.println("switch to mode 3, elapsed cycles: " + (cyc - prevCyc));
-                nextImageBuilder.setLine(currentLine, computeLine(currentLine));
+    private void reallyCycle(long cycle, int currentLine, int cycFromLn) {
+        //System.out.println("cycle " + cycle + " current line " + currentLine + " ly " + lcdRegs.get(LCDReg.LY) + " cycles from line " + cycFromLn);
+        modifyLYorLYC(LCDReg.LY, currentLine);
+        if (currentLine <= 143) {
+            switch (cycFromLn) {
+            case MODE2_DURATION:
+                //System.out.println("switch to mode 3");
                 nextNonIdleCycle += MODE3_DURATION;
                 setMode(3);
-            } else if (cycFromLn == MODE2_DURATION + MODE3_DURATION) {
-                //System.out.println("switch to mode 0, elapsed cycles: " + (cyc - prevCyc));
+                break;
+            case MODE2_DURATION + MODE3_DURATION:
+                //System.out.println("switch to mode 0");
                 nextNonIdleCycle += MODE0_DURATION;
+                nextImageBuilder.setLine(currentLine, computeLine(currentLine));
                 setMode(0);
-            } else if (cycFromLn == 0) {
+                break;
+            case 0:
                 if (currentLine == 143) {
-                    //System.out.println("switch to mode 1, elapsed cycles: " + (cyc - prevCyc));
-                    displayedImage = nextImageBuilder.build();
-                    lcdRegs.increment(LCDReg.LY);
+                    //System.out.println("switch to mode 1");
                     nextNonIdleCycle += LINE_CYCLE_DURATION;
                     setMode(1);
                 } else {
-                    //System.out.println("switch to mode 2, elapsed cycles: " + (cyc - prevCyc));
-                    lcdRegs.increment(LCDReg.LY);
+                    //System.out.println("switch to mode 2");
                     nextNonIdleCycle += MODE2_DURATION;
                     setMode(2);
                 }
+                break;
             }
         } else {
-            if (currentLine == 153) {
-                //System.out.println("switch to mode 2 from VBLANK, elapsed cycles: " + (cyc - prevCyc));
-                lcdRegs.set(LCDReg.LY, 0);
-                nextNonIdleCycle += MODE2_DURATION;
-                setMode(2);
+            if (currentLine == 144) {
+                //System.out.println("draw virtual line " + currentLine);
+                winY = 0;
+                displayedImage = nextImageBuilder.build();
+                nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+                nextNonIdleCycle += LINE_CYCLE_DURATION;
+                cpu.requestInterrupt(Interrupt.VBLANK);
             } else {
-                //System.out.println("draw virtual line, elapsed cycles: " + (cyc - prevCyc));
-                lcdRegs.increment(LCDReg.LY);
+                //System.out.println("draw virtual line " + currentLine);
                 nextNonIdleCycle += LINE_CYCLE_DURATION;
             }
-        }*/
+            
+            if (currentLine == 153) {
+                //System.out.println("switch to mode 2 from vblank ");
+                nextNonIdleCycle += MODE2_DURATION;
+                setMode(2);
+            }
+        }
         
         prevCyc = cyc;//XXX
-        
-        //////////////////////////////////////////
-        
-        if (nextNonIdleCycle == IMAGE_DRAW) {
-            nextNonIdleCycle = Long.MAX_VALUE;
-            currentLine = 0;
-            winY = 0;
-            return;
-        }
-
-        if (nextNonIdleCycle >= END_LINE_DRAW) {
-            if (nextNonIdleCycle == END_LINE_DRAW) {
-                displayedImage = nextImageBuilder.build();
-            }
-            nextNonIdleCycle += LINE_CYCLE_DURATION;
-            changeLy(currentLine + 1);
-            setMode(1);
-
-            return;
-        }
-
-        if (nextNonIdleCycle == 0) {
-            nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-        }
-
-        switch ((int) (nextNonIdleCycle % LINE_CYCLE_DURATION)) {
-
-        case 0:
-            nextNonIdleCycle += 20;
-            changeLy(currentLine + 1);
-            setMode(2);
-            break;
-
-        case 20:
-            nextNonIdleCycle += 43;
-            nextImageBuilder.setLine(currentLine, computeLine(lcdRegs.get(LCDReg.LY)));
-            setMode(3);
-            break;
-
-        case 63:
-            nextNonIdleCycle += 51;
-            setMode(0);
-            break;
-
-        }
     }
     
     private void changeLy(int val) {
@@ -228,9 +190,8 @@ public final class LcdController implements Component, Clocked {
     
     private void turnOn(long cycle) {
         lcdOnCycle = cycle;
-        //nextNonIdleCycle = cycle + MODE2_DURATION;
-        //setMode(2);
-        nextNonIdleCycle = 0;
+        nextNonIdleCycle = cycle + MODE2_DURATION;
+        setMode(2);
     }
     
     private boolean isOn() {
@@ -252,7 +213,6 @@ public final class LcdController implements Component, Clocked {
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) {
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
             }
-            cpu.requestInterrupt(Interrupt.VBLANK);
             break;
         case 2:
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE2)) {
@@ -333,7 +293,7 @@ public final class LcdController implements Component, Clocked {
         LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_SIZE);
         
         winY++;
-          
+        
         for (int i = 0; i < WIN_TILE_SIZE; ++i) {
             int winAddress;
 

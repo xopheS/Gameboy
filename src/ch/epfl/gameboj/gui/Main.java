@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Joypad;
@@ -28,7 +29,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-    GameBoy gameboj = null;
+    static GameBoy gameboj = null;
     
     private static final Map<Key, String> keyToString = Map.of(
             Key.A, "A",
@@ -59,14 +60,11 @@ public class Main extends Application {
         imgView.setFitWidth(2 * LCD_WIDTH);
         imgView.setFitHeight(2 * LCD_HEIGHT); //TODO fit stage/scene/imgview
         
-        BorderPane borderPane = new BorderPane();
-        borderPane.getChildren().add(imgView);
+        BorderPane borderPane = new BorderPane(imgView);
         
         Scene mainScene = new Scene(borderPane);
         setInput(mainScene, gameboj.joypad());
         
-        primaryStage.setWidth(2 * LCD_WIDTH);
-        primaryStage.setHeight(2 * LCD_HEIGHT);
         primaryStage.setScene(mainScene);       
         primaryStage.show();
         
@@ -89,6 +87,18 @@ public class Main extends Application {
         // Set up keyboard input
         scene.setOnKeyPressed(e -> {
             switch (e.getCode()) {
+            case A:
+                jp.keyPressed(Key.A);
+                break;
+            case B:
+                jp.keyPressed(Key.B);
+                break;
+            case S:
+                jp.keyPressed(Key.START);
+                break;
+            case SPACE:
+                jp.keyPressed(Key.START);
+                break;
             case UP:
                 jp.keyPressed(Key.UP);
                 break;
@@ -103,8 +113,9 @@ public class Main extends Application {
                 break;
             }
 
-            switch (e.getText()) { //TODO this doesn't work, why?
+            /*switch (e.getText()) { //TODO this doesn't work, why?
             case "A":
+                System.out.println("yiss");
                 jp.keyPressed(Key.A);
                 break;
             case "B":
@@ -116,11 +127,23 @@ public class Main extends Application {
             case "Space":
                 jp.keyPressed(Key.START);
                 break;
-            }
+            }*/
         });
 
         scene.setOnKeyReleased(e -> {
             switch (e.getCode()) {
+            case A:
+                jp.keyReleased(Key.A);
+                break;
+            case B:
+                jp.keyReleased(Key.B);
+                break;
+            case C:
+                jp.keyReleased(Key.START);
+                break;
+            case SPACE:
+                jp.keyReleased(Key.START);
+                break;
             case UP:
                 jp.keyReleased(Key.UP);
                 break;
@@ -135,7 +158,7 @@ public class Main extends Application {
                 break;
             }
 
-            switch (e.getText()) {
+            /*switch (e.getText()) {
             case "A":
                 jp.keyReleased(Key.A);
                 break;
@@ -148,7 +171,7 @@ public class Main extends Application {
             case "Space":
                 jp.keyReleased(Key.START);
                 break;
-            }
+            }*/
         });
     }
 }
