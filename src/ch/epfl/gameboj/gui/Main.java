@@ -5,25 +5,20 @@ import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 
 import static ch.epfl.gameboj.GameBoy.CYCLES_PER_NANOSECOND;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Joypad.Key;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
-import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;

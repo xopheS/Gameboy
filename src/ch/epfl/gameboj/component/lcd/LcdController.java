@@ -5,7 +5,6 @@ import static ch.epfl.gameboj.component.lcd.LcdImage.BLANK_LCD_IMAGE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -56,12 +55,10 @@ public final class LcdController implements Component, Clocked {
     private LcdImage displayedImage = BLANK_LCD_IMAGE;
     private final RamController videoRamController, oamRamController;
     private final Cpu cpu;
-    private Bus bus;
     private long nextNonIdleCycle = Long.MAX_VALUE;
-    private boolean winActive = false;
     private int winY = 0;
     private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-    private final DmaController dmaController = DmaController.getQuickCopyUtil();
+    private final DmaController dmaController = DmaController.getDmaController();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
     
@@ -398,7 +395,7 @@ public final class LcdController implements Component, Clocked {
         int scanIndex = 0, foundSprites = 0;
         int spriteHeight = getHeight();
         
-        Integer[] intersect = new Integer[MAX_SPRITES]; //TODO replace with list?
+        Integer[] intersect = new Integer[MAX_SPRITES];
         
         while (foundSprites < MAX_SPRITES && scanIndex < OAM_SPRITES) {
             int spriteY = readAttr(scanIndex, DISPLAY_DATA.Y_COORD) - SPRITE_YOFFSET;
@@ -466,7 +463,6 @@ public final class LcdController implements Component, Clocked {
     
     @Override
     public void attachTo(Bus bus) {
-        this.bus = bus;
         bus.attach(this);
         dmaController.setBus(bus);
     }

@@ -56,25 +56,6 @@ class LcdControllerTest {
     void testCurrentImageInitiallyBlank() {
         assertThat(lcdController.currentImage(), is(equalTo(BLANK_LCD_IMAGE)));
     }
-    
-    @Test
-    void testQuickCopyWorks() {        
-        int[] busMem = new int[500];
-        int startAddressMSB = 0b01101101;
-        int startAddress = startAddressMSB << Byte.SIZE;
-        
-        for (int i = startAddress; i < startAddress + 500; ++i) {
-            busMem[i - startAddress] = Bits.clip(8, i);
-            when(mockBus.read(i)).thenReturn(Bits.clip(8, i));
-        }
-        
-        lcdController.write(AddressMap.REGS_LCD_START + 6, startAddressMSB);
-
-        for (int i = 0; i < 160; ++i) {
-            lcdController.cycle(i);
-            assertThat(lcdController.read(AddressMap.OAM_START + i), is(equalTo(busMem[i])));
-        }
-    }
 
     @Test
     void testCycleVBLANKAtCorrectInstants() {

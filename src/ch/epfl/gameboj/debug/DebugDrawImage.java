@@ -11,7 +11,6 @@ import javax.imageio.ImageIO;
 
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import ch.epfl.gameboj.component.lcd.LcdImageLine;
-import ch.epfl.gameboj.component.lcd.LcdImageLine.Builder;
 
 public final class DebugDrawImage {
     private DebugDrawImage() {

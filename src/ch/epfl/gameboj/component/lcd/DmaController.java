@@ -6,8 +6,8 @@ import ch.epfl.gameboj.Preconditions;
 
 public final class DmaController {
     private final static int COPY_LENGTH = 160;
-    private final static DmaController quickCopy = new DmaController();
-    private static Bus bus;
+    private final static DmaController dmaController = new DmaController();
+    private Bus bus;
     private boolean isActive = false;
     private int startAddress;
     private int currentIndex = 0;
@@ -17,7 +17,7 @@ public final class DmaController {
     }
     
     void setBus(Bus bus) {
-        DmaController.bus = bus;
+        this.bus = bus;
     }
     
     void start(int addressMSB) {
@@ -48,8 +48,8 @@ public final class DmaController {
         startAddress = 0;
     }
     
-    static DmaController getQuickCopyUtil() {
-        return quickCopy;
+    static DmaController getDmaController() {
+        return dmaController;
     }
     
     boolean isActive() {
