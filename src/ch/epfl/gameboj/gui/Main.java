@@ -28,8 +28,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-public class Main extends Application {
-    static GameBoy gameboj = null;
+public class Main extends Application {   
+    private static GameBoy gameboj = null;
     
     private static final Map<Key, String> keyToString = Map.of(
             Key.A, "A",
@@ -44,6 +44,9 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         List<String> cmdArgs = getParameters().getRaw();
+        
+        Scene splashScreen;  
+        Scene mainMenuScreen;
         
         Preconditions.checkArgument(cmdArgs.size() == 1, () -> System.exit(1));
         

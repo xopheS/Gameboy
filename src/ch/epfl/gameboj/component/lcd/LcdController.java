@@ -551,10 +551,10 @@ public final class LcdController implements Component, Clocked {
                 lcdRegs.set(LCDReg.OBP1, data);
                 break;
             case AddressMap.REG_WY:
-                lcdRegs.set(LCDReg.WY, Objects.checkIndex(data, 145)); 
+                lcdRegs.set(LCDReg.WY, data);
                 break;
             case AddressMap.REG_WX:
-                lcdRegs.set(LCDReg.WX, Objects.checkIndex(data, 167));
+                lcdRegs.set(LCDReg.WX, data);
                 break;
             }
                         

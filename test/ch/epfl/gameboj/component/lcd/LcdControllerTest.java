@@ -12,8 +12,6 @@ import static org.hamcrest.CoreMatchers.*;
 
 import static org.mockito.Mockito.*;
 
-import java.util.Arrays;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
