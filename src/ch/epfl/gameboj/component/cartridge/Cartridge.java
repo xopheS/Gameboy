@@ -59,8 +59,19 @@ public final class Cartridge implements Component {
         try (FileInputStream fis = new FileInputStream(romFile)) {
             byte[] fileBytes = fis.readAllBytes();
 
-            if (fileBytes[AddressMap.CARTRIDGE_TYPE] != cartridgeTypeNum.get(CartridgeType.MBC0)) {
+            /*if (fileBytes[AddressMap.CARTRIDGE_TYPE] != cartridgeTypeNum.get(CartridgeType.MBC0)) {
                 throw new IllegalArgumentException("At the moment only MBC0 cartridges are supported");
+            }*/
+            
+            switch (fileBytes[AddressMap.CARTRIDGE_TYPE]) {
+            case 0:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 0));
+            case 1:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 2048));
+            case 2:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 8192));
+            case 3:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 32768));
             }
 
             return new Cartridge(new MBC0(new Rom(fileBytes)));
