@@ -21,6 +21,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -70,16 +73,81 @@ public class Main extends Application {
         setInput(simpleModeScreen, gameboj.joypad());
 
         // Extended mode screen
-        ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Speed"), new Button("Screen"),
-                new Button("Dump"), new Button("Debug"), new Button("Save"), new Button("Help"));
+        /*
+         * Menu fileMenu = new Menu("File"); Menu helpMenu = new Menu("Help");
+         * 
+         * MenuBar mainMenuBar = new MenuBar(); mainMenuBar.getMenus().addAll(fileMenu,
+         * helpMenu);
+         * 
+         * ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Speed"), new
+         * Button("Screen"), new Button("Dump"), new Button("Debug"), new
+         * Button("Save"));
+         */
 
         BorderPane extendedBorderPane = new BorderPane();
 
-        extendedBorderPane.setTop(toolBar);
+        // extendedBorderPane.setTop(toolBar); TODO fix code duplication
         extendedBorderPane.setCenter(emulationView); // Copy the emulation view actually or it doesn't work TODO
+
+        // TODO add gameboy overlay
 
         Scene extendedModeScreen = new Scene(extendedBorderPane);
         setInput(extendedModeScreen, gameboj.joypad());
+
+        // Development mode screen
+        Menu fileMenu = new Menu("File"); // file related functionality
+        MenuItem exitMenuItem = new MenuItem("Exit");
+        exitMenuItem.setOnAction(e -> System.exit(0));
+        fileMenu.getItems().addAll(exitMenuItem);
+
+        Menu dumpMenu = new Menu("Dump"); // dumping related functionality
+        MenuItem dumpTileSourceMenuItem = new MenuItem("Dump tile source");
+        MenuItem dumpBackgroundMenuItem = new MenuItem("Dump background");
+        MenuItem dumpWindowMenuItem = new MenuItem("Dump window");
+        MenuItem dumpSpritesMenuItem = new MenuItem("Dump sprites");
+        dumpMenu.getItems().addAll(dumpTileSourceMenuItem, dumpBackgroundMenuItem, dumpWindowMenuItem,
+                dumpSpritesMenuItem);
+
+        Menu debugMenu = new Menu("Debug"); // debugging related functionality
+        MenuItem stepByStepMenuItem = new MenuItem("Step by step execution");
+        MenuItem decompileMenuItem = new MenuItem("Decompile");
+        MenuItem showStateMenuItem = new MenuItem("Show Gameboy state");
+        debugMenu.getItems().addAll(stepByStepMenuItem, decompileMenuItem, showStateMenuItem);
+
+        Menu optionsMenu = new Menu("Options"); // gameboy options
+        MenuItem changeSpeedMenuItem = new MenuItem("Change speed");
+        MenuItem gameboyConfigurationMenuItem = new MenuItem("Configuration");
+        optionsMenu.getItems().addAll(changeSpeedMenuItem, gameboyConfigurationMenuItem);
+
+        Menu windowMenu = new Menu("Window"); // workspace visual control
+        Menu perspectiveMenu = new Menu("Perspectives"); // switch to view layout presets
+        Menu showViewMenu = new Menu("Show view"); // show view in workspace
+        MenuItem backgroundViewMenuItem = new MenuItem("Background");
+        MenuItem windowViewMenuItem = new MenuItem("Window");
+        MenuItem spritesViewMenuItem = new MenuItem("Sprites");
+        showViewMenu.getItems().addAll(backgroundViewMenuItem, windowViewMenuItem, spritesViewMenuItem);
+        windowMenu.getItems().addAll(perspectiveMenu, showViewMenu);
+
+        Menu preferencesMenu = new Menu("Preferences"); // program preferences
+
+        Menu helpMenu = new Menu("Help"); // help functionality
+        MenuItem programmingManualMenuItem = new MenuItem("Nintendo programming manual");
+        helpMenu.getItems().addAll(programmingManualMenuItem);
+
+        MenuBar mainMenuBar = new MenuBar();
+        mainMenuBar.getMenus().addAll(fileMenu, dumpMenu, debugMenu, optionsMenu, windowMenu, preferencesMenu,
+                helpMenu);
+
+        ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
+                                                                                                      // pane under menu
+
+        BorderPane developmentBorderPane = new BorderPane();
+
+        developmentBorderPane.setTop(mainMenuBar);
+        developmentBorderPane.setCenter(emulationView);
+
+        Scene developmentModeScreen = new Scene(developmentBorderPane); // TODO
+        setInput(developmentModeScreen, gameboj.joypad());
 
         // Mode choice screen
         BorderPane modeChoicePane = new BorderPane();
@@ -88,10 +156,13 @@ public class Main extends Application {
         simpleModeButton.setOnAction(e -> primaryStage.setScene(simpleModeScreen));
         Button extendedModeButton = new Button("Extended Mode");
         extendedModeButton.setOnAction(e -> primaryStage.setScene(extendedModeScreen));
+        Button developmentModeButton = new Button("Development Mode");
+        developmentModeButton.setOnAction(e -> primaryStage.setScene(developmentModeScreen));
         VBox modeButtonsBox = new VBox(10);
 
         modeButtonsBox.getChildren().add(simpleModeButton);
         modeButtonsBox.getChildren().add(extendedModeButton);
+        modeButtonsBox.getChildren().add(developmentModeButton); // TODO replace with addAll
 
         modeChoicePane.getChildren().add(modeButtonsBox);
 
