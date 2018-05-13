@@ -46,7 +46,7 @@ public final class LcdController implements Component, Clocked {
     //Max sprites: 40 per screen, 10 per line
     private static final int MAX_SPRITES = 10, OAM_SPRITES = 40;
     private static final int SPRITE_ATTR_BYTES = 4;
-    private static final int TILE_BYTE_LENGTH = 16;
+    private static final int BYTES_PER_TILE = 16;
     private static final int WX_OFFSET = 7;
     //Cycle durations
     private static final int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
@@ -61,6 +61,8 @@ public final class LcdController implements Component, Clocked {
     private final DmaController dmaController = DmaController.getDmaController();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
+    
+    private int currentImage = 0;
     
     long cycFromPowOn;
     
@@ -105,6 +107,7 @@ public final class LcdController implements Component, Clocked {
         cycFromPowOn = cycle - lcdOnCycle; //TODO can move???
         
         if (cycle == nextNonIdleCycle && isOn()) {
+            //currentImage = cycFromPowOn - 
             int cycFromImg = (int) (cycFromPowOn % IMAGE_CYCLE_DURATION);
             int currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
             int cycFromLn = cycFromImg % LINE_CYCLE_DURATION;
@@ -367,12 +370,12 @@ public final class LcdController implements Component, Clocked {
         
     private int tileTypeAddress(int tileTypeIndex, int lineIndex) {
         if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
-            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, TILE_SIZE) * 2;
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * BYTES_PER_TILE + Math.floorMod(lineIndex, TILE_SIZE) * 2;
         } else {
             if (tileTypeIndex >= 0 && tileTypeIndex < 128) {
-                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex + 128) * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, TILE_SIZE) * 2;
+                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex + 128) * BYTES_PER_TILE + Math.floorMod(lineIndex, TILE_SIZE) * 2;
             } else if (tileTypeIndex >= 128 && tileTypeIndex < 256) {
-                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex - 128) * TILE_BYTE_LENGTH + Math.floorMod(lineIndex, TILE_SIZE) * 2;
+                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex - 128) * BYTES_PER_TILE + Math.floorMod(lineIndex, TILE_SIZE) * 2;
             } else {
                 throw new IllegalArgumentException("tile_type_index wrong!");
             }
@@ -385,9 +388,9 @@ public final class LcdController implements Component, Clocked {
         int spriteY = read(AddressMap.OAM_START + tileIndex * 4);
         
         if (vFlipped) {
-            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + (height - Math.floorMod(lineIndex - spriteY, height)) * 2;
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * BYTES_PER_TILE + (height - Math.floorMod(lineIndex - spriteY, height)) * 2;
         } else {
-            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * TILE_BYTE_LENGTH + Math.floorMod(lineIndex - spriteY, height) * 2;
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * BYTES_PER_TILE + Math.floorMod(lineIndex - spriteY, height) * 2;
         }
     }
     
