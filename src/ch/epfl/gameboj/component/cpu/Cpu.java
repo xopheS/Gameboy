@@ -595,7 +595,6 @@ public final class Cpu implements Component, Clocked {
             }
                 break;
             case STOP:
-                //TODO halt system clock
                 throw new Error("STOP is not implemented");
             default:
                 break;

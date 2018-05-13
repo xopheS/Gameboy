@@ -24,16 +24,7 @@ public final class Cartridge implements Component {
     
     private enum CartridgeType { MBC0, MBC1, MBC1_RAM, MBC1_RAM_BAT, MBC_2, MBC2_BAT, ROM_RAM, ROM_RAM_BAT, MM01, MM01_RAM, MM01_RAM_BAT, MBC3_TIM_BAT,
         MBC3_TIM_RAM_BAT, MBC3, MBC3_RAM, MBC3_RAM_BAT, MBC5, MBC5_RAM, MBC5_RAM_BAT, MBC5_RUMBLE, MBC5_RUMBLE_RAM, MBC5_RUMBLE_RAM_BAT, MBC6, MBC7_ALL 
-    }
-    
-    private enum ExtraCartridgeType { POCKET_CAM, BANDAI_TAMAS, HuC3, HuC1_RAM_BAT }
-    
-    private static final Map<CartridgeType, Integer> cartridgeTypeNum = Collections.unmodifiableMap(Map.of(
-            CartridgeType.MBC0, 0x00,
-            CartridgeType.MBC1, 0x01)); //TODO finish this map
-    
-    private static final Map<Integer, Integer> romSizeNum = Collections.unmodifiableMap(Map.of(
-            32, 0x00)); //TODO finish this map
+    } //TODO modify this for production?
 
     private final Component mbc;
 

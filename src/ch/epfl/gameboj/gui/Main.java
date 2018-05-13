@@ -56,7 +56,7 @@ public class Main extends Application {
         
         ImageView imgView = new ImageView();
         imgView.setFitWidth(2 * LCD_WIDTH);
-        imgView.setFitHeight(2 * LCD_HEIGHT); //TODO fit stage/scene/imgview
+        imgView.setFitHeight(2 * LCD_HEIGHT);
         
         BorderPane borderPane = new BorderPane(imgView);
         

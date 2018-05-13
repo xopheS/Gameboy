@@ -1,14 +1,15 @@
 package ch.epfl.gameboj;
 
 public interface AddressMap {
-    //TODO CHECK FOR REDUNDANCY AND IMPRECISIONS
     int BOOT_ROM_START = 0x0000;
     //Jump vectors
     int[] RESETS = new int[] { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };
     int[] INTERRUPTS = new int[] { 0x40, 0x48, 0x50, 0x58, 0x60 };
     
+    int BOOT_ROM_END = 0x0100, BOOT_ROM_SIZE = BOOT_ROM_END - BOOT_ROM_START;
+    
     //Cartridge header
-    int CARTRIDGE_HEADER_START = 0x0100, CARTRIDGE_HEADER_END = 0x0150, CARTRIDGE_HEADER_SIZE = CARTRIDGE_HEADER_END - CARTRIDGE_HEADER_START;
+    int CARTRIDGE_HEADER_START = 0x0100;
     
     int ENTRY_POINT_START = 0x100, ENTRY_POINT_END = 0x104;
     int NINTENDO_LOGO_START = 0x104, NINTENDO_LOGO_END = 0x134;
@@ -26,7 +27,7 @@ public interface AddressMap {
     int H_CHKSUM = 0x14D;
     int G_CHKSUM_START = 0x14E, G_CHKSUM_END = 0x150;
     
-    int BOOT_ROM_END = 0x0100, BOOT_ROM_SIZE = BOOT_ROM_END - BOOT_ROM_START;
+    int CARTRIDGE_HEADER_END = 0x0150, CARTRIDGE_HEADER_SIZE = CARTRIDGE_HEADER_END - CARTRIDGE_HEADER_START;
     
     int USER_AREA_START = 0x150;
     //From cartridge, fixed bank (EXTERNAL)
@@ -97,7 +98,7 @@ public interface AddressMap {
     
     int REGS_END = 0xFF80;
     //High ram
-    int HRAM_START = 0xFF80, HRAM_END = 0xFFFF, HIGH_RAM_SIZE = HRAM_END - HRAM_START; //TODO HRAM ends at 0xFFFE?
+    int HRAM_START = 0xFF80, HRAM_END = 0xFFFE, HIGH_RAM_SIZE = HRAM_END - HRAM_START;
     //Interrupts enable register
     int REG_IE = 0xFFFF; 
     

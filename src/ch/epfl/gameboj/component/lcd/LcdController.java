@@ -67,8 +67,6 @@ public final class LcdController implements Component, Clocked {
     long cycFromPowOn;
     
     private long cyc, prevCyc; //XXX
-
-    //TODO can only access HRAM during quick copy
     
     /**
      * Construit un contrôleur LCD.
@@ -471,9 +469,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     @Override
-    public int read(int address) {
-        //TODO if drawing, cpu cannot access VRAM and OAM
-        
+    public int read(int address) {        
         if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
             return videoRamController.read(address);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
@@ -488,14 +484,10 @@ public final class LcdController implements Component, Clocked {
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits8(data);
-        
-        //TODO if drawing, cpu cannot access VRAM and OAM
 
         if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
-            //TODO cannot access during mode 3
             videoRamController.write(address, data);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
-            //TODO cannot access during mode 2 or 3
             oamRamController.write(address, data);
         } else if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
             switch(address) {

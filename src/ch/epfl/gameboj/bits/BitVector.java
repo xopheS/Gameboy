@@ -33,7 +33,7 @@ public final class BitVector {
     //////////////////////////////////////////////////////////
 
     private static int[] bitVector(int size, boolean initialValue) {
-        Preconditions.checkArgument(size % Integer.SIZE == 0 && size > 0);
+        Preconditions.checkArgument(size % Integer.SIZE == 0 && size > 0, "Size must be strictly positive and a multiple of 32");
         int[] bitVector = new int[size / Integer.SIZE];
         Arrays.fill(bitVector, initialValue ? -1 : 0);
         return bitVector;
@@ -54,7 +54,7 @@ public final class BitVector {
         FloorEuclideanDiv d = new FloorEuclideanDiv(start, Integer.SIZE);
 
         if (methodZeroExtended) {
-            if (Math.floorMod(start, Integer.SIZE) == 0) {
+            if (d.mod == 0) {
                 for (int i = 0; i < extractedInts.length; i++) {
                     extractedInts[i] = (i < -d.div || i >= bitVector.length - d.div) ? 0 : bitVector[i + d.div];
                 }
@@ -64,7 +64,7 @@ public final class BitVector {
                 }
             }
         } else {
-            if (Math.floorMod(start, Integer.SIZE) == 0) {
+            if (d.mod == 0) {
                 for (int i = 0; i < extractedInts.length; i++) {
                     extractedInts[i] = bitVector[Math.floorMod(i + d.div, bitVector.length)];
                 }
@@ -86,6 +86,7 @@ public final class BitVector {
             if (f.div == bitVector.length - 1) {
                 return bitVector[f.div] >>> f.mod;
             }
+            
             if (f.div == -1) {
                 return (bitVector[f.div + 1] << (Integer.SIZE - f.mod));
             } else {

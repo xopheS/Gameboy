@@ -13,9 +13,6 @@ import ch.epfl.gameboj.Preconditions;
  */
 
 public final class Ram {
-    
-    private final Map<Integer, Integer> ramSizeNum = Collections.unmodifiableMap(Map.of(
-            0, 0x00)); //TODO finish this map
 
     private final byte[] data;
     

@@ -120,7 +120,7 @@ class LcdControllerTest {
     @Test
     void testWriteDoesNothingWhenOtherAddress() {
         lcdController.write(0, 0x43);
-        //TODO
+        assertThat(lcdController.read(AddressMap.OAM_START + 50), is(equalTo(0)));
     }
 
     @Test
