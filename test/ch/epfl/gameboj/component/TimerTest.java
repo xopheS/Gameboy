@@ -12,7 +12,6 @@ import static ch.epfl.test.TestRandomizer.newRandom;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.component.cpu.Cpu;
-import ch.epfl.gameboj.component.time.Timer;
 
 public final class TimerTest implements ComponentTest {
     @Override

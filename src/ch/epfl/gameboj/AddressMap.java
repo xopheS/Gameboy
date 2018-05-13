@@ -103,5 +103,4 @@ public interface AddressMap {
     int REG_IE = 0xFFFF; 
     
     //Destination code
-    //TODO: 00 japan, 01 not japan
 }

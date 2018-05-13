@@ -12,8 +12,6 @@ import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Alu.Flag;
 import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 import ch.epfl.gameboj.component.memory.Ram;
-import ch.epfl.gameboj.input.InputPort;
-import ch.epfl.gameboj.input.OutputPort;
 
 /**
  * Cette classe modélise le processeur de la Gameboy.
@@ -30,15 +28,6 @@ public final class Cpu implements Component, Clocked {
 
     private Bus bus;
     private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
-    
-    private final CpuCore cpuCore = new CpuCore();
-    
-    private final InputPort P10 = new InputPort();
-    private final InputPort P11 = new InputPort();
-    private final InputPort P12 = new InputPort();
-    private final InputPort P13 = new InputPort();
-    private final OutputPort P14 = new OutputPort();
-    private final OutputPort P15 = new OutputPort();
 
     // PC = program counter, stores the address of the next instruction
     private int PC = 0;
@@ -99,7 +88,7 @@ public final class Cpu implements Component, Clocked {
         return Integer.numberOfTrailingZeros(pendingInterrupts());
     }
 
-    private void handleInterrupt() { //TODO recheck for precision/fidelity
+    private void handleInterrupt() {
         int i = prioritaryInterruptIndex();
         IF = Bits.set(IF, i, false);
         IME = false;

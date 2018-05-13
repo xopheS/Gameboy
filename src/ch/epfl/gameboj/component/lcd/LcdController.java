@@ -62,11 +62,9 @@ public final class LcdController implements Component, Clocked {
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
     
-    private int currentImage = 0;
+    private int currentImage = 0; //XXX
     
     long cycFromPowOn;
-    
-    private long cyc, prevCyc; //XXX
     
     /**
      * Construit un contrôleur LCD.
@@ -95,8 +93,6 @@ public final class LcdController implements Component, Clocked {
             dmaController.copy();
         }
         
-        cyc = cycle;//XXX
-        
         //cycFromImg = Math.floorMod(cycFromPowOn, IMAGE_CYCLE_DURATION);
         //cycFromLn = Math.floorMod(cycFromImg, LINE_CYCLE_DURATION);
         
@@ -105,7 +101,6 @@ public final class LcdController implements Component, Clocked {
         cycFromPowOn = cycle - lcdOnCycle; //TODO can move???
         
         if (cycle == nextNonIdleCycle && isOn()) {
-            //currentImage = cycFromPowOn - 
             int cycFromImg = (int) (cycFromPowOn % IMAGE_CYCLE_DURATION);
             int currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
             int cycFromLn = cycFromImg % LINE_CYCLE_DURATION;
@@ -114,9 +109,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private void reallyCycle(long cycle, int currentLine, int cycFromLn) {
-        //System.out.println("cycle " + cycle + " current line " + currentLine + " ly " + lcdRegs.get(LCDReg.LY) + " cycles from line " + cycFromLn);
         modifyLYorLYC(LCDReg.LY, currentLine);
-        System.out.println("window active at line " + currentLine + " : " + isWindowActive());
         
         if (currentLine <= 143) {
             switch (cycFromLn) {
@@ -162,21 +155,9 @@ public final class LcdController implements Component, Clocked {
                 setMode(2);
             }
         }
-        
-        prevCyc = cyc;//XXX
-    }
-    
-    private void compareLYandLYC() {
-        lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, false);
-        
-        if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
-            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
-            //TODO request STAT interrupt if appropriate, clean up code
-        }
     }
     
     private void turnOff() {
-        //TODO power off only possible during VBLANK
         setMode(0);
         modifyLYorLYC(LCDReg.LY, 0);
         nextNonIdleCycle = Long.MAX_VALUE;
@@ -381,7 +362,6 @@ public final class LcdController implements Component, Clocked {
     }
     
     private int tileTypeAddressS(int tileTypeIndex, int tileIndex, int lineIndex, boolean vFlipped) {
-        //TODO When double character composition, only even-numbered indexes can be selected, when odd will be the same as even, how to do this?
         int height = getHeight();
         int spriteY = read(AddressMap.OAM_START + tileIndex * 4);
         
@@ -410,7 +390,7 @@ public final class LcdController implements Component, Clocked {
         
         Integer[] intersectIndex = trimIntArray(intersect, foundSprites);
         
-        Arrays.sort(intersectIndex); //TODO replace with System.sortarray call?
+        Arrays.sort(intersectIndex);
         
         return intersectIndex;
     }

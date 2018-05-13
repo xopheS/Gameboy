@@ -86,9 +86,7 @@ public final class Joypad implements Component {
     }
        
     @Override
-    public int read(int address) {      	
-    	//updateP1(); TODO remove?
-    	
+    public int read(int address) {      	    	
         return Preconditions.checkBits16(address) == AddressMap.REG_P1 ? Bits.complement8(P1) : NO_DATA;
     }
 

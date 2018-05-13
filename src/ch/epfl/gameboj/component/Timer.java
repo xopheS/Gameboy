@@ -1,4 +1,4 @@
-package ch.epfl.gameboj.component.time;
+package ch.epfl.gameboj.component;
 
 import java.util.Objects;
 
@@ -6,8 +6,6 @@ import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
-import ch.epfl.gameboj.component.Clocked;
-import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
