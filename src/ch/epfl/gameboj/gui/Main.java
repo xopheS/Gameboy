@@ -95,6 +95,8 @@ public class Main extends Application {
         setInput(extendedModeScreen, gameboj.joypad());
 
         // Development mode screen
+        BorderPane developmentBorderPane = new BorderPane();
+
         Menu fileMenu = new Menu("File"); // file related functionality
         MenuItem exitMenuItem = new MenuItem("Exit");
         exitMenuItem.setOnAction(e -> System.exit(0));
@@ -123,6 +125,10 @@ public class Main extends Application {
         Menu perspectiveMenu = new Menu("Perspectives"); // switch to view layout presets
         Menu showViewMenu = new Menu("Show view"); // show view in workspace
         MenuItem backgroundViewMenuItem = new MenuItem("Background");
+
+        ImageView backgroundView = new ImageView();
+
+        backgroundViewMenuItem.setOnAction(e -> developmentBorderPane.setLeft(backgroundView));
         MenuItem windowViewMenuItem = new MenuItem("Window");
         MenuItem spritesViewMenuItem = new MenuItem("Sprites");
         showViewMenu.getItems().addAll(backgroundViewMenuItem, windowViewMenuItem, spritesViewMenuItem);
@@ -140,8 +146,6 @@ public class Main extends Application {
 
         ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
                                                                                                       // pane under menu
-
-        BorderPane developmentBorderPane = new BorderPane();
 
         developmentBorderPane.setTop(mainMenuBar);
         developmentBorderPane.setCenter(emulationView);
@@ -182,6 +186,7 @@ public class Main extends Application {
                 gameboj.runUntil(elapsedCycles);
 
                 emulationView.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
+                backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
             }
         }.start();
     }
