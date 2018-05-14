@@ -65,9 +65,6 @@ public final class GameBoy {
         joypad.attachTo(bus);
 
         soundController.attachTo(bus);
-
-        System.out.println("start sound");
-        soundController.start(); // TODO move this to powerup action
     }
 
     /**
@@ -84,7 +81,7 @@ public final class GameBoy {
         Preconditions.checkArgument(currentCycle <= cycle);
         while (currentCycle < cycle) {
             timer.cycle(currentCycle);
-            soundController.cycle(cycle);
+            // soundController.cycle(cycle);
             lcdController.cycle(currentCycle);
             cpu.cycle(currentCycle);
             currentCycle++;

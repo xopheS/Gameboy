@@ -4,11 +4,20 @@ import static ch.epfl.gameboj.GameBoy.CYCLES_PER_NANOSECOND;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.TargetDataLine;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.GameBoy;
@@ -25,7 +34,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -46,7 +54,7 @@ public class Main extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage primaryStage) throws IOException, LineUnavailableException, InterruptedException {
         List<String> cmdArgs = getParameters().getRaw();
         Preconditions.checkArgument(cmdArgs.size() == 1, () -> System.exit(1));
 
@@ -59,6 +67,66 @@ public class Main extends Application {
         } catch (IOException e) {
             System.exit(1);
         }
+
+        //////////////////////////////// TEST
+        int SAMPLE_RATE = 44100;
+
+        AudioFormat gameboySoundFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, SAMPLE_RATE, 16, 2, 4,
+                SAMPLE_RATE, false);
+
+        DataLine.Info info = new DataLine.Info(SourceDataLine.class, gameboySoundFormat);
+        final SourceDataLine soundLine = (SourceDataLine) AudioSystem.getLine(info);
+        soundLine.open(gameboySoundFormat);
+
+        info = new DataLine.Info(TargetDataLine.class, gameboySoundFormat);
+        final TargetDataLine targetLine = (TargetDataLine) AudioSystem.getLine(info);
+        targetLine.open(gameboySoundFormat);
+
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        Thread audioThread = new Thread() {
+            @Override
+            public void run() {
+                soundLine.start();
+                while (true) {
+                    soundLine.write(out.toByteArray(), 0, out.size());
+                }
+            }
+        };
+
+        Thread targetThread = new Thread() {
+            @Override
+            public void run() {
+                targetLine.start();
+                byte[] data = new byte[targetLine.getBufferSize() / 5];
+                int readBytes;
+                while (true) {
+                    readBytes = targetLine.read(data, 0, data.length);
+                    out.write(data, 0, readBytes);
+                }
+            }
+        };
+
+        FloatControl audioVolume = (FloatControl) soundLine.getControl(FloatControl.Type.MASTER_GAIN);
+        audioVolume.setValue(6f);
+
+        targetThread.start();
+        System.out.println("Started recording");
+        Thread.sleep(5000);
+        targetLine.stop();
+        targetLine.close();
+
+        System.out.println("Ended recording");
+        System.out.println("Starting playback");
+
+        audioThread.start();
+        Thread.sleep(5000);
+        soundLine.stop();
+        soundLine.close();
+
+        System.out.println("Ended playback");
+
+        /////////////////////////////////////
 
         // TODO replace gameboj with clever name
         primaryStage.setTitle("gameboj: the GameBoy emulator");
@@ -164,8 +232,9 @@ public class Main extends Application {
                 helpMenu);
 
         // TODO add button graphics (btn.setGraphic())
-        //ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
-                                                                                                      // pane under menu
+        // ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new
+        // Button("Save")); // TODO add to top
+        // pane under menu
 
         topBox.getChildren().addAll(mainMenuBar);
 
@@ -212,7 +281,7 @@ public class Main extends Application {
                 viewportRectangle.setTranslateY(gameboj.bus().read(AddressMap.REG_SCY)); // FIXME
                 backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
                 // FIXME
-                windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
+                // windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
                 spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
             }
         }.start();

@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.component.sound;
 
+import java.util.Arrays;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
@@ -54,11 +56,20 @@ public final class SoundController implements Component, Clocked {
 
     public void start() {
         byte[] test = new byte[10000];
-        for (int i = 0; i < 10000; ++i) {
-            test[i] = 100;
-        }
-        soundLine.write(test, 0, 10000); // FIXME
-        soundLine.start();
+        Arrays.fill(test, (byte) 100);
+
+        Thread audioThread = new Thread() {
+            @Override
+            public void run() {
+                System.out.println("start sound");
+                this.start(); // TODO move this to powerup action
+                while (true) {
+                    soundLine.write(test, 0, 10000);
+                }
+            }
+        };
+
+        audioThread.start();
     }
 
     @Override
