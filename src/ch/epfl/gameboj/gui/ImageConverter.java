@@ -7,7 +7,10 @@ import javafx.scene.image.WritableImage;
 
 public final class ImageConverter {
 
-    private static class JavaFXColor {
+    private enum JavaFXColor {
+        COLOR0(0xFF, 0xFF, 0xFF, 0xFF), COLOR1(0xFF, 0xD3, 0xD3, 0xD3), COLOR2(0xFF, 0xA9, 0xA9, 0xA9), COLOR3(0xFF,
+                0x00, 0x00, 0x00);
+
         private int alpha, red, green, blue;
 
         JavaFXColor(int alpha, int red, int green, int blue) {
@@ -16,11 +19,11 @@ public final class ImageConverter {
             this.green = green;
             this.blue = blue;
         }
-    } // nested class or enum? TODO
 
-    JavaFXColor[] fxColors = new JavaFXColor[] { new JavaFXColor(0xFF, 0xFF, 0xFF, 0xFF),
-            new JavaFXColor(0xFF, 0xD3, 0xD3, 0xD3), new JavaFXColor(0xFF, 0xA9, 0xA9, 0xA9),
-            new JavaFXColor(0xFF, 0x00, 0x00, 0x00) };
+        int getARG_B() {
+            return alpha << Byte.SIZE * 3 | red << Byte.SIZE * 2 | green << Byte.SIZE | blue;
+        }
+    }
 
     public static Image convert(LcdImage lcdImage) {
         WritableImage wImage = new WritableImage(lcdImage.getWidth(), lcdImage.getHeight());
@@ -34,16 +37,16 @@ public final class ImageConverter {
 
                 switch (lcdImage.get(x, y)) {
                 case 0:
-                    color = 0xFFFFFFFF;
+                    color = JavaFXColor.COLOR0.getARG_B();
                     break;
                 case 1:
-                    color = 0xFFD3D3D3;
+                    color = JavaFXColor.COLOR1.getARG_B();
                     break;
                 case 2:
-                    color = 0xFFA9A9A9;
+                    color = JavaFXColor.COLOR2.getARG_B();
                     break;
                 case 3:
-                    color = 0xFF000000;
+                    color = JavaFXColor.COLOR3.getARG_B();
                     break;
                 }
 
@@ -53,4 +56,5 @@ public final class ImageConverter {
 
         return wImage;
     }
+
 }
