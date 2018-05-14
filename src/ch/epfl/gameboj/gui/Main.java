@@ -127,6 +127,7 @@ public class Main extends Application {
         MenuItem backgroundViewMenuItem = new MenuItem("Background");
 
         ImageView backgroundView = new ImageView();
+        ImageView windowView = new ImageView();
 
         backgroundViewMenuItem.setOnAction(e -> developmentBorderPane.setLeft(backgroundView));
         MenuItem windowViewMenuItem = new MenuItem("Window");
@@ -187,6 +188,7 @@ public class Main extends Application {
 
                 emulationView.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
                 backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
+                windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
             }
         }.start();
     }
