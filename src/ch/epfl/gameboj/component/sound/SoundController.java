@@ -1,12 +1,14 @@
 package ch.epfl.gameboj.component.sound;
 
-import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
+import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.TargetDataLine;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
@@ -32,44 +34,70 @@ public final class SoundController implements Component, Clocked {
 
     RegisterFile<Register> scRegs = new RegisterFile<>(Reg.values());
 
-    public SoundController() {
-        AudioFormat gameboySoundFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, SAMPLE_RATE, Byte.SIZE, 2, 2,
-                SAMPLE_RATE, true);
+    public SoundController() throws InterruptedException, LineUnavailableException {
+        //////////////////////////////// TEST
+        int SAMPLE_RATE = 44100;
+
+        AudioFormat gameboySoundFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, SAMPLE_RATE, 16, 2, 4,
+                SAMPLE_RATE, false);
 
         DataLine.Info info = new DataLine.Info(SourceDataLine.class, gameboySoundFormat);
+        final SourceDataLine soundLine = (SourceDataLine) AudioSystem.getLine(info);
+        soundLine.open(gameboySoundFormat);
 
-        try {
-            soundLine = (SourceDataLine) AudioSystem.getLine(info);
-        } catch (LineUnavailableException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+        info = new DataLine.Info(TargetDataLine.class, gameboySoundFormat);
+        final TargetDataLine targetLine = (TargetDataLine) AudioSystem.getLine(info);
+        targetLine.open(gameboySoundFormat);
 
-        try {
-            soundLine.open(gameboySoundFormat);
-            System.out.println("open soundline");
-        } catch (LineUnavailableException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    public void start() {
-        byte[] test = new byte[10000];
-        Arrays.fill(test, (byte) 100);
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         Thread audioThread = new Thread() {
             @Override
             public void run() {
-                System.out.println("start sound");
-                this.start(); // TODO move this to powerup action
+                soundLine.start();
                 while (true) {
-                    soundLine.write(test, 0, 10000);
+                    soundLine.write(out.toByteArray(), 0, out.size());
                 }
             }
         };
 
+        Thread targetThread = new Thread() {
+            @Override
+            public void run() {
+                targetLine.start();
+                byte[] data = new byte[targetLine.getBufferSize() / 5];
+                int readBytes;
+                while (true) {
+                    readBytes = targetLine.read(data, 0, data.length);
+                    out.write(data, 0, readBytes);
+                }
+            }
+        };
+
+        FloatControl audioVolume = (FloatControl) soundLine.getControl(FloatControl.Type.MASTER_GAIN);
+        audioVolume.setValue(6f);
+
+        targetThread.start();
+        System.out.println("Started recording");
+        Thread.sleep(5000);
+        targetLine.stop();
+        targetLine.close();
+
+        System.out.println("Ended recording");
+        System.out.println("Starting playback");
+
         audioThread.start();
+        Thread.sleep(5000);
+        soundLine.stop();
+        soundLine.close();
+
+        System.out.println("Ended playback");
+
+        /////////////////////////////////////
+    }
+
+    public void start() {
+
     }
 
     @Override

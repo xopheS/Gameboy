@@ -2,6 +2,8 @@ package ch.epfl.gameboj;
 
 import java.util.Objects;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -45,11 +47,13 @@ public final class GameBoy {
      *
      * @param cartridge
      *            La cartouche que la Gameboy va exécuter
+     * @throws InterruptedException
+     * @throws LineUnavailableException
      *
      * @throws NullPointerException
      *             si la cartouche est null
      */
-    public GameBoy(Cartridge cartridge) {
+    public GameBoy(Cartridge cartridge) throws InterruptedException, LineUnavailableException {
         bootRomController = new BootRomController(Objects.requireNonNull(cartridge));
         bootRomController.attachTo(bus);
 
@@ -65,6 +69,7 @@ public final class GameBoy {
         joypad.attachTo(bus);
 
         soundController.attachTo(bus);
+        soundController.start(); // TODO change this
     }
 
     /**

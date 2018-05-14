@@ -4,20 +4,13 @@ import static ch.epfl.gameboj.GameBoy.CYCLES_PER_NANOSECOND;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.TargetDataLine;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.GameBoy;
@@ -68,66 +61,6 @@ public class Main extends Application {
             System.exit(1);
         }
 
-        //////////////////////////////// TEST
-        int SAMPLE_RATE = 44100;
-
-        AudioFormat gameboySoundFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, SAMPLE_RATE, 16, 2, 4,
-                SAMPLE_RATE, false);
-
-        DataLine.Info info = new DataLine.Info(SourceDataLine.class, gameboySoundFormat);
-        final SourceDataLine soundLine = (SourceDataLine) AudioSystem.getLine(info);
-        soundLine.open(gameboySoundFormat);
-
-        info = new DataLine.Info(TargetDataLine.class, gameboySoundFormat);
-        final TargetDataLine targetLine = (TargetDataLine) AudioSystem.getLine(info);
-        targetLine.open(gameboySoundFormat);
-
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        Thread audioThread = new Thread() {
-            @Override
-            public void run() {
-                soundLine.start();
-                while (true) {
-                    soundLine.write(out.toByteArray(), 0, out.size());
-                }
-            }
-        };
-
-        Thread targetThread = new Thread() {
-            @Override
-            public void run() {
-                targetLine.start();
-                byte[] data = new byte[targetLine.getBufferSize() / 5];
-                int readBytes;
-                while (true) {
-                    readBytes = targetLine.read(data, 0, data.length);
-                    out.write(data, 0, readBytes);
-                }
-            }
-        };
-
-        FloatControl audioVolume = (FloatControl) soundLine.getControl(FloatControl.Type.MASTER_GAIN);
-        audioVolume.setValue(6f);
-
-        targetThread.start();
-        System.out.println("Started recording");
-        Thread.sleep(5000);
-        targetLine.stop();
-        targetLine.close();
-
-        System.out.println("Ended recording");
-        System.out.println("Starting playback");
-
-        audioThread.start();
-        Thread.sleep(5000);
-        soundLine.stop();
-        soundLine.close();
-
-        System.out.println("Ended playback");
-
-        /////////////////////////////////////
-
         // TODO replace gameboj with clever name
         primaryStage.setTitle("gameboj: the GameBoy emulator");
 
@@ -135,7 +68,6 @@ public class Main extends Application {
         Parent splashScreenRoot = FXMLLoader.load(getClass().getResource("Splash_Screen.fxml"));
         Scene splashScreen = new Scene(splashScreenRoot, 200, 200);
 
-        // Simple mode screen TODO rename to simple/development/other???
         ImageView emulationView = new ImageView();
         emulationView.setFitWidth(2 * LCD_WIDTH);
         emulationView.setFitHeight(2 * LCD_HEIGHT);
@@ -144,18 +76,6 @@ public class Main extends Application {
 
         Scene simpleModeScreen = new Scene(simpleBorderPane);
         setInput(simpleModeScreen, gameboj.joypad());
-
-        // Extended mode screen
-        /*
-         * Menu fileMenu = new Menu("File"); Menu helpMenu = new Menu("Help");
-         * 
-         * MenuBar mainMenuBar = new MenuBar(); mainMenuBar.getMenus().addAll(fileMenu,
-         * helpMenu);
-         * 
-         * ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Speed"), new
-         * Button("Screen"), new Button("Dump"), new Button("Debug"), new
-         * Button("Save"));
-         */
 
         BorderPane extendedBorderPane = new BorderPane();
 
@@ -198,7 +118,7 @@ public class Main extends Application {
         optionsMenu.getItems().addAll(changeSpeedMenuItem, gameboyConfigurationMenuItem);
 
         Menu windowMenu = new Menu("Window"); // workspace visual control
-        Menu perspectiveMenu = new Menu("Perspectives"); // switch to view layout presets
+        Menu perspectiveMenu = new Menu("Perspective"); // switch to view layout presets
         Menu showViewMenu = new Menu("Show view"); // show view in workspace
 
         ImageView backgroundView = new ImageView();
@@ -215,13 +135,16 @@ public class Main extends Application {
         backgroundViewPane.getChildren().add(viewportRectangle);
         backgroundViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(backgroundViewPane));
         MenuItem windowViewMenuItem = new MenuItem("Window");
-        windowViewMenuItem.setOnAction(e -> developmentBorderPane.setLeft(windowView));
+        windowViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(windowView));
         MenuItem spritesViewMenuItem = new MenuItem("Sprites");
         spritesViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(spriteView));
         showViewMenu.getItems().addAll(backgroundViewMenuItem, windowViewMenuItem, spritesViewMenuItem);
         windowMenu.getItems().addAll(perspectiveMenu, showViewMenu);
 
         Menu preferencesMenu = new Menu("Preferences"); // program preferences
+        MenuItem themeMenuItem = new MenuItem("Theme");
+        MenuItem skinsMenuItem = new MenuItem("Skins");
+        preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem);
 
         Menu helpMenu = new Menu("Help"); // help functionality
         MenuItem programmingManualMenuItem = new MenuItem("Nintendo programming manual");
