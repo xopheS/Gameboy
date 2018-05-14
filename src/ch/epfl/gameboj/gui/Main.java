@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Joypad;
@@ -27,7 +28,11 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -96,6 +101,7 @@ public class Main extends Application {
 
         // Development mode screen
         BorderPane developmentBorderPane = new BorderPane();
+        FlowPane leftViewPane = new FlowPane();
 
         Menu fileMenu = new Menu("File"); // file related functionality
         MenuItem exitMenuItem = new MenuItem("Exit");
@@ -124,13 +130,22 @@ public class Main extends Application {
         Menu windowMenu = new Menu("Window"); // workspace visual control
         Menu perspectiveMenu = new Menu("Perspectives"); // switch to view layout presets
         Menu showViewMenu = new Menu("Show view"); // show view in workspace
-        MenuItem backgroundViewMenuItem = new MenuItem("Background");
 
         ImageView backgroundView = new ImageView();
         ImageView windowView = new ImageView();
 
-        backgroundViewMenuItem.setOnAction(e -> developmentBorderPane.setLeft(backgroundView));
+        MenuItem backgroundViewMenuItem = new MenuItem("Background");
+        Rectangle viewportRectangle = new Rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT); // FIXME
+        viewportRectangle.setFill(Color.TRANSPARENT);
+        viewportRectangle.setStroke(Color.DARKGREEN);
+        // TODO use binding with IntegerProperty?
+        // viewportRectangle.xProperty().bind(gameboj.bus().read(AddressMap.REG_SCX));
+        StackPane backgroundViewPane = new StackPane(backgroundView);
+        backgroundViewPane.getChildren().add(viewportRectangle);
+        backgroundViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(backgroundViewPane));
         MenuItem windowViewMenuItem = new MenuItem("Window");
+        // TODO windowViewMenuItem.setOnAction(e ->
+        // developmentBorderPane.setLeft(windowView));
         MenuItem spritesViewMenuItem = new MenuItem("Sprites");
         showViewMenu.getItems().addAll(backgroundViewMenuItem, windowViewMenuItem, spritesViewMenuItem);
         windowMenu.getItems().addAll(perspectiveMenu, showViewMenu);
@@ -150,8 +165,9 @@ public class Main extends Application {
 
         developmentBorderPane.setTop(mainMenuBar);
         developmentBorderPane.setCenter(emulationView);
+        developmentBorderPane.setLeft(leftViewPane);
 
-        Scene developmentModeScreen = new Scene(developmentBorderPane); // TODO
+        Scene developmentModeScreen = new Scene(developmentBorderPane);
         setInput(developmentModeScreen, gameboj.joypad());
 
         // Mode choice screen
@@ -165,9 +181,7 @@ public class Main extends Application {
         developmentModeButton.setOnAction(e -> primaryStage.setScene(developmentModeScreen));
         VBox modeButtonsBox = new VBox(10);
 
-        modeButtonsBox.getChildren().add(simpleModeButton);
-        modeButtonsBox.getChildren().add(extendedModeButton);
-        modeButtonsBox.getChildren().add(developmentModeButton); // TODO replace with addAll
+        modeButtonsBox.getChildren().addAll(simpleModeButton, extendedModeButton, developmentModeButton);
 
         modeChoicePane.getChildren().add(modeButtonsBox);
 
@@ -187,8 +201,12 @@ public class Main extends Application {
                 gameboj.runUntil(elapsedCycles);
 
                 emulationView.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
+
+                viewportRectangle.setTranslateX(gameboj.bus().read(AddressMap.REG_SCX)); // FIXME
+                viewportRectangle.setTranslateY(gameboj.bus().read(AddressMap.REG_SCY)); // FIXME
                 backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
-                windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
+                // FIXME
+                // windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
             }
         }.start();
     }
