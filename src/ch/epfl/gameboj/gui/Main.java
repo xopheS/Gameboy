@@ -135,6 +135,7 @@ public class Main extends Application {
 
         ImageView backgroundView = new ImageView();
         ImageView windowView = new ImageView();
+        ImageView spriteView = new ImageView();
 
         MenuItem backgroundViewMenuItem = new MenuItem("Background");
         Rectangle viewportRectangle = new Rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT); // FIXME
@@ -149,6 +150,7 @@ public class Main extends Application {
         // TODO windowViewMenuItem.setOnAction(e ->
         // developmentBorderPane.setLeft(windowView));
         MenuItem spritesViewMenuItem = new MenuItem("Sprites");
+        spritesViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(spriteView));
         showViewMenu.getItems().addAll(backgroundViewMenuItem, windowViewMenuItem, spritesViewMenuItem);
         windowMenu.getItems().addAll(perspectiveMenu, showViewMenu);
 
@@ -211,6 +213,7 @@ public class Main extends Application {
                 backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
                 // FIXME
                 // windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
+                spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
             }
         }.start();
     }

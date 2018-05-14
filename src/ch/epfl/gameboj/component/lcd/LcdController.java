@@ -107,9 +107,15 @@ public final class LcdController implements Component, Clocked {
         return windowBuilder.build();
     }
 
-    public LcdImage getSprites() {
-        LcdImage.Builder backgroundBuilder = new LcdImage.Builder(BG_SIZE, BG_SIZE);
-        return null; // TODO
+    public LcdImage getSprites() { // TODO whole screen or just lcd?
+        LcdImage.Builder spriteBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+
+        int scy = lcdRegs.get(LCDReg.SCY);
+
+        for (int y = 0; y < LCD_HEIGHT; ++y) {
+            spriteBuilder.setLine(y, computeSpriteLine(spritesIntersectingLine(y), y));
+        }
+        return spriteBuilder.build();
     }
 
     @Override
