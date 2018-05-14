@@ -147,8 +147,7 @@ public class Main extends Application {
         backgroundViewPane.getChildren().add(viewportRectangle);
         backgroundViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(backgroundViewPane));
         MenuItem windowViewMenuItem = new MenuItem("Window");
-        // TODO windowViewMenuItem.setOnAction(e ->
-        // developmentBorderPane.setLeft(windowView));
+        windowViewMenuItem.setOnAction(e -> developmentBorderPane.setLeft(windowView));
         MenuItem spritesViewMenuItem = new MenuItem("Sprites");
         spritesViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(spriteView));
         showViewMenu.getItems().addAll(backgroundViewMenuItem, windowViewMenuItem, spritesViewMenuItem);
@@ -165,10 +164,10 @@ public class Main extends Application {
                 helpMenu);
 
         // TODO add button graphics (btn.setGraphic())
-        ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
+        //ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
                                                                                                       // pane under menu
 
-        topBox.getChildren().addAll(mainMenuBar, toolBar);
+        topBox.getChildren().addAll(mainMenuBar);
 
         developmentBorderPane.setTop(topBox);
         developmentBorderPane.setCenter(emulationView);
@@ -213,7 +212,7 @@ public class Main extends Application {
                 viewportRectangle.setTranslateY(gameboj.bus().read(AddressMap.REG_SCY)); // FIXME
                 backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
                 // FIXME
-                // windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
+                windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
                 spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
             }
         }.start();

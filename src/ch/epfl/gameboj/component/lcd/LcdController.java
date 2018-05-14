@@ -280,7 +280,12 @@ public final class LcdController implements Component, Clocked {
         }
 
         if (lineIndex >= lcdRegs.get(LCDReg.WY) && isWindowActive()) {
-            nextLine = nextLine.join(computeWinLine(adjustedWX, LCD_WIDTH), adjustedWX);
+            LcdImageLine winLine = computeWinLine(adjustedWX, LCD_WIDTH);
+            nextLine = nextLine.join(winLine, adjustedWX);
+            if(lineIndex >= 120) {
+                System.out.println(nextLine.getMsb().toString());
+                System.out.println(nextLine.getLsb().toString());
+            }
         }
 
         nextLine = nextLine.below(fgSpriteLine);
@@ -327,6 +332,8 @@ public final class LcdController implements Component, Clocked {
                 winAddress = AddressMap.BG_DISPLAY_DATA[0] + tileIndex;
             }
 
+            //System.out.println("win address " + winAddress);
+            
             int winTypeIndex = read(winAddress);
 
             nextWinLineBuilder.setBytes(i * Byte.SIZE, Bits.reverse8(tileLineMSB(winTypeIndex, winY)),
@@ -407,7 +414,7 @@ public final class LcdController implements Component, Clocked {
                 return AddressMap.TILE_SOURCE[0] + (tileTypeIndex - 128) * BYTES_PER_TILE
                         + Math.floorMod(lineIndex, TILE_SIZE) * 2;
             } else {
-                throw new IllegalArgumentException("tile_type_index wrong!");
+                throw new IllegalArgumentException("tile_type_index wrong! " + tileTypeIndex);
             }
         }
     }
@@ -508,6 +515,7 @@ public final class LcdController implements Component, Clocked {
     @Override
     public int read(int address) {
         // TODO if drawing, cpu cannot access VRAM and OAM
+        
 
         if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
             return videoRamController.read(address);

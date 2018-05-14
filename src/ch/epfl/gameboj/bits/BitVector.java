@@ -35,7 +35,7 @@ public final class BitVector {
     private static int[] bitVector(int size, boolean initialValue) {
         Preconditions.checkArgument(size % Integer.SIZE == 0 && size > 0);
         int[] bitVector = new int[size / Integer.SIZE];
-        Arrays.fill(bitVector, initialValue ? -1 : 0);
+        Arrays.fill(bitVector, initialValue ? ~0 : 0);
         return bitVector;
     }
 
@@ -189,7 +189,7 @@ public final class BitVector {
     public BitVector clipLSB(int index) {
         BitVector mask = new BitVector(size(), true).shift(size() - index);
         return this.and(mask);
-    } //TODO unify this and clipLeft and add a boolean argument?
+    } //TODO unify this and clipLeft and add a boolean argument? use not operator
     
     public BitVector setBits(BitVector mask, boolean value) {
         return value ? this.or(mask) : this.and(mask.not());
