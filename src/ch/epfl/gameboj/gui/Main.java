@@ -103,6 +103,8 @@ public class Main extends Application {
         BorderPane developmentBorderPane = new BorderPane();
         FlowPane leftViewPane = new FlowPane();
 
+        VBox topBox = new VBox();
+
         Menu fileMenu = new Menu("File"); // file related functionality
         MenuItem exitMenuItem = new MenuItem("Exit");
         exitMenuItem.setOnAction(e -> System.exit(0));
@@ -163,7 +165,9 @@ public class Main extends Application {
         ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
                                                                                                       // pane under menu
 
-        developmentBorderPane.setTop(mainMenuBar);
+        topBox.getChildren().addAll(mainMenuBar, toolBar);
+
+        developmentBorderPane.setTop(topBox);
         developmentBorderPane.setCenter(emulationView);
         developmentBorderPane.setLeft(leftViewPane);
 
