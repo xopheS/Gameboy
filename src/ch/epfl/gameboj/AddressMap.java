@@ -64,10 +64,37 @@ public interface AddressMap {
     int REG_TMA = 0xFF06;
     int REG_TAC = 0xFF07;
     int REG_IF = 0xFF0F;
+    // Sound registers
     int REGS_NR_START = 0xFF10;
+    // Sound 1 registers
+    int REG_NR10 = 0xFF10;
+    int REG_NR11 = 0xFF11;
+    int REG_NR12 = 0xFF12;
+    int REG_NR13 = 0xFF13;
+    int REG_NR14 = 0xFF14;
+    // Sound 2 registers
+    int REG_NR21 = 0xFF16;
+    int REG_NR22 = 0xFF17;
+    int REG_NR23 = 0xFF18;
+    int REG_NR24 = 0xFF19;
+    // Sound 3 registers
+    int REG_NR30 = 0xFF1A;
+    int REG_NR31 = 0xFF1B;
+    int REG_NR32 = 0xFF1C;
+    int REG_NR33 = 0xFF1D;
+    int REG_NR34 = 0xFF1E;
+    // Sound 4 registers
+    int REG_NR41 = 0xFF20;
+    int REG_NR42 = 0xFF21;
+    int REG_NR43 = 0xFF22;
+    int REG_NR44 = 0xFF23;
+    // Sound controller registers
+    int REG_NR50 = 0xFF24;
+    int REG_NR51 = 0xFF25;
+    int REG_NR52 = 0xFF26;
     int REGS_NR_END = 0xFF27;
     int WAVE_RAM_START = 0xFF30;
-    int WAVE_RAM_END = 0xFF3F;
+    int WAVE_RAM_END = 0xFF3F, WAVE_RAM_SIZE = WAVE_RAM_END - WAVE_RAM_START;
 
     int REGS_LCD_START = 0xFF40;
     int REG_LCDC = 0xFF40;
