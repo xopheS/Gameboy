@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -22,19 +21,21 @@ import ch.epfl.gameboj.component.memory.Rom;
  *
  */
 public final class Cartridge implements Component {
-    
-    private enum CartridgeType { MBC0, MBC1, MBC1_RAM, MBC1_RAM_BAT, MBC_2, MBC2_BAT, ROM_RAM, ROM_RAM_BAT, MM01, MM01_RAM, MM01_RAM_BAT, MBC3_TIM_BAT,
-        MBC3_TIM_RAM_BAT, MBC3, MBC3_RAM, MBC3_RAM_BAT, MBC5, MBC5_RAM, MBC5_RAM_BAT, MBC5_RUMBLE, MBC5_RUMBLE_RAM, MBC5_RUMBLE_RAM_BAT, MBC6, MBC7_ALL 
+
+    private enum CartridgeType {
+        MBC0, MBC1, MBC1_RAM, MBC1_RAM_BAT, MBC_2, MBC2_BAT, ROM_RAM, ROM_RAM_BAT, MM01, MM01_RAM, MM01_RAM_BAT, MBC3_TIM_BAT, MBC3_TIM_RAM_BAT, MBC3, MBC3_RAM, MBC3_RAM_BAT, MBC5, MBC5_RAM, MBC5_RAM_BAT, MBC5_RUMBLE, MBC5_RUMBLE_RAM, MBC5_RUMBLE_RAM_BAT, MBC6, MBC7_ALL
     }
-    
-    private enum ExtraCartridgeType { POCKET_CAM, BANDAI_TAMAS, HuC3, HuC1_RAM_BAT }
-    
-    private static final Map<CartridgeType, Integer> cartridgeTypeNum = Collections.unmodifiableMap(Map.of(
-            CartridgeType.MBC0, 0x00,
-            CartridgeType.MBC1, 0x01)); //TODO finish this map
-    
-    private static final Map<Integer, Integer> romSizeNum = Collections.unmodifiableMap(Map.of(
-            32, 0x00)); //TODO finish this map
+
+    private enum ExtraCartridgeType {
+        POCKET_CAM, BANDAI_TAMAS, HuC3, HuC1_RAM_BAT
+    }
+
+    private static final Map<CartridgeType, Integer> cartridgeTypeNum = Collections
+            .unmodifiableMap(Map.of(CartridgeType.MBC0, 0x00, CartridgeType.MBC1, 0x01)); // TODO finish this map
+
+    private static final Map<Integer, Integer> romSizeNum = Collections.unmodifiableMap(Map.of(32, 0x00)); // TODO
+                                                                                                           // finish
+                                                                                                           // this map
 
     private final Component mbc;
 
@@ -59,8 +60,22 @@ public final class Cartridge implements Component {
         try (FileInputStream fis = new FileInputStream(romFile)) {
             byte[] fileBytes = fis.readAllBytes();
 
-            if (fileBytes[AddressMap.CARTRIDGE_TYPE] != cartridgeTypeNum.get(CartridgeType.MBC0)) {
-                throw new IllegalArgumentException("At the moment only MBC0 cartridges are supported");
+            /*
+             * if (fileBytes[AddressMap.CARTRIDGE_TYPE] !=
+             * cartridgeTypeNum.get(CartridgeType.MBC0)) { throw new
+             * IllegalArgumentException("At the moment only MBC0 cartridges are supported");
+             * }
+             */
+
+            switch (fileBytes[AddressMap.CARTRIDGE_TYPE]) {
+            case 0:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 0));
+            case 1:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 2048));
+            case 2:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 8192));
+            case 3:
+                return new Cartridge(new MBC1(new Rom(fileBytes), 32768));
             }
 
             return new Cartridge(new MBC0(new Rom(fileBytes)));
@@ -83,7 +98,7 @@ public final class Cartridge implements Component {
      * @see ch.epfl.gameboj.component.Component#write(int, int)
      */
     @Override
-    public void write(int address, int data) { 
+    public void write(int address, int data) {
         mbc.write(Preconditions.checkBits16(address), Preconditions.checkBits8(data));
     }
 

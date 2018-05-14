@@ -181,9 +181,19 @@ public final class BitVector {
         return new BitVector(orVector);
     }
     
+    public BitVector clipMSB(int index) {
+        BitVector mask = new BitVector(size(), true).shift(index);
+        return this.and(mask);
+    }
+    
+    public BitVector clipLSB(int index) {
+        BitVector mask = new BitVector(size(), true).shift(size() - index);
+        return this.and(mask);
+    } //TODO unify this and clipLeft and add a boolean argument?
+    
     public BitVector setBits(BitVector mask, boolean value) {
         return value ? this.or(mask) : this.and(mask.not());
-    }
+    } //TODO use this???
 
     public BitVector extractZeroExtended(int start, int size) {
         return extract(start, size, true);
