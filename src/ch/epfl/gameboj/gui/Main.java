@@ -164,6 +164,7 @@ public class Main extends Application {
         mainMenuBar.getMenus().addAll(fileMenu, dumpMenu, debugMenu, optionsMenu, windowMenu, preferencesMenu,
                 helpMenu);
 
+        // TODO add button graphics (btn.setGraphic())
         ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
                                                                                                       // pane under menu
 
