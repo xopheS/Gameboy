@@ -31,8 +31,6 @@ public final class Cpu implements Component, Clocked {
     private Bus bus;
     private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
 
-    private final CpuCore cpuCore = new CpuCore();
-
     private final InputPort P10 = new InputPort();
     private final InputPort P11 = new InputPort();
     private final InputPort P12 = new InputPort();

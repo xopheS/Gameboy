@@ -69,7 +69,7 @@ public final class GameBoy {
         joypad.attachTo(bus);
 
         soundController.attachTo(bus);
-        soundController.start(); // TODO change this
+        // soundController.start(); // TODO change this
     }
 
     /**

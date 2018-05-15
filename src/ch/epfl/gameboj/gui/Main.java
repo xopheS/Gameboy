@@ -21,12 +21,14 @@ import ch.epfl.gameboj.component.cartridge.Cartridge;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -34,10 +36,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-    private static GameBoy gameboj = null;
+    private static GameBoy gameboj;
 
     private static final Map<Key, String> keyToString = Map.of(Key.A, "A", Key.B, "B", Key.START, "S", Key.SELECT,
             "Space"); // TODO use this, invert mapping
@@ -51,15 +54,9 @@ public class Main extends Application {
         List<String> cmdArgs = getParameters().getRaw();
         Preconditions.checkArgument(cmdArgs.size() == 1, () -> System.exit(1));
 
-        String fileName = cmdArgs.get(0);
+        String fileName = cmdArgs.get(0); // TODO change this
 
-        try {
-            gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
-        } catch (FileNotFoundException e) {
-            System.exit(1); // TODO can improve this with eg different exit codes?
-        } catch (IOException e) {
-            System.exit(1);
-        }
+        gameboj = new GameBoy(Cartridge.ofFile(new File(fileName))); // FIXME
 
         // TODO replace gameboj with clever name
         primaryStage.setTitle("gameboj: the GameBoy emulator");
@@ -75,7 +72,6 @@ public class Main extends Application {
         BorderPane simpleBorderPane = new BorderPane(emulationView);
 
         Scene simpleModeScreen = new Scene(simpleBorderPane);
-        setInput(simpleModeScreen, gameboj.joypad());
 
         BorderPane extendedBorderPane = new BorderPane();
 
@@ -85,7 +81,6 @@ public class Main extends Application {
         // TODO add gameboy overlay
 
         Scene extendedModeScreen = new Scene(extendedBorderPane);
-        setInput(extendedModeScreen, gameboj.joypad());
 
         // Development mode screen
         BorderPane developmentBorderPane = new BorderPane();
@@ -94,9 +89,31 @@ public class Main extends Application {
         VBox topBox = new VBox();
 
         Menu fileMenu = new Menu("File"); // file related functionality
+        MenuItem saveCartridgeMenuItem = new MenuItem("Save");
+        MenuItem saveAsCartridgeMenuItem = new MenuItem("Save as");
+        MenuItem loadCartridgeMenuItem = new MenuItem("Load");
+        loadCartridgeMenuItem.setOnAction(e -> {
+            FileChooser gamePakChooser = new FileChooser();
+            gamePakChooser.setTitle("Choose Game Pak");
+            try {
+                gameboj = new GameBoy(Cartridge.ofFile(gamePakChooser.showOpenDialog(primaryStage)));
+            } catch (FileNotFoundException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (InterruptedException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (LineUnavailableException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
         MenuItem exitMenuItem = new MenuItem("Exit");
         exitMenuItem.setOnAction(e -> System.exit(0));
-        fileMenu.getItems().addAll(exitMenuItem);
+        fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, loadCartridgeMenuItem);
 
         Menu dumpMenu = new Menu("Dump"); // dumping related functionality
         MenuItem dumpTileSourceMenuItem = new MenuItem("Dump tile source");
@@ -148,25 +165,25 @@ public class Main extends Application {
 
         Menu helpMenu = new Menu("Help"); // help functionality
         MenuItem programmingManualMenuItem = new MenuItem("Nintendo programming manual");
-        helpMenu.getItems().addAll(programmingManualMenuItem);
+        MenuItem aboutMenuItem = new MenuItem("About");
+        helpMenu.getItems().addAll(programmingManualMenuItem, aboutMenuItem);
 
         MenuBar mainMenuBar = new MenuBar();
         mainMenuBar.getMenus().addAll(fileMenu, dumpMenu, debugMenu, optionsMenu, windowMenu, preferencesMenu,
                 helpMenu);
 
         // TODO add button graphics (btn.setGraphic())
-        // ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new
-        // Button("Save")); // TODO add to top
+        ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
         // pane under menu
 
-        topBox.getChildren().addAll(mainMenuBar);
+        topBox.getChildren().addAll(mainMenuBar, toolBar);
 
         developmentBorderPane.setTop(topBox);
         developmentBorderPane.setCenter(emulationView);
         developmentBorderPane.setLeft(leftViewPane);
 
         Scene developmentModeScreen = new Scene(developmentBorderPane);
-        setInput(developmentModeScreen, gameboj.joypad());
+        setInput(emulationView, gameboj.joypad());
 
         // Mode choice screen
         BorderPane modeChoicePane = new BorderPane();
@@ -198,6 +215,7 @@ public class Main extends Application {
 
                 gameboj.runUntil(elapsedCycles);
 
+                emulationView.requestFocus(); // TODO change this???
                 emulationView.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
 
                 viewportRectangle.setTranslateX(gameboj.bus().read(AddressMap.REG_SCX)); // FIXME
@@ -210,9 +228,9 @@ public class Main extends Application {
         }.start();
     }
 
-    private static void setInput(Scene scene, Joypad jp) {
+    private static void setInput(Node node, Joypad jp) {
         // Set up keyboard input
-        scene.setOnKeyPressed(e -> {
+        node.setOnKeyPressed(e -> {
             switch (e.getCode()) {
             case A:
                 jp.keyPressed(Key.A);
@@ -248,7 +266,7 @@ public class Main extends Application {
              */
         });
 
-        scene.setOnKeyReleased(e -> {
+        node.setOnKeyReleased(e -> {
             switch (e.getCode()) {
             case A:
                 jp.keyReleased(Key.A);
