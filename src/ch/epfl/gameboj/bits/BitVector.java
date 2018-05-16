@@ -18,7 +18,7 @@ import ch.epfl.gameboj.Preconditions;
 public final class BitVector {
 
     public static final BitVector BLANK_LCD_VECTOR = new BitVector(LCD_WIDTH);
-    
+
     private final int[] bitVector;
 
     // TEST FUNCTION////////////////////////////////////////////
@@ -74,7 +74,7 @@ public final class BitVector {
                 }
             }
         }
-        
+
         return new BitVector(extractedInts);
     }
 
@@ -97,7 +97,8 @@ public final class BitVector {
     private int intExtWrapped(int start) {
         FloorEuclideanDiv f = new FloorEuclideanDiv(start, Integer.SIZE);
         int startIntIndex = Math.floorDiv((Math.floorMod(start, size())), Integer.SIZE);
-        return (bitVector[startIntIndex] >>> f.mod) | (bitVector[Math.floorMod((startIntIndex + 1), bitVector.length)] << (Integer.SIZE - f.mod));
+        return (bitVector[startIntIndex] >>> f.mod)
+                | (bitVector[Math.floorMod((startIntIndex + 1), bitVector.length)] << (Integer.SIZE - f.mod));
     }
 
     // Constructeur privé
@@ -145,11 +146,12 @@ public final class BitVector {
      * Effectue le ET entre ce vecteur et un autre.
      * 
      * @param otherVector
-     * l'autre vecteur
+     *            l'autre vecteur
      * @return la conjonction
      */
     public BitVector and(BitVector otherVector) {
-        Preconditions.checkArgument(size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
+        Preconditions.checkArgument(
+                size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
                 "Two bit vectors of different sizes cannot be compared.");
 
         int[] andVector = new int[bitVector.length];
@@ -165,11 +167,12 @@ public final class BitVector {
      * Effectue le OU entre ce vecteur et un autre.
      * 
      * @param otherVector
-     * l'autre vecteur
+     *            l'autre vecteur
      * @return la disjonction
      */
     public BitVector or(BitVector otherVector) {
-        Preconditions.checkArgument(size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
+        Preconditions.checkArgument(
+                size() == Objects.requireNonNull(otherVector, "The provided vector must not be null").size(),
                 "Two bit vectors of different sizes cannot be compared.");
 
         int[] orVector = new int[bitVector.length];
@@ -180,31 +183,46 @@ public final class BitVector {
 
         return new BitVector(orVector);
     }
-    
+
+    public BitVector maskMSB(int index) {
+        BitVector oneVector = new BitVector(size(), true);
+        return oneVector.shift(index);
+    } // TODO public or private? make static
+
+    public BitVector maskLSB(int index) {
+        return maskMSB(index).not();
+    } // TODO public or private? make static
+
+    public BitVector mask(int startIndex, int endIndex) {
+        BitVector maskMSB = maskMSB(startIndex);
+        BitVector maskLSB = maskLSB(endIndex);
+        return maskMSB.and(maskLSB);
+    } // TODO public or private? remove this? make static
+
     public BitVector clipMSB(int index) {
-        BitVector mask = new BitVector(size(), true).shift(index);
-        return this.and(mask);
+        return and(maskMSB(index));
     }
-    
+
     public BitVector clipLSB(int index) {
-        BitVector mask = new BitVector(size(), true).shift(size() - index);
-        return this.and(mask);
-    } //TODO unify this and clipLeft and add a boolean argument? use not operator
-    
+        return and(maskLSB(index));
+    } // TODO unify this and clipLeft and add a boolean argument? use not operator
+
     public BitVector setBits(BitVector mask, boolean value) {
         return value ? this.or(mask) : this.and(mask.not());
-    } //TODO use this???
+    } // TODO use this???, also check for possible uses of maskMSB and maskLSB
 
+    // FIXME this works in the wrong direction
     public BitVector extractZeroExtended(int start, int size) {
         return extract(start, size, true);
     }
 
+    // FIXME this also probably works in the wrong direction
     public BitVector extractWrapped(int start, int size) {
         return extract(start, size, false);
     }
 
     public BitVector shift(int distance) {
-        return extractZeroExtended(distance, size());
+        return extractZeroExtended(-distance, size());
     }
 
     @Override
@@ -238,18 +256,18 @@ public final class BitVector {
          * Change la valeur d'un octet.
          * 
          * @param index
-         * l'index de début (en bits)
+         *            l'index de début (en bits)
          * @param b
-         * la valeur à lui donner
+         *            la valeur à lui donner
          * @return le builder
          */
         public Builder setByte(int index, int b) {
             if (vector == null) {
                 throw new IllegalStateException();
             }
-            
+
             Objects.checkIndex(index, vector.length * Integer.SIZE - Byte.SIZE + 1);
-            
+
             int intIndex = Math.floorDiv(index, Integer.SIZE);
             int startPosition = Math.floorMod(index, Integer.SIZE);
             vector[intIndex] &= ~(0b1111_1111 << startPosition);
