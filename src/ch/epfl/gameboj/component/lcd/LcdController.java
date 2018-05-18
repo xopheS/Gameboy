@@ -136,9 +136,8 @@ public final class LcdController implements Component, Clocked {
 
         cyc = cycle;
 
-        // compareLYandLYC(); //TODO correct?
         if (isOn()) {
-            long cycFromPowOn = cycle - lcdOnCycle; // TODO can move???
+            long cycFromPowOn = cycle - lcdOnCycle; 
             cycFromImg = Math.floorMod(cycFromPowOn, IMAGE_CYCLE_DURATION);
             currentImage = (int) Math.floorDiv(cycFromPowOn, IMAGE_CYCLE_DURATION);
 
@@ -183,20 +182,12 @@ public final class LcdController implements Component, Clocked {
         }
     }
 
-    private void compareLYandLYC() {
-        lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, false);
-
-        if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
-            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
-            // TODO request STAT interrupt if appropriate, clean up code
-        }
-    }
-
     private void turnOff() {
         // TODO power off only possible during VBLANK
         setMode(1);
         modifyLYorLYC(LCDReg.LY, 0);
         nextNonIdleCycle = Long.MAX_VALUE;
+        System.out.println("turnoff");
     }
 
     private void turnOn(long cycle) {
@@ -598,9 +589,9 @@ public final class LcdController implements Component, Clocked {
 
     private void modifyLYorLYC(LCDReg reg, int data) {
         Preconditions.checkArgument(reg == LCDReg.LY || reg == LCDReg.LYC);
-        /*if (currentImage == 1 && reg == LCDReg.LY && data != lcdRegs.get(LCDReg.LY))
+        if (reg == LCDReg.LY && data != lcdRegs.get(LCDReg.LY))
             System.out.println("cycles: " + cyc + " since frame: " + cycFromImg + " | LY: " + lcdRegs.get(LCDReg.LY)
-                    + " -> " + data);*/
+                    + " -> " + data);
 
         lcdRegs.set(reg, Preconditions.checkBits8(data));
 
