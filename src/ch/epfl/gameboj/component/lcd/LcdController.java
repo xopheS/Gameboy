@@ -214,11 +214,10 @@ public final class LcdController implements Component, Clocked {
         lcdRegs.setBit(LCDReg.STAT, STAT.MODE0, Bits.test(mode, 0));
         lcdRegs.setBit(LCDReg.STAT, STAT.MODE1, Bits.test(mode, 1));
 
-        if (currentImage == 1) {
-            System.out
-                    .println("cycles: " + cyc + " since frame: " + cycFromImg + " | mode: " + prevMode + " -> " + mode);
+        /*if (currentImage == 1) {
+            System.out.println("cycles: " + cyc + " since frame: " + cycFromImg + " | mode: " + prevMode + " -> " + mode);
 
-        }
+        }*/
         switch (mode) {
         case 0:
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE0)) {
@@ -226,10 +225,9 @@ public final class LcdController implements Component, Clocked {
             }
             break;
         case 1:
-            if (currentImage == 1) {
-                System.out
-                        .println("cycles: " + cyc + " since frame: " + cycFromImg + " | request VBLANK interrupt");
-            }
+            /*if (currentImage == 1) {
+                System.out.println("cycles: " + cyc + " since frame: " + cycFromImg + " | request VBLANK interrupt");
+            }*/
             cpu.requestInterrupt(Interrupt.VBLANK); // TODO before or after lcd stat?
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) {
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
@@ -600,9 +598,9 @@ public final class LcdController implements Component, Clocked {
 
     private void modifyLYorLYC(LCDReg reg, int data) {
         Preconditions.checkArgument(reg == LCDReg.LY || reg == LCDReg.LYC);
-        if (currentImage == 1 && reg == LCDReg.LY && data != lcdRegs.get(LCDReg.LY))
+        /*if (currentImage == 1 && reg == LCDReg.LY && data != lcdRegs.get(LCDReg.LY))
             System.out.println("cycles: " + cyc + " since frame: " + cycFromImg + " | LY: " + lcdRegs.get(LCDReg.LY)
-                    + " -> " + data);
+                    + " -> " + data);*/
 
         lcdRegs.set(reg, Preconditions.checkBits8(data));
 

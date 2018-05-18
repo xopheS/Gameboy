@@ -66,19 +66,48 @@ public final class Cartridge implements Component {
              * IllegalArgumentException("At the moment only MBC0 cartridges are supported");
              * }
              */
-
             switch (fileBytes[AddressMap.CARTRIDGE_TYPE]) {
             case 0:
-                return new Cartridge(new MBC1(new Rom(fileBytes), 0));
+                return new Cartridge(new MBC0(new Rom(fileBytes)));
             case 1:
-                return new Cartridge(new MBC1(new Rom(fileBytes), 2048));
+                switch (fileBytes[AddressMap.RAM_SIZE]) {
+                case 0:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 0));
+                case 1:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 2048));
+                case 2:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 8192));
+                case 3:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 32768));
+                }
+                break;
             case 2:
-                return new Cartridge(new MBC1(new Rom(fileBytes), 8192));
+                switch (fileBytes[AddressMap.RAM_SIZE]) {
+                case 0:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 0));
+                case 1:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 2048));
+                case 2:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 8192));
+                case 3:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 32768));
+                }
+                break;
             case 3:
-                return new Cartridge(new MBC1(new Rom(fileBytes), 32768));
+                switch (fileBytes[AddressMap.RAM_SIZE]) {
+                case 0:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 0));
+                case 1:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 2048));
+                case 2:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 8192));
+                case 3:
+                    return new Cartridge(new MBC1(new Rom(fileBytes), 32768));
+                }
+                break;
             }
-
-            return new Cartridge(new MBC0(new Rom(fileBytes)));
+            
+            throw new IllegalArgumentException("Cartridge file is not valid");
         }
     }
 
