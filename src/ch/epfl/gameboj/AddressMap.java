@@ -127,7 +127,7 @@ public interface AddressMap {
 
     int REGS_END = 0xFF80;
     // High ram
-    int HRAM_START = 0xFF80, HRAM_END = 0xFFFE, HIGH_RAM_SIZE = HRAM_END - HRAM_START;
+    int HRAM_START = 0xFF80, HRAM_END = 0xFFFF, HIGH_RAM_SIZE = HRAM_END - HRAM_START;
     // Interrupts enable register
     int REG_IE = 0xFFFF;
 

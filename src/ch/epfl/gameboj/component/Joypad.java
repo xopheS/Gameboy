@@ -52,10 +52,10 @@ public final class Joypad implements Component {
     }
 
     /**
-     * Permet de simuler l'�liberation d'une touche.
+     * Permet de simuler l'élibération d'une touche.
      * 
      * @param k
-     *            la touche lib�r�e
+     *            la touche libérée
      */
     public void keyReleased(Key k) {        
         if (k.ordinal() < LINE_LENGTH) {
@@ -65,7 +65,7 @@ public final class Joypad implements Component {
         }
     }
 
-    private void updateP1() { 
+    private void computeP1() { 
         int tmp = P1; //TODO
     	
         P1 &= 0b1111_0000;
@@ -83,7 +83,7 @@ public final class Joypad implements Component {
        
     @Override
     public int read(int address) {      	
-    	updateP1();
+    	computeP1();
     	
         return Preconditions.checkBits16(address) == AddressMap.REG_P1 ? Bits.complement8(P1) : NO_DATA;
     }
