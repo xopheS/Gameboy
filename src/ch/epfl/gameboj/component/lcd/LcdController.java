@@ -223,34 +223,20 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeLine(int lineIndex) {
-        LcdImageLine nextLine = BLANK_LCD_IMAGE_LINE, bgSpriteLine = BLANK_LCD_IMAGE_LINE, fgSpriteLine = BLANK_LCD_IMAGE_LINE;
+        LcdImageLine nextLine = BLANK_LCD_IMAGE_LINE, fgSpriteLine = BLANK_LCD_IMAGE_LINE;
 
         int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
         
         int height = getHeight();
 
-        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ)) {
-            List<Integer> bgSpriteInfoL = new ArrayList<>(10);
-            List<Integer> fgSpriteInfoL = new ArrayList<>(10);
+        if (areSpritesActive()) {
             Integer[] spriteInfo = oamRamController.spritesIntersectingLine(lineIndex, height);
+            Integer[][] spriteLayerInfo = spriteLayerInfo(spriteInfo);
 
-            for (int i = 0; i < spriteInfo.length; ++i) {
-                boolean isInBG = oamRamController.readAttr(i, ATTRIBUTES.BEHIND_BG);
-                if (isInBG) {
-                    bgSpriteInfoL.add(spriteInfo[i]);
-                } else {
-                    fgSpriteInfoL.add(spriteInfo[i]);
-                }
-            }
-
-            Integer[] bgSpriteInfo = bgSpriteInfoL.toArray(new Integer[0]);
-            Integer[] fgSpriteInfo = fgSpriteInfoL.toArray(new Integer[0]);
-
-            bgSpriteLine = computeSpriteLine(bgSpriteInfo, lineIndex);
-            fgSpriteLine = computeSpriteLine(fgSpriteInfo, lineIndex);
+            nextLine = computeSpriteLine(spriteLayerInfo[0], lineIndex);
+            
+            fgSpriteLine = computeSpriteLine(spriteLayerInfo[1], lineIndex);          
         }
-
-        nextLine = bgSpriteLine;
 
         if (isBackgroundActive()) {
             LcdImageLine nextBGLine = computeBGLine(lineIndex).extractWrapped(lcdRegs.get(LCDReg.SCX), LCD_WIDTH);
@@ -292,8 +278,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeWinLine(int adjustedWX, int lineIndex, int width) {
-        Preconditions.checkArgument(width % TILE_SIZE == 0,
-                "The width must be a multiple of the tile size. Was provided: " + width);
+        Preconditions.checkArgument(width % TILE_SIZE == 0, "The width must be a multiple of the tile size. Was provided: " + width);
         Objects.checkIndex(lineIndex, WIN_SIZE);
         LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(width);
 
@@ -315,7 +300,7 @@ public final class LcdController implements Component, Clocked {
                     Bits.reverse8(videoRamController.tileLineBytes(winTypeIndex, winTileLineIndex(lineIndex), lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE), false)));
         }
 
-        return nextWinLineBuilder.build().shift(-adjustedWX).mapColors(lcdRegs.get(LCDReg.BGP));
+        return nextWinLineBuilder.build().mapColors(lcdRegs.get(LCDReg.BGP)).extractZeroExtended(-adjustedWX, LCD_WIDTH);
     }
 
     private LcdImageLine computeSpriteLine(Integer[] spriteInfo, int lineIndex) {
@@ -376,6 +361,22 @@ public final class LcdController implements Component, Clocked {
             return Math.floorMod(lineIndex - spriteY, height);
         }
     }
+    
+    private Integer[][] spriteLayerInfo(Integer[] spriteInfo) {
+        List<Integer> bgSpriteInfo = new ArrayList<Integer>(10);
+        List<Integer> fgSpriteInfo = new ArrayList<Integer>(10);
+        
+        for (int i = 0; i < spriteInfo.length; ++i) {
+            boolean isInBG = oamRamController.readAttr(i, ATTRIBUTES.BEHIND_BG);
+            if (isInBG) {
+                bgSpriteInfo.add(spriteInfo[i]);
+            } else {
+                fgSpriteInfo.add(spriteInfo[i]);
+            }
+        }
+        
+        return new Integer[][] { bgSpriteInfo.toArray(new Integer[0]), fgSpriteInfo.toArray(new Integer[0]) };
+    }
 
     private int getHeight() {
         // Sprite size: 8 x 8 or 8 x 16
@@ -391,15 +392,19 @@ public final class LcdController implements Component, Clocked {
     }
 
     private BitVector computeMeldOpacity(LcdImageLine below, LcdImageLine over) {
-        return below.getOpacity().not().and(over.getOpacity());
+        return below.getOpacity().not().or(over.getOpacity());
+    }
+    
+    private boolean isBackgroundActive() {
+        return lcdRegs.testBit(LCDReg.LCDC, LCDC.BG);
     }
 
     private boolean isWindowActive(int adjustedWX) {
         return (adjustedWX >= 0 && adjustedWX < 160 && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN));
     }
     
-    private boolean isBackgroundActive() {
-        return lcdRegs.testBit(LCDReg.LCDC, LCDC.BG);
+    private boolean areSpritesActive() {
+        return lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ);
     }
 
     @Override

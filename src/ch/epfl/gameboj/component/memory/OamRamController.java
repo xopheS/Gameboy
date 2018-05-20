@@ -45,7 +45,7 @@ public class OamRamController implements IRamController {
 
         Integer[] intersectIndex = trimIntArray(intersect, foundSprites);
 
-        Arrays.sort(intersectIndex); // TODO replace with System.sortarray call?
+        Arrays.sort(intersectIndex);
 
         return intersectIndex;
     }

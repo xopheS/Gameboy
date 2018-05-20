@@ -58,8 +58,11 @@ public class LcdImageLine {
     }
 
     public LcdImageLine extractWrapped(int pixel, int size) {
-        return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size),
-                opacity.extractWrapped(pixel, size));
+        return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size), opacity.extractWrapped(pixel, size));
+    }
+    
+    public LcdImageLine extractZeroExtended(int pixel, int size) {
+        return new LcdImageLine(MSB.extractZeroExtended(pixel, size), LSB.extractZeroExtended(pixel, size), opacity.extractZeroExtended(pixel, size));
     }
 
     /**
