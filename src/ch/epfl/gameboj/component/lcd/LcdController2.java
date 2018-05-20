@@ -37,11 +37,14 @@ public final class LcdController2 implements Clocked, Component {
     private static final int BG_SIZE = 256;
     private static final int TILE_LINE = 8;
     private static final int TILE_SIZE = 16;
-    private static final int TILE_BY_BG = 32;
+    private static final int BG_TILE_SIZE = 32;
     private static final int IMAGE_DRAW = 17556;
     private static final int LINE_DRAW_CYCLE = 114;
     private static final int END_IMAGE_DRAW = 16416;
     private static final int TILE_SOURCE_NUMBER = 128;
+    
+    private static final int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
+    
     private static final int WX_OFF = 7;
     private static final int SPRITE_INFO = 4;
     private static final int SPRITEY_OFF = 16;
@@ -62,7 +65,7 @@ public final class LcdController2 implements Clocked, Component {
     private final Cpu cpu;
     private final Ram ramVideo;
     private final Ram ramSprite;
-    private final RegisterFile<Reg> register = new RegisterFile<>(Reg.values());
+    private final RegisterFile<LCDReg> lcdRegs = new RegisterFile<>(LCDReg.values());
 
     private Bus bus;
     private LcdImage.Builder nextImageBuilder;
@@ -78,7 +81,7 @@ public final class LcdController2 implements Clocked, Component {
      * Enumération représentant les différents registre de l'écran (LCD)
      *
      */
-    private enum Reg implements Register {
+    private enum LCDReg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
     }
 
@@ -132,115 +135,16 @@ public final class LcdController2 implements Clocked, Component {
 
     }
 
-    /**
-     * Redéfinition de la méthode attachTo afin de pouvoir ajouter le bus comme
-     * attribut dans cette classe
-     */
-    @Override
-    public void attachTo(Bus bus) {
-        Objects.requireNonNull(bus);
-        this.bus = bus;
-        bus.attach(this);
-    }
-
-    @Override
-    public int read(int address) {
-        Preconditions.checkBits16(address);
-        if (address >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
-            return this.ramVideo.read(address - AddressMap.VRAM_START);
-        } else {
-            if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
-                int data = getRegValue(address);
-                return data;
-            } else {
-                if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
-                    return this.ramSprite.read(address - AddressMap.OAM_START);
-                } else {
-                    return NO_DATA;
-                }
-            }
-        }
-    }
-
-    @Override
-    public void write(int address, int data) {
-        Preconditions.checkBits8(data);
-        Preconditions.checkBits16(address);
-        
-        if (address == AddressMap.REG_DMA) System.out.println("activate dma");
-
-        if (address >= AddressMap.VRAM_START
-                && address < AddressMap.VRAM_END) {
-            this.ramVideo.write(address - AddressMap.VRAM_START, data);
-        }
-
-        if (address >= AddressMap.REGS_START
-                && address < AddressMap.REGS_END) {
-
-            switch (address) {
-            case AddressMap.REG_LCDC: {
-                register.set(Reg.LCDC, data);
-                if (!(Bits.test(data, 7))) {
-                    this.changeMode(0);
-                    this.changeLyLyc(Reg.LY, 0);
-                    this.nextNonIdleCycle = Long.MAX_VALUE;
-                }
-            }
-                break;
-
-            case AddressMap.REG_LCD_STAT: {
-                int newStat = (data & 0b11111000)
-                        | ((register.get(Reg.STAT) & 0b00000111));
-                register.set(Reg.STAT, newStat);
-            }
-                break;
-
-            case AddressMap.REG_LY: {
-                // DO NOTHING
-                // cf. 1.2.1 etape 9
-                // ici car il ne faut pas rentrer dans le case défault
-            }
-                break;
-
-            case AddressMap.REG_LYC: {
-                this.changeLyLyc(Reg.LYC, data);
-            }
-                break;
-            case AddressMap.REG_DMA: {
-                // Active la copie directe dans la mémoire OAM (spriteRam)
-                if (!copyActive) {
-                    this.copyActive = true;
-                    this.counterOfCopy = 0;
-                }
-            }
-
-            default: {
-                setRegValue(address, data);
-            }
-                break;
-            }
-        }
-
-        if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
-            this.ramSprite.write(address - AddressMap.OAM_START, data);
-        }
-
-    }
-
     @Override
     public void cycle(long cycle) {
 
-        // Allumage de l'écran
-        if (this.nextNonIdleCycle == Long.MAX_VALUE
-                && Bits.test(register.get(Reg.LCDC), LCDC.LCD_STATUS)) {
-            this.lcdOnCycle = cycle;
-            this.nextNonIdleCycle = 0;
+        if (nextNonIdleCycle == Long.MAX_VALUE && isOn()) {
+            turnOn(cycle);
         }
 
-        // Copie direct de la spriteRam
         if (this.copyActive && this.counterOfCopy < 160) {
             this.write(AddressMap.OAM_START + this.counterOfCopy, bus
-                    .read((register.get(Reg.DMA) << 8) + this.counterOfCopy));
+                    .read((lcdRegs.get(LCDReg.DMA) << 8) + this.counterOfCopy));
             this.counterOfCopy += 1;
             if (this.counterOfCopy == 160) {
                 this.copyActive = false;
@@ -248,9 +152,7 @@ public final class LcdController2 implements Clocked, Component {
             }
         }
 
-        // Calcul si il y a quelque chose à faire à ce cycle, si oui appelle la
-        // méthode reallyCycle
-        if ((cycle - this.lcdOnCycle) == this.nextNonIdleCycle) {
+        if (isOn() && (cycle - this.lcdOnCycle) == this.nextNonIdleCycle) {
             indexLine = ((((int) ((cycle - this.lcdOnCycle))) % IMAGE_DRAW)
                     / LINE_DRAW_CYCLE);
             this.reallyCycle();
@@ -270,13 +172,13 @@ public final class LcdController2 implements Clocked, Component {
         // prochaine image
         if (this.nextNonIdleCycle % (IMAGE_DRAW) >= END_IMAGE_DRAW) {
             if (this.nextNonIdleCycle % (IMAGE_DRAW) == END_IMAGE_DRAW) {
-                this.changeMode(1);
+                this.setMode(1);
                 this.nextImage = this.nextImageBuilder.build();
                 this.winY = 0;
             }
 
             this.nextNonIdleCycle += LINE_DRAW_CYCLE;
-            this.changeLyLyc(Reg.LY, this.indexLine);
+            this.modifyLYorLYC(LCDReg.LY, this.indexLine);
 
             return;
         }
@@ -292,25 +194,34 @@ public final class LcdController2 implements Clocked, Component {
 
         case 0:
             this.nextNonIdleCycle += MODE2_DURATION;
-            this.changeLyLyc(Reg.LY, this.indexLine);
-            this.changeMode(2);
+            this.modifyLYorLYC(LCDReg.LY, this.indexLine);
+            this.setMode(2);
             break;
 
         case MODE2_DURATION:
             this.nextNonIdleCycle += MODE3_DURATION;
             // System.out.println(register.get(Reg.LY));
-            this.nextImageBuilder.setLine(register.get(Reg.LY),
-                    this.computeLine(register.get(Reg.LY)));
-            this.changeMode(3);
+            this.nextImageBuilder.setLine(lcdRegs.get(LCDReg.LY),
+                    this.computeLine(lcdRegs.get(LCDReg.LY)));
+            this.setMode(3);
             break;
 
         case MODE2_DURATION + MODE3_DURATION:
             this.nextNonIdleCycle += MODE0_DURATION;
-            this.changeMode(0);
+            this.setMode(0);
             break;
 
         }
 
+    }
+    
+    private boolean isOn() {
+        return lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS);
+    }
+    
+    private void turnOn(long cycle) {
+        this.lcdOnCycle = cycle;
+        this.nextNonIdleCycle = 0;
     }
 
     /**
@@ -330,197 +241,134 @@ public final class LcdController2 implements Clocked, Component {
      * @param value
      *            la valeur du mode qu'on veut (entre 0 et 3 compris)
      */
-    private void changeMode(int value) {
+    private void setMode(int value) {
         Preconditions.checkArgument(value >= 0 && value <= 3);
+        
+        lcdRegs.setBit(LCDReg.STAT, STAT.MODE0, Bits.test(value, 0));
+        lcdRegs.setBit(LCDReg.STAT, STAT.MODE1, Bits.test(value, 1));
+        
         switch (value) {
         case 0: {
-            register.setBit(Reg.STAT, STAT.MODE0, false);
-            register.setBit(Reg.STAT, STAT.MODE1, false);
-            if (Bits.test(register.get(Reg.STAT), STAT.INT_MODE0))
+            if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE0))
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
         }
             break;
         case 1: {
-            register.setBit(Reg.STAT, STAT.MODE0, true);
-            register.setBit(Reg.STAT, STAT.MODE1, false);
-            if (Bits.test(register.get(Reg.STAT), STAT.INT_MODE1))
+            if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1))
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
             cpu.requestInterrupt(Interrupt.VBLANK);
         }
             break;
         case 2: {
-            register.setBit(Reg.STAT, STAT.MODE0, false);
-            register.setBit(Reg.STAT, STAT.MODE1, true);
-            if (Bits.test(register.get(Reg.STAT), STAT.INT_MODE2))
+            if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE2))
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
         }
             break;
         case 3: {
-            register.setBit(Reg.STAT, STAT.MODE0, true);
-            register.setBit(Reg.STAT, STAT.MODE1, true);
         }
             break;
 
         }
     }
 
-    /**
-     * Méthode permettant de changer la valeur du registre LY ou LYC, de
-     * comparet si ils sont égaux et de lancer des excetpions sous certaines
-     * conditions
-     * 
-     * @param reg
-     *            le registre (LY ou LYC) qu'on veut modifier
-     * @param data
-     *            la valeur qu'on veut mettre dans ce registre
-     */
-    private void changeLyLyc(Reg reg, int data) {
-        Preconditions.checkBits8(data);
-        Preconditions.checkArgument(reg == Reg.LY || reg == Reg.LYC);
-        register.set(reg, data);
-        if (this.checkLyLyc()) {
-            register.setBit(Reg.STAT, STAT.LYC_EQ_LY, true);
-            if (Bits.test(register.get(Reg.STAT), STAT.INT_LYC)) {
-                cpu.requestInterrupt(Interrupt.LCD_STAT);
-            }
-        } else {
-            register.setBit(Reg.STAT, STAT.LYC_EQ_LY, false);
-        }
-
-    }
-
-    /**
-     * Méthode qui verifie si les registre LY et LYC sont égaux
-     * 
-     * @return true si LY == LYC, false sinon
-     */
-    private boolean checkLyLyc() {
-        return (register.get(Reg.LY) == register.get(Reg.LYC));
-    }
-
-    /**
-     * Méthode permettant de recupérer la valeur d'un registre Reg en donnant
-     * l'address de celui si
-     * 
-     * @param addresse
-     *            l'address du registre
-     * @return la valeur du registre correspondant
-     */
     private int getRegValue(int address) {
         Preconditions.checkBits16(address);
         int value = 0;
         switch (address) {
         case AddressMap.REG_LCDC:
-            value = register.get(Reg.LCDC);
+            value = lcdRegs.get(LCDReg.LCDC);
             break;
         case AddressMap.REG_LCD_STAT:
-            value = register.get(Reg.STAT);
+            value = lcdRegs.get(LCDReg.STAT);
             break;
         case AddressMap.REG_SCY:
-            value = register.get(Reg.SCY);
+            value = lcdRegs.get(LCDReg.SCY);
             break;
         case AddressMap.REG_SCX:
-            value = register.get(Reg.SCX);
+            value = lcdRegs.get(LCDReg.SCX);
             break;
         case AddressMap.REG_LY:
-            value = register.get(Reg.LY);
+            value = lcdRegs.get(LCDReg.LY);
             break;
         case AddressMap.REG_LYC:
-            value = register.get(Reg.LYC);
+            value = lcdRegs.get(LCDReg.LYC);
             break;
         case AddressMap.REG_DMA:
-            value = register.get(Reg.DMA);
+            value = lcdRegs.get(LCDReg.DMA);
             break;
         case AddressMap.REG_BGP:
-            value = register.get(Reg.BGP);
+            value = lcdRegs.get(LCDReg.BGP);
             break;
         case AddressMap.REG_OBP0:
-            value = register.get(Reg.OBP0);
+            value = lcdRegs.get(LCDReg.OBP0);
             break;
         case AddressMap.REG_OBP1:
-            value = register.get(Reg.OBP1);
+            value = lcdRegs.get(LCDReg.OBP1);
             break;
         case AddressMap.REG_WY:
-            value = register.get(Reg.WY);
+            value = lcdRegs.get(LCDReg.WY);
             break;
         case AddressMap.REG_WX:
-            value = register.get(Reg.WX);
+            value = lcdRegs.get(LCDReg.WX);
             break;
         }
 
         return value;
     }
 
-    /**
-     * Méthode permettant de modifer la valeur d'un registre Reg en fournissant
-     * l'adresse lui correspondant
-     * 
-     * @param address
-     *            l'adresse lié au registre
-     * @param data
-     *            la valeur qu'on veut écrire dans le registre
-     */
     private void setRegValue(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         switch (address) {
         case AddressMap.REG_LCDC:
-            register.set(Reg.LCDC, data);
+            lcdRegs.set(LCDReg.LCDC, data);
             break;
         case AddressMap.REG_LCD_STAT:
-            register.set(Reg.STAT, data);
+            lcdRegs.set(LCDReg.STAT, data);
             break;
         case AddressMap.REG_SCY:
-            register.set(Reg.SCY, data);
+            lcdRegs.set(LCDReg.SCY, data);
             break;
         case AddressMap.REG_SCX:
-            register.set(Reg.SCX, data);
+            lcdRegs.set(LCDReg.SCX, data);
             break;
         case AddressMap.REG_LY:
-            register.set(Reg.LY, data);
+            lcdRegs.set(LCDReg.LY, data);
             break;
         case AddressMap.REG_LYC:
-            register.set(Reg.LYC, data);
+            lcdRegs.set(LCDReg.LYC, data);
             break;
         case AddressMap.REG_DMA:
-            register.set(Reg.DMA, data);
+            lcdRegs.set(LCDReg.DMA, data);
             break;
         case AddressMap.REG_BGP:
-            register.set(Reg.BGP, data);
+            lcdRegs.set(LCDReg.BGP, data);
             break;
         case AddressMap.REG_OBP0:
-            register.set(Reg.OBP0, data);
+            lcdRegs.set(LCDReg.OBP0, data);
             break;
         case AddressMap.REG_OBP1:
-            register.set(Reg.OBP1, data);
+            lcdRegs.set(LCDReg.OBP1, data);
             break;
         case AddressMap.REG_WY:
-            register.set(Reg.WY, data);
+            lcdRegs.set(LCDReg.WY, data);
             break;
         case AddressMap.REG_WX:
-            register.set(Reg.WX, data);
+            lcdRegs.set(LCDReg.WX, data);
             break;
         }
     }
 
-    /**
-     * Méthode permettant de calculer la ligne à renvoyer pour créer l'image à
-     * retourner
-     * 
-     * @param ligne
-     *            l'index de la ligne a dessiner
-     * @return la ligne composé du backgrounde, de la fenêtre et des sprites
-     */
     private LcdImageLine computeLine(int ligne) {
 
         // BACKGROUND
         LcdImageLine.Builder nextLineBuilderBG = new LcdImageLine.Builder(
                 BG_SIZE);
-        int scx = register.get(Reg.SCX);
-        int lineBG = Math.floorMod(ligne + register.get(Reg.SCY), BG_SIZE);
+        int scx = lcdRegs.get(LCDReg.SCX);
+        int lineBG = Math.floorMod(ligne + lcdRegs.get(LCDReg.SCY), BG_SIZE);
         int tileLineBG = lineBG / TILE_LINE;
         int lineInTileBG = Math.floorMod(lineBG, TILE_LINE);
-        int displayDataBG = (Bits.test(register.get(Reg.LCDC), LCDC.BG_AREA))
+        int displayDataBG = (Bits.test(lcdRegs.get(LCDReg.LCDC), LCDC.BG_AREA))
                 ? 1
                 : 0;
 
@@ -529,19 +377,19 @@ public final class LcdController2 implements Clocked, Component {
                 BG_SIZE);
         int tileLineWD = winY / TILE_LINE;
         int lineInTileWD = winY % TILE_LINE;
-        int displayDataWD = (Bits.test(register.get(Reg.LCDC), LCDC.WIN_AREA))
+        int displayDataWD = (Bits.test(lcdRegs.get(LCDReg.LCDC), LCDC.WIN_AREA))
                 ? 1
                 : 0;
-        int wxPrime = register.get(Reg.WX) - WX_OFF;
+        int wxPrime = lcdRegs.get(LCDReg.WX) - WX_OFF;
         wxPrime = wxPrime < 0 ? 0 : wxPrime; // POUR REGLER ZELDA, VU AVEC LE
                                              // PROF
-        int wy = register.get(Reg.WY);
+        int wy = lcdRegs.get(LCDReg.WY);
 
         // SPRITES
         List<LcdImageLine> composeSpriteLine = null;
         BitVector opacityToBelow = EMPTY_VECTOR;
 
-        if (Bits.test(register.get(Reg.LCDC), LCDC.OBJ)) {
+        if (Bits.test(lcdRegs.get(LCDReg.LCDC), LCDC.OBJ)) {
             int[] spritesIndex = this.spritesIntersectingLine(ligne);
             List<LcdImageLine> SpritesLine = this.listSpritesLine(spritesIndex);
             composeSpriteLine = composeSprites(spritesIndex, SpritesLine);
@@ -550,11 +398,11 @@ public final class LcdController2 implements Clocked, Component {
         // COMMUN
         int msb;
         int lsb;
-        int palette = register.get(Reg.BGP);
+        int palette = lcdRegs.get(LCDReg.BGP);
 
         // CALCUL DU BACKGROUND
-        if (register.testBit(Reg.LCDC, LCDC.BG)) {
-            for (int i = 0; i < TILE_BY_BG; ++i) {
+        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.BG)) {
+            for (int i = 0; i < BG_TILE_SIZE; ++i) {
                 int[] value = getMsbLsb(tileLineBG, lineInTileBG, displayDataBG,
                         i);
                 msb = value[0];
@@ -569,7 +417,7 @@ public final class LcdController2 implements Clocked, Component {
 
         // CALCUL L'OPACITE ENTRE LE BACKGROUND ET LES SPRITES D'ARRIERE PLAN ET
         // COMPOSE LES DEUX LIGNES ENSMEMBLES
-        if (register.testBit(Reg.LCDC, LCDC.OBJ)) {
+        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ)) {
             opacityToBelow = nextImageLine.getOpacity().not()
                     .and(composeSpriteLine.get(0).getOpacity());
 
@@ -578,9 +426,9 @@ public final class LcdController2 implements Clocked, Component {
         }
 
         // DESSIN DE LA FENETRE
-        if (register.testBit(Reg.LCDC, LCDC.WIN) && wxPrime >= 0
+        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN) && wxPrime >= 0
                 && wxPrime < LCD_WIDTH && wy <= ligne) {
-            for (int i = 0; i < TILE_BY_BG; ++i) {
+            for (int i = 0; i < BG_TILE_SIZE; ++i) {
                 int[] value = getMsbLsb(tileLineWD, lineInTileWD, displayDataWD,
                         i);
                 msb = value[0];
@@ -601,7 +449,7 @@ public final class LcdController2 implements Clocked, Component {
         }
 
         // DESSIN DES SPRITE DU PREMIER PLAN
-        if (register.testBit(Reg.LCDC, LCDC.OBJ)) {
+        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ)) {
             nextImageLine = nextImageLine.below(composeSpriteLine.get(1));
         }
 
@@ -631,21 +479,14 @@ public final class LcdController2 implements Clocked, Component {
             int i) {
 
         int lsb, msb;
-        int tileNumber = this.read(AddressMap.BG_DISPLAY_DATA[displayInfo]
-                + tileLine * TILE_BY_BG + i);
-        if (register.testBit(Reg.LCDC, LCDC.TILE_SOURCE)) {
-            lsb = this.read(AddressMap.TILE_SOURCE[1] + tileNumber * TILE_SIZE
-                    + 2 * lineInTile);
-            msb = this.read(AddressMap.TILE_SOURCE[1] + tileNumber * TILE_SIZE
-                    + 2 * lineInTile + 1);
+        int tileNumber = this.read(AddressMap.BG_DISPLAY_DATA[displayInfo] + tileLine * BG_TILE_SIZE + i);
+        if (lcdRegs.testBit(LCDReg.LCDC, LCDC.TILE_SOURCE)) {
+            lsb = this.read(AddressMap.TILE_SOURCE[1] + tileNumber * TILE_SIZE + 2 * lineInTile);
+            msb = this.read(AddressMap.TILE_SOURCE[1] + tileNumber * TILE_SIZE + 2 * lineInTile + 1);
         } else {
-            tileNumber = tileNumber < TILE_SOURCE_NUMBER
-                    ? tileNumber + TILE_SOURCE_NUMBER
-                    : tileNumber - TILE_SOURCE_NUMBER;
-            lsb = this.read(AddressMap.TILE_SOURCE[0] + tileNumber * TILE_SIZE
-                    + 2 * lineInTile);
-            msb = this.read(AddressMap.TILE_SOURCE[0] + tileNumber * TILE_SIZE
-                    + 2 * lineInTile + 1);
+            tileNumber = tileNumber < TILE_SOURCE_NUMBER ? tileNumber + TILE_SOURCE_NUMBER : tileNumber - TILE_SOURCE_NUMBER;
+            lsb = this.read(AddressMap.TILE_SOURCE[0] + tileNumber * TILE_SIZE + 2 * lineInTile);
+            msb = this.read(AddressMap.TILE_SOURCE[0] + tileNumber * TILE_SIZE + 2 * lineInTile + 1);
         }
 
         return new int[] { msb, lsb };
@@ -667,7 +508,7 @@ public final class LcdController2 implements Clocked, Component {
         int[] spriteIntersect = new int[MAX_SPRITE];
 
         while (index < NUMBER_SPRITE && spriteFound < MAX_SPRITE) {
-            int spriteSize = getSize();
+            int spriteSize = getHeight();
             int spriteY = this.getSpriteInfo(index, SPRITE.Y) - SPRITEY_OFF;
             if (ligne >= spriteY && ligne < spriteY + spriteSize) {
                 // on enlève pas SPRITEX_OFF pour ne pas avoir de coordonnées
@@ -701,10 +542,10 @@ public final class LcdController2 implements Clocked, Component {
      */
     private int[] getSpriteOctet(int index) {
 
-        int lineIndex = register.get(Reg.LY);
+        int lineIndex = lcdRegs.get(LCDReg.LY);
         int valueOfIndex = this.getSpriteInfo(index, SPRITE.INDEX);
         int spriteY = this.getSpriteInfo(index, SPRITE.Y) - SPRITEY_OFF;
-        int spriteSize = getSize();
+        int spriteSize = getHeight();
         boolean isFlipV = Bits.test(this.getSpriteInfo(index, SPRITE.INFO),
                 SINFO.FLIP_V);
 
@@ -740,8 +581,8 @@ public final class LcdController2 implements Clocked, Component {
                     - SPRITEX_OFF;
             int palette = Bits.test(
                     this.getSpriteInfo(spritesIndex[i], SPRITE.INFO),
-                    SINFO.PALETTE) ? register.get(Reg.OBP1)
-                            : register.get(Reg.OBP0);
+                    SINFO.PALETTE) ? lcdRegs.get(LCDReg.OBP1)
+                            : lcdRegs.get(LCDReg.OBP0);
 
             int msb = msbLsb[0];
             int lsb = msbLsb[1];
@@ -771,21 +612,20 @@ public final class LcdController2 implements Clocked, Component {
      *            le tableau comportant les lignes de chaque sprites
      * @return
      */
-    private List<LcdImageLine> composeSprites(int[] index,
-            List<LcdImageLine> spriteLine) {
+    private List<LcdImageLine> composeSprites(int[] index, List<LcdImageLine> spriteLine) {
 
         LcdImageLine behind = EMPTY_LINE;
         LcdImageLine inFront = EMPTY_LINE;
 
         for (int i = index.length - 1; i >= 0; --i) {
-            boolean isBehind = Bits.test(
-                    this.getSpriteInfo(index[i], SPRITE.INFO), SINFO.BEHIND_BG);
+            boolean isBehind = Bits.test(this.getSpriteInfo(index[i], SPRITE.INFO), SINFO.BEHIND_BG);
             if (isBehind) {
                 behind = behind.below(spriteLine.get(i));
             } else {
                 inFront = inFront.below(spriteLine.get(i));
             }
         }
+        
         List<LcdImageLine> list = new ArrayList<>();
         list.add(behind);
         list.add(inFront);
@@ -802,17 +642,154 @@ public final class LcdController2 implements Clocked, Component {
      * @return l'info voulu
      */
     private int getSpriteInfo(int spriteIndex, SPRITE info) {
-        return this.read(AddressMap.OAM_START + spriteIndex * SPRITE_INFO
-                + info.index());
+        return this.read(AddressMap.OAM_START + spriteIndex * SPRITE_INFO + info.index());
     }
 
-    /**
-     * Méthode qui retourne la taille des sprite de la ligne (8x8 ou 8x16)
-     * 
-     * @return la taille des sprites de la ligne
-     */
-    private int getSize() {
-        return Bits.test(register.get(Reg.LCDC), LCDC.OBJ_SIZE) ? 2 * TILE_LINE
-                : TILE_LINE;
+    private int bgTileLineIndex(int lineIndex) {
+        return (lcdRegs.get(LCDReg.SCY) + Objects.checkIndex(lineIndex, BG_SIZE)) % TILE_SIZE;
+    }
+    
+    private int winTileLineIndex(int lineIndex) {
+        return Objects.checkIndex(lineIndex, WIN_SIZE) % TILE_SIZE;
+    }
+    
+    private int spriteTileLineIndex(int lineIndex, int spriteY, boolean vFlip, int height) {
+        Objects.checkIndex(lineIndex, LCD_HEIGHT);
+        if (vFlip) {
+            return (height - Math.floorMod(lineIndex - spriteY, height));
+        } else {
+            return Math.floorMod(lineIndex - spriteY, height);
+        }
+    }
+    
+    private int getHeight() {
+     // Sprite size: 8 x 8 or 8 x 16
+        return TILE_LINE * (lcdRegs.testBit(LCDReg.LCDC, LCDC.OBJ_SIZE) ? 2 : 1);
+    }
+    
+    private int unpackX(int spriteInfo) {
+        return Bits.extract(spriteInfo, Byte.SIZE, Byte.SIZE);
+    }
+
+    private int unpackIndex(int spriteInfo) {
+        return Bits.clip(Byte.SIZE, spriteInfo);
+    }
+
+    private BitVector computeMeldOpacity(LcdImageLine below, LcdImageLine over) {
+        return below.getOpacity().and(over.getOpacity().not()).not();
+    }
+    
+    private boolean isWindowActive(int adjustedWX) {
+        return (adjustedWX >= 0 && adjustedWX < 160 && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN));
+    }
+    
+    private boolean isBackgroundActive() {
+        return lcdRegs.testBit(LCDReg.LCDC, LCDC.BG);
+    }
+
+    @Override
+    public void attachTo(Bus bus) {
+        Objects.requireNonNull(bus);
+        this.bus = bus;
+        bus.attach(this);
+    }
+    
+    @Override
+    public int read(int address) {
+        Preconditions.checkBits16(address);
+        if (address >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
+            return this.ramVideo.read(address - AddressMap.VRAM_START);
+        } else {
+            if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
+                int data = getRegValue(address);
+                return data;
+            } else {
+                if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
+                    return this.ramSprite.read(address - AddressMap.OAM_START);
+                } else {
+                    return NO_DATA;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void write(int address, int data) {
+        Preconditions.checkBits8(data);
+        
+        if (address == AddressMap.REG_DMA) System.out.println("activate dma");
+
+        if (address >= AddressMap.VRAM_START
+                && address < AddressMap.VRAM_END) {
+            this.ramVideo.write(address - AddressMap.VRAM_START, data);
+        }
+
+        if (address >= AddressMap.REGS_START
+                && address < AddressMap.REGS_END) {
+
+            switch (address) {
+            case AddressMap.REG_LCDC: {
+                lcdRegs.set(LCDReg.LCDC, data);
+                if (!(Bits.test(data, 7))) {
+                    this.setMode(0);
+                    this.modifyLYorLYC(LCDReg.LY, 0);
+                    this.nextNonIdleCycle = Long.MAX_VALUE;
+                }
+            }
+                break;
+
+            case AddressMap.REG_LCD_STAT: {
+                int newStat = (data & 0b11111000)
+                        | ((lcdRegs.get(LCDReg.STAT) & 0b00000111));
+                lcdRegs.set(LCDReg.STAT, newStat);
+            }
+                break;
+
+            case AddressMap.REG_LY: {
+                // DO NOTHING
+                // cf. 1.2.1 etape 9
+                // ici car il ne faut pas rentrer dans le case défault
+            }
+                break;
+
+            case AddressMap.REG_LYC: {
+                this.modifyLYorLYC(LCDReg.LYC, data);
+            }
+                break;
+            case AddressMap.REG_DMA: {
+                // Active la copie directe dans la mémoire OAM (spriteRam)
+                if (!copyActive) {
+                    this.copyActive = true;
+                    this.counterOfCopy = 0;
+                }
+            }
+
+            default: {
+                setRegValue(address, data);
+            }
+                break;
+            }
+        }
+
+        if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
+            this.ramSprite.write(address - AddressMap.OAM_START, data);
+        }
+
+    }
+    
+    private void modifyLYorLYC(LCDReg reg, int data) {
+        Preconditions.checkArgument(reg == LCDReg.LY || reg == LCDReg.LYC);
+        
+        lcdRegs.set(reg, Preconditions.checkBits8(data));
+        
+        if (lcdRegs.get(LCDReg.LY) == lcdRegs.get(LCDReg.LYC)) {
+            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, true);
+            if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_LYC)) {
+                cpu.requestInterrupt(Interrupt.LCD_STAT);
+            }
+        } else {
+            lcdRegs.setBit(LCDReg.STAT, STAT.LYC_EQ_LY, false);
+        }
+
     }
 }
