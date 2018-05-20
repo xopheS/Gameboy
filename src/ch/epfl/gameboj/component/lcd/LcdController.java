@@ -64,7 +64,7 @@ public final class LcdController implements Component, Clocked {
     private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
     private final DmaController dmaController = DmaController.getDmaController();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
-    private long lcdOnCycle;
+    private long lcdOnCycle = Long.MAX_VALUE;
 
     int prevMode;
     private int currentImage;
@@ -176,7 +176,6 @@ public final class LcdController implements Component, Clocked {
         setMode(0);
         modifyLYorLYC(LCDReg.LY, 0);
         nextNonIdleCycle = Long.MAX_VALUE;
-        System.out.println("turnoff");
     }
 
     private void turnOn(long cycle) {

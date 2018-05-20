@@ -1,8 +1,9 @@
 package ch.epfl.gameboj.component.lcd;
 
+import static ch.epfl.gameboj.component.lcd.LcdImage.BLANK_LCD_IMAGE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,7 +19,9 @@ import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
+import ch.epfl.gameboj.component.memory.OamRamController;
 import ch.epfl.gameboj.component.memory.Ram;
+import ch.epfl.gameboj.component.memory.VideoRamController;
 
 /**
  * 
@@ -30,77 +33,51 @@ import ch.epfl.gameboj.component.memory.Ram;
  */
 
 public final class LcdController2 implements Clocked, Component {
-
-    public static final int LCD_WIDTH = 160;
-    public static final int LCD_HEIGHT = 144;
-
-    private static final int BG_SIZE = 256;
-    private static final int TILE_LINE = 8;
-    private static final int TILE_SIZE = 16;
-    private static final int BG_TILE_SIZE = 32;
-    private static final int IMAGE_DRAW = 17556;
-    private static final int LINE_DRAW_CYCLE = 114;
-    private static final int END_IMAGE_DRAW = 16416;
-    private static final int TILE_SOURCE_NUMBER = 128;
-    
-    private static final int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
-    
-    private static final int WX_OFF = 7;
-    private static final int SPRITE_INFO = 4;
-    private static final int SPRITEY_OFF = 16;
-    private static final int SPRITEX_OFF = 8;
-    private static final int MODE2_DURATION = 20;
-    private static final int MODE3_DURATION = 43;
-    private static final int MODE0_DURATION = 51;
-    private static final int MAX_SPRITE = 10;
-    private static final int NUMBER_SPRITE = 40;
-    private static final BitVector EMPTY_VECTOR = new BitVector(LCD_WIDTH,
-            false);
-    private static final LcdImageLine EMPTY_LINE = new LcdImageLine(
-            EMPTY_VECTOR, EMPTY_VECTOR, EMPTY_VECTOR);
-    private static final LcdImage EMPTY_IMAGE = new LcdImage(LCD_WIDTH,
-            LCD_HEIGHT, new ArrayList<LcdImageLine>(
-                    Collections.nCopies(LCD_HEIGHT, EMPTY_LINE)));
-
-    private final Cpu cpu;
-    private final Ram ramVideo;
-    private final Ram ramSprite;
-    private final RegisterFile<LCDReg> lcdRegs = new RegisterFile<>(LCDReg.values());
-
-    private Bus bus;
-    private LcdImage.Builder nextImageBuilder;
-    private LcdImage nextImage;
-    private int winY = 0;
-    private int indexLine = 0;
-    private boolean copyActive = false;
-    private int counterOfCopy = 0;
-    private long nextNonIdleCycle = Long.MAX_VALUE;
-    private long lcdOnCycle = Long.MAX_VALUE;
-
-    /**
-     * Enumération représentant les différents registre de l'écran (LCD)
-     *
-     */
     private enum LCDReg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
     }
 
-    /**
-     * Enumération représentant les différents bit du registre LCDC
-     *
-     */
     private enum LCDC implements Bit {
         BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS
     }
 
-    /**
-     * Enumération représentant les différents bit du registre STAT
-     *
-     */
     private enum STAT implements Bit {
         MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED7
     }
 
+    private static final int TILE_SIZE = 8;
+    // Background size: 256 x 256, 32 x 32 tiles
+    private static final int BG_SIZE = 256;
+    private static final int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
+    // Resolution: 160 x 144, 20 x 18 tiles
+    public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
+    private static final int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
+    // Max sprites: 40 per screen, 10 per line
+    private static final int WX_OFFSET = 7;
+    // Cycle durations
+    private static final int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
+    public static final int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
+    public static final int IMAGE_CYCLE_DURATION = 154 * LINE_CYCLE_DURATION;
+    private LcdImage displayedImage = BLANK_LCD_IMAGE;
+    private final VideoRamController videoRamController;
+    private final OamRamController oamRamController;
+    private final Cpu cpu;
+    private long nextNonIdleCycle = Long.MAX_VALUE;
+    private int winY;
+    private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+    private final DmaController dmaController = DmaController.getDmaController();
+    private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
+    private long lcdOnCycle;
+
+    int prevMode;
+    private int currentImage;
+    long cycFromImg;
+    long cycFromLn;
+    private long cyc;
+
+    private final Ram ramVideo;
+    private final Ram ramSprite;
+    
     /**
      * Enumération représentant l'octet de l'entier (type int) contenant les
      * information dites (Y, X, INDEX et INFO) d'un sprite
@@ -217,6 +194,13 @@ public final class LcdController2 implements Clocked, Component {
     
     private boolean isOn() {
         return lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS);
+    }
+    
+    private void turnOff() {
+        // TODO power off only possible during VBLANK
+        setMode(0);
+        modifyLYorLYC(LCDReg.LY, 0);
+        nextNonIdleCycle = Long.MAX_VALUE;
     }
     
     private void turnOn(long cycle) {
@@ -731,16 +715,13 @@ public final class LcdController2 implements Clocked, Component {
             case AddressMap.REG_LCDC: {
                 lcdRegs.set(LCDReg.LCDC, data);
                 if (!(Bits.test(data, 7))) {
-                    this.setMode(0);
-                    this.modifyLYorLYC(LCDReg.LY, 0);
-                    this.nextNonIdleCycle = Long.MAX_VALUE;
+                    turnOff();
                 }
             }
                 break;
 
             case AddressMap.REG_LCD_STAT: {
-                int newStat = (data & 0b11111000)
-                        | ((lcdRegs.get(LCDReg.STAT) & 0b00000111));
+                int newStat = (data & 0b11111000) | ((lcdRegs.get(LCDReg.STAT) & 0b00000111));
                 lcdRegs.set(LCDReg.STAT, newStat);
             }
                 break;
