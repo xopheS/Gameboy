@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.component.Component;
@@ -28,7 +30,7 @@ public final class S6GameBoyTest {
     }
 
     @Test
-    void runUntilWorksWhenNotAdvancing() {
+    void runUntilWorksWhenNotAdvancing() throws InterruptedException, LineUnavailableException {
         GameBoy g = new GameBoy(CartridgeTest.cartridgeWithData(new byte[0x8000]));
         for (long c = 0; c <= 1000; ++c) {
             g.runUntil(c);
@@ -38,7 +40,7 @@ public final class S6GameBoyTest {
     }
 
     @Test
-    void runUntilFailsWhenGoingBackwardsInTime() {
+    void runUntilFailsWhenGoingBackwardsInTime() throws InterruptedException, LineUnavailableException {
         GameBoy g = new GameBoy(CartridgeTest.cartridgeWithData(new byte[0x8000]));
         g.runUntil(2018);
         assertThrows(IllegalArgumentException.class, () -> {
@@ -47,7 +49,7 @@ public final class S6GameBoyTest {
     }
 
     @Test
-    void blarggsTestsWork() throws IOException {
+    void blarggsTestsWork() throws IOException, InterruptedException, LineUnavailableException {
         Iterator<Integer> reqCycles = List.of(5000000, 5000000, 5000000, 10000000, 10000000, 5000000, 5000000, 10000000,
                 20000000, 20000000, 30000000, 5000000).iterator();
 

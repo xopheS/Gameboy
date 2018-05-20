@@ -13,7 +13,7 @@ import ch.epfl.gameboj.Preconditions;
  * @author David Cian (287967)
  */
 
-public final class RamController implements Component {
+public final class RamController implements IRamController {
 
     private final Ram ram;
     private final int startAddress;

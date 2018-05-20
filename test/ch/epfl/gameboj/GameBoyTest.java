@@ -2,11 +2,13 @@ package ch.epfl.gameboj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import org.junit.jupiter.api.Test;
 
 public class GameBoyTest {
     @Test
-    void workRamIsProperlyMapped() {
+    void workRamIsProperlyMapped() throws InterruptedException, LineUnavailableException {
         Bus b = new GameBoy(null).bus();
         for (int a = 0; a <= 0xFFFF; ++a) {
             boolean inWorkRamOrEcho = (0xC000 <= a && a < 0xFE00);
@@ -15,7 +17,7 @@ public class GameBoyTest {
     }
 
     @Test
-    void workRamCanBeReadAndWritten() {
+    void workRamCanBeReadAndWritten() throws InterruptedException, LineUnavailableException {
         Bus b = new GameBoy(null).bus();
         for (int a = 0xC000; a < 0xE000; ++a) {
             b.write(a, (a ^ 0xA5) & 0xFF);
@@ -26,7 +28,7 @@ public class GameBoyTest {
     }
 
     @Test
-    void echoAreaReflectsWorkRam() {
+    void echoAreaReflectsWorkRam() throws InterruptedException, LineUnavailableException {
         Bus b = new GameBoy(null).bus();
         for (int a = 0xC000; a < 0xE000; ++a) {
             b.write(a, (a ^ 0xA5) & 0xFF);

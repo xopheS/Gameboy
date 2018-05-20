@@ -3,6 +3,8 @@ package ch.epfl.gameboj.debug;
 import java.io.File;
 import java.io.IOException;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
@@ -14,7 +16,7 @@ public final class DebugMain {
     }
     
     //First argument: name of ROM file, second argument: number of cycles to execute (30 000 000)
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException, LineUnavailableException {
         File romFile = new File(args[0]);
         long cycles = Long.parseLong(args[1]);
 

@@ -26,10 +26,8 @@ public final class GameBoy {
 
     private final Bus bus = new Bus();
     private final Ram workRam = new Ram(AddressMap.WRAM_BANK_0_SIZE + AddressMap.WRAM_BANK_1_SIZE);
-    private final RamController workRamController = new RamController(workRam, AddressMap.WRAM_BANK_0_START,
-            AddressMap.WRAM_BANK_1_END);
-    private final RamController workRamEchoController = new RamController(workRam, AddressMap.ECHO_RAM_START,
-            AddressMap.ECHO_RAM_END);
+    private final RamController workRamController = new RamController(workRam, AddressMap.WRAM_BANK_0_START, AddressMap.WRAM_BANK_1_END);
+    private final RamController workRamEchoController = new RamController(workRam, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
     private final BootRomController bootRomController;
     private final Cpu cpu = new Cpu();
     private final Timer timer = new Timer(cpu);

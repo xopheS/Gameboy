@@ -39,16 +39,12 @@ public final class Joypad implements Component {
      * @param k
      *            la touche appuyée
      */
-    public void keyPressed(Key k) {       
-        //System.out.println("p1 before " + Integer.toBinaryString(P1));
-        
+    public void keyPressed(Key k) {     
         if (k.ordinal() < LINE_LENGTH) {
             line0 = Bits.set(line0, k.ordinal(), true);
         } else {
             line1 = Bits.set(line1, k.ordinal() % LINE_LENGTH, true);
         }
-        
-        //cpu.requestInterrupt(Interrupt.JOYPAD);
     }
 
     /**

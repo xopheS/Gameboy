@@ -22,8 +22,7 @@ public final class DmaController {
 
     void start(int addressMSB) {
         startAddress = Preconditions.checkBits8(addressMSB) << Byte.SIZE;
-        Preconditions.checkArgument(startAddress % 0x100 == 0,
-                "The start address can only be set in increments of 0x100");
+        Preconditions.checkArgument(startAddress % 0x100 == 0, "The start address can only be set in increments of 0x100");
         if (bus == null)
             throw new IllegalStateException("The bus has not been set");
         // if (isActive) throw new IllegalStateException("A quick copy is already taking
