@@ -31,7 +31,7 @@ public class OamRamController implements IRamController {
     public Integer[] spritesIntersectingLine(int lineIndex, int height) {
         int scanIndex = 0, foundSprites = 0;
 
-        Integer[] intersect = new Integer[MAX_SPRITES]; // TODO replace with list?
+        Integer[] intersect = new Integer[MAX_SPRITES];
 
         while (foundSprites < MAX_SPRITES && scanIndex < OAM_SPRITES) {
             int spriteY = readAttr(scanIndex, DISPLAY_DATA.Y_COORD) - SPRITE_YOFFSET;
@@ -61,7 +61,7 @@ public class OamRamController implements IRamController {
     }
     
     public int packSpriteInfo(int spriteIndex) {
-        return readAttr(spriteIndex, DISPLAY_DATA.X_COORD) << Byte.SIZE | spriteIndex;
+        return Bits.make16(readAttr(spriteIndex, DISPLAY_DATA.X_COORD), spriteIndex);
     }
     
     public int readAttr(int spriteIndex, DISPLAY_DATA attr) {
