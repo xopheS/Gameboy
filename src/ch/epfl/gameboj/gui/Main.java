@@ -32,7 +32,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -41,6 +41,9 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
     private static GameBoy gameboj;
+    boolean isPaused;
+    AnimationTimer animationTimer;
+    long start;
 
     private static final Map<Key, String> keyToString = Map.of(Key.A, "A", Key.B, "B", Key.START, "S", Key.SELECT,
             "Space"); // TODO use this, invert mapping
@@ -69,18 +72,18 @@ public class Main extends Application {
         emulationView.setFitWidth(2 * LCD_WIDTH);
         emulationView.setFitHeight(2 * LCD_HEIGHT);
 
-        BorderPane simpleBorderPane = new BorderPane(emulationView);
-
-        Scene simpleModeScreen = new Scene(simpleBorderPane);
-
-        BorderPane extendedBorderPane = new BorderPane();
-
-        // extendedBorderPane.setTop(toolBar); TODO fix code duplication
-        extendedBorderPane.setCenter(emulationView); // Copy the emulation view actually or it doesn't work TODO
-
-        // TODO add gameboy overlay
-
-        Scene extendedModeScreen = new Scene(extendedBorderPane);
+//        BorderPane simpleBorderPane = new BorderPane(emulationView);
+//
+//        Scene simpleModeScreen = new Scene(simpleBorderPane);
+//
+//        BorderPane extendedBorderPane = new BorderPane();
+//
+//        // extendedBorderPane.setTop(toolBar); TODO fix code duplication
+//        extendedBorderPane.setCenter(emulationView); // Copy the emulation view actually or it doesn't work TODO
+//
+//        // TODO add gameboy overlay
+//
+//        Scene extendedModeScreen = new Scene(extendedBorderPane);
 
         // Development mode screen
         BorderPane developmentBorderPane = new BorderPane();
@@ -148,7 +151,7 @@ public class Main extends Application {
         viewportRectangle.setStroke(Color.DARKGREEN);
         // TODO use binding with IntegerProperty?
         // viewportRectangle.xProperty().bind(gameboj.bus().read(AddressMap.REG_SCX));
-        StackPane backgroundViewPane = new StackPane(backgroundView);
+        Pane backgroundViewPane = new Pane(backgroundView);
         backgroundViewPane.getChildren().add(viewportRectangle);
         backgroundViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(backgroundViewPane));
         MenuItem windowViewMenuItem = new MenuItem("Window");
@@ -173,7 +176,36 @@ public class Main extends Application {
                 helpMenu);
 
         // TODO add button graphics (btn.setGraphic())
-        ToolBar toolBar = new ToolBar(new Button("Reset"), new Button("Screen"), new Button("Save")); // TODO add to top
+        Button tbResetButton = new Button("Reset");
+        tbResetButton.setOnAction(e -> {
+            start = 0;
+            try {
+                gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
+            } catch (FileNotFoundException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (InterruptedException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (LineUnavailableException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
+        Button tbPauseButton = new Button("Pause");
+        tbPauseButton.setOnAction(e -> {
+            if (isPaused) {
+                isPaused = false;
+                animationTimer.start();
+            } else {
+                isPaused = true;
+                animationTimer.stop();
+            }
+        });
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, new Button("Screen"), new Button("Save")); // TODO add to top
         // pane under menu
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
@@ -189,9 +221,9 @@ public class Main extends Application {
         BorderPane modeChoicePane = new BorderPane();
 
         Button simpleModeButton = new Button("Simple Mode");
-        simpleModeButton.setOnAction(e -> primaryStage.setScene(simpleModeScreen));
+//        simpleModeButton.setOnAction(e -> primaryStage.setScene(simpleModeScreen));
         Button extendedModeButton = new Button("Extended Mode");
-        extendedModeButton.setOnAction(e -> primaryStage.setScene(extendedModeScreen));
+//        extendedModeButton.setOnAction(e -> primaryStage.setScene(extendedModeScreen));
         Button developmentModeButton = new Button("Development Mode");
         developmentModeButton.setOnAction(e -> primaryStage.setScene(developmentModeScreen));
         VBox modeButtonsBox = new VBox(10);
@@ -205,9 +237,9 @@ public class Main extends Application {
         primaryStage.setScene(modeChoiceScreen); // TODO set to splash screen
         primaryStage.show();
 
-        long start = System.nanoTime();
+        start = System.nanoTime();
 
-        new AnimationTimer() {
+        animationTimer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 long elapsed = now - start;
@@ -219,13 +251,15 @@ public class Main extends Application {
                 emulationView.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
 
                 viewportRectangle.setTranslateX(gameboj.bus().read(AddressMap.REG_SCX)); // FIXME
-                viewportRectangle.setTranslateY(gameboj.bus().read(AddressMap.REG_SCY)); // FIXME
+                viewportRectangle.setTranslateY(gameboj.bus().read(AddressMap.REG_SCY));
                 backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
                 // FIXME
                 windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
                 spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
             }
-        }.start();
+        };
+        
+        animationTimer.start();
     }
 
     private static void setInput(Node node, Joypad jp) {

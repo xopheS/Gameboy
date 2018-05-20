@@ -66,7 +66,7 @@ public final class GameBoy {
 
         joypad.attachTo(bus);
 
-        soundController.attachTo(bus);
+        //soundController.attachTo(bus);
         // soundController.start(); // TODO change this
     }
 
@@ -84,7 +84,6 @@ public final class GameBoy {
         Preconditions.checkArgument(currentCycle <= cycle);
         while (currentCycle < cycle) {
             timer.cycle(currentCycle);
-            // soundController.cycle(cycle);
             lcdController.cycle(currentCycle);
             cpu.cycle(currentCycle);
             currentCycle++;

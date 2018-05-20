@@ -560,7 +560,7 @@ public final class LcdController2 implements Clocked, Component {
                         i);
                 msb = value[0];
                 lsb = value[1];
-                nextLineBuilderBG.setBytes(i, Bits.reverse8(msb),
+                nextLineBuilderBG.setBytes(8 * i, Bits.reverse8(msb),
                         Bits.reverse8(lsb));
             }
         }
@@ -586,7 +586,7 @@ public final class LcdController2 implements Clocked, Component {
                         i);
                 msb = value[0];
                 lsb = value[1];
-                nextLineBuilderWD.setBytes(i, Bits.reverse8(msb),
+                nextLineBuilderWD.setBytes(8 * i, Bits.reverse8(msb),
                         Bits.reverse8(lsb));
             }
             winY += 1;

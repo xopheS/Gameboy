@@ -843,6 +843,7 @@ public final class Cpu implements Component, Clocked {
         } else if (address >= AddressMap.HRAM_START && address < AddressMap.HRAM_END) {
             return highRam.read(address - AddressMap.HRAM_START);
         }
+        
         return NO_DATA;
     }
 
