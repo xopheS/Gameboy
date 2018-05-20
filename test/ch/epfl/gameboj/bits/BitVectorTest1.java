@@ -86,7 +86,7 @@ class BitVectorTest1 {
     
     @Test
     void shiftWorks() {
-        assertEquals("0000000000000000110011000000000010101010111100000000000000000000", v1.shift(-16).toString());
+        assertEquals("0000000000000000110011000000000010101010111100000000000000000000", v1.shift(16).toString());
     }
     
     @Test

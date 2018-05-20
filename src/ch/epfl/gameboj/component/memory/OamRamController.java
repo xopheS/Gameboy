@@ -6,8 +6,6 @@ import java.util.Objects;
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
-import ch.epfl.gameboj.component.memory.OamRamController.ATTRIBUTES;
-import ch.epfl.gameboj.component.memory.OamRamController.DISPLAY_DATA;
 
 public class OamRamController implements IRamController { 
     public enum DISPLAY_DATA {
