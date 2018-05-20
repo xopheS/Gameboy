@@ -64,7 +64,7 @@ public final class LcdController implements Component, Clocked {
     private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
     private final DmaController dmaController = DmaController.getDmaController();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
-    private long lcdOnCycle = Long.MAX_VALUE;
+    private long lcdOnCycle;
 
     int prevMode;
     private int currentImage;
@@ -216,8 +216,6 @@ public final class LcdController implements Component, Clocked {
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE2)) {
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
             }
-            break;
-        default:
             break;
         }
 
@@ -393,7 +391,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private BitVector computeMeldOpacity(LcdImageLine below, LcdImageLine over) {
-        return below.getOpacity().and(over.getOpacity().not()).not();
+        return below.getOpacity().not().and(over.getOpacity());
     }
 
     private boolean isWindowActive(int adjustedWX) {
@@ -420,7 +418,6 @@ public final class LcdController implements Component, Clocked {
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
             return oamRamController.read(address);
         } else if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
-//            return lcdRegs.get(address - AddressMap.REGS_LCD_START);
             switch (address) {
             case AddressMap.REG_LCDC:
                 return lcdRegs.get(LCDReg.LCDC);
