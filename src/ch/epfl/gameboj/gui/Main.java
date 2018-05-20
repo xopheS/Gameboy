@@ -252,10 +252,10 @@ public class Main extends Application {
 
                 viewportRectangle.setTranslateX(gameboj.bus().read(AddressMap.REG_SCX)); // FIXME
                 viewportRectangle.setTranslateY(gameboj.bus().read(AddressMap.REG_SCY));
-                backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
-                // FIXME
-                windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
-                spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
+//                backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
+//                // FIXME
+//                windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
+//                spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
             }
         };
         

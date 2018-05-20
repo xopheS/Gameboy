@@ -146,17 +146,14 @@ public final class LcdController2 implements Clocked, Component {
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
-        if (address >= AddressMap.VRAM_START
-                && address < AddressMap.VRAM_END) {
+        if (address >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
             return this.ramVideo.read(address - AddressMap.VRAM_START);
         } else {
-            if (address >= AddressMap.REGS_START
-                    && address < AddressMap.REGS_END) {
+            if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
                 int data = getRegValue(address);
                 return data;
             } else {
-                if (address >= AddressMap.OAM_START
-                        && address < AddressMap.OAM_END) {
+                if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
                     return this.ramSprite.read(address - AddressMap.OAM_START);
                 } else {
                     return NO_DATA;
@@ -169,6 +166,8 @@ public final class LcdController2 implements Clocked, Component {
     public void write(int address, int data) {
         Preconditions.checkBits8(data);
         Preconditions.checkBits16(address);
+        
+        if (address == AddressMap.REG_DMA) System.out.println("activate dma");
 
         if (address >= AddressMap.VRAM_START
                 && address < AddressMap.VRAM_END) {
