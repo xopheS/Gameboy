@@ -40,7 +40,7 @@ class VideoRamControllerTest {
         System.out.println("writing at " + AddressMap.TILE_SOURCE[tileSource ? 1 : 0] + tileTypeIndex * BYTES_PER_TILE + tileLineIndex);
         testController.write(AddressMap.TILE_SOURCE[tileSource ? 1 : 0] + tileTypeIndex * BYTES_PER_TILE + 2 * tileLineIndex, data);
         
-        assertThat(testController.tileLineBytes(3, 5, tileSource, false), is(equalTo(data)));
+        assertThat(testController.tileLineBytes(3, 5, tileSource)[0], is(equalTo(data)));
     }
 
     @Test

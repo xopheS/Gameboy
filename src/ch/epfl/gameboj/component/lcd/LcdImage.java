@@ -16,8 +16,7 @@ public class LcdImage {
 
     public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT, Collections.nCopies(LCD_HEIGHT, BLANK_LCD_IMAGE_LINE));
 
-    private final int width;
-    private final int height;
+    private final int width, height;
     private final List<LcdImageLine> imageLines;
 
     /**

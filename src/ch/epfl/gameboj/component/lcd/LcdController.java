@@ -271,11 +271,9 @@ public final class LcdController implements Component, Clocked {
     }
     
     private int spriteTileLineIndex(int lineIndex, int spriteY, boolean vFlip, int spriteHeight) {
-        if (vFlip) {
-            return (spriteHeight - Math.floorMod(lineIndex - spriteY, spriteHeight));
-        } else {
-            return Math.floorMod(lineIndex - spriteY, spriteHeight);
-        }
+        int unflippedIndex = Math.floorMod(lineIndex - spriteY, spriteHeight);
+
+        return vFlip ? spriteHeight - unflippedIndex : unflippedIndex;
     }
     
     private Integer[][] spriteLayerInfo(Integer[] spriteInfo) {
