@@ -1,5 +1,7 @@
 package ch.epfl.gameboj;
 
+import java.util.Objects;
+
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
@@ -42,19 +44,19 @@ public final class RegisterFile<E extends Register> {
         return Byte.toUnsignedInt(registerFile[reg.index()]);
     }
 
-//    /**
-//     * Overload du getter de la valeur d'un registre du banc, offre un contrôle plus
-//     * direct.
-//     *
-//     * @param index
-//     *            Index du registre
-//     * @return la valeur du registre en question
-//     *
-//     * @see #get(Register)
-//     */
-//    public int get(int index) {
-//        return Byte.toUnsignedInt(registerFile[Objects.checkIndex(index, registerFile.length)]);
-//    }
+    /**
+     * Overload du getter de la valeur d'un registre du banc, offre un contrôle plus
+     * direct.
+     *
+     * @param index
+     *            Index du registre
+     * @return la valeur du registre en question
+     *
+     * @see #get(Register)
+     */
+    public int get(int index) {
+        return Byte.toUnsignedInt(registerFile[Objects.checkIndex(index, registerFile.length)]);
+    }
 
     /**
      * Setter de la valeur d'un registre du banc.
@@ -72,9 +74,9 @@ public final class RegisterFile<E extends Register> {
         registerFile[reg.index()] = (byte) Preconditions.checkBits8(newValue);
     }
 
-//    public void set(int index, int newValue) {
-//        registerFile[index] = (byte) Preconditions.checkBits8(newValue);
-//    }
+    public void set(int index, int newValue) {
+        registerFile[index] = (byte) Preconditions.checkBits8(newValue);
+    }
     
     public void increment(E reg) { //TODO remove this???
         registerFile[reg.index()]++;

@@ -81,8 +81,6 @@ public final class Joypad implements Component {
     public int read(int address) {      	
     	computeP1();
     	
-//    	if(Bits.test(P1, 3)) System.out.println("Start pressed " + Integer.toBinaryString(P1));
-    	
         return Preconditions.checkBits16(address) == AddressMap.REG_P1 ? Bits.complement8(P1) : NO_DATA;
     }
 

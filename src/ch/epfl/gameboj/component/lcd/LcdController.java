@@ -30,18 +30,13 @@ import ch.epfl.gameboj.component.memory.VideoRamController;
 
 public final class LcdController implements Component, Clocked {
 
-    private enum LCDReg implements Register {
-        LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
-    }
+    private enum LCDReg implements Register { LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX }
 
-    private enum LCDC implements Bit {
-        BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS
-    }
+    private enum LCDC implements Bit { BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS }
 
-    private enum STAT implements Bit {
-        MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED7
-    }
+    private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED7 }
 
+    // A tile is 8 x 8 bits
     private static final int TILE_SIZE = 8;
     // Background size: 256 x 256, 32 x 32 tiles
     private static final int BG_SIZE = 256;
@@ -66,11 +61,6 @@ public final class LcdController implements Component, Clocked {
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
 
-    long cycFromImg;
-    long cycFromLn;
-
-    // TODO can only access HRAM during quick copy
-
     /**
      * Construit un contrôleur LCD.
      * 
@@ -88,33 +78,6 @@ public final class LcdController implements Component, Clocked {
         return Objects.requireNonNull(displayedImage, "Displayed image cannot be null");
     }
 
-    public LcdImage getBackground() {
-        LcdImage.Builder backgroundBuilder = new LcdImage.Builder(BG_SIZE, BG_SIZE);
-        for (int y = 0; y < BG_SIZE; ++y) {
-            backgroundBuilder.setLine(y, computeBGLine(y));
-        }
-        return backgroundBuilder.build();
-    }
-
-    public LcdImage getWindow() {
-        LcdImage.Builder windowBuilder = new LcdImage.Builder(WIN_SIZE, WIN_SIZE);
-        for (int y = 0; y < WIN_SIZE; ++y) {
-            windowBuilder.setLine(y, computeWinLine(0, y, WIN_SIZE));
-        }
-        return windowBuilder.build();
-    }
-
-    public LcdImage getSprites() { // TODO whole screen or just lcd?
-        LcdImage.Builder spriteBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-        
-        int height = getHeight();
-
-        for (int y = 0; y < LCD_HEIGHT; ++y) {
-            spriteBuilder.setLine(y, computeSpriteLine(oamRamController.spritesIntersectingLine(y, height), y));
-        }
-        return spriteBuilder.build();
-    }
-
     @Override
     public void cycle(long cycle) {
         if (nextNonIdleCycle == Long.MAX_VALUE && isOn()) {
@@ -127,9 +90,9 @@ public final class LcdController implements Component, Clocked {
 
         if (isOn() && cycle == nextNonIdleCycle) {
             long cycFromPowOn = cycle - lcdOnCycle; 
-            cycFromImg = (int) (cycFromPowOn % IMAGE_CYCLE_DURATION);
+            long cycFromImg = (int) (cycFromPowOn % IMAGE_CYCLE_DURATION);
             int currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
-            cycFromLn = cycFromImg % LINE_CYCLE_DURATION;
+            long cycFromLn = cycFromImg % LINE_CYCLE_DURATION;
             reallyCycle(currentLine, (int) cycFromLn);
         }
     }
@@ -166,7 +129,6 @@ public final class LcdController implements Component, Clocked {
     }
 
     private void turnOff() {
-        // TODO power off only possible during VBLANK
         setMode(0);
         modifyLYorLYC(LCDReg.LY, 0);
         nextNonIdleCycle = Long.MAX_VALUE;
@@ -261,7 +223,6 @@ public final class LcdController implements Component, Clocked {
 
     private LcdImageLine computeWinLine(int adjustedWX, int lineIndex, int width) {
         Preconditions.checkArgument(width % TILE_SIZE == 0, "The width must be a multiple of the tile size. Was provided: " + width);
-        Objects.checkIndex(lineIndex, WIN_SIZE);
         
         LcdImageLine.Builder nextWinLineBuilder = new LcdImageLine.Builder(WIN_SIZE);
 
@@ -330,11 +291,11 @@ public final class LcdController implements Component, Clocked {
         return Objects.checkIndex(lineIndex, WIN_SIZE) % TILE_SIZE;
     }
     
-    private int spriteTileLineIndex(int lineIndex, int spriteY, boolean vFlip, int height) {
+    private int spriteTileLineIndex(int lineIndex, int spriteY, boolean vFlip, int spriteHeight) {
         if (vFlip) {
-            return (height - Math.floorMod(lineIndex - spriteY, height));
+            return (spriteHeight - Math.floorMod(lineIndex - spriteY, spriteHeight));
         } else {
-            return Math.floorMod(lineIndex - spriteY, height);
+            return Math.floorMod(lineIndex - spriteY, spriteHeight);
         }
     }
     
@@ -392,39 +353,12 @@ public final class LcdController implements Component, Clocked {
 
     @Override
     public int read(int address) {
-        // TODO if drawing, cpu cannot access VRAM and OAM
-
         if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
             return videoRamController.read(address);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
             return oamRamController.read(address);
         } else if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
-            switch (address) {
-            case AddressMap.REG_LCDC:
-                return lcdRegs.get(LCDReg.LCDC);
-            case AddressMap.REG_LCD_STAT:
-                return lcdRegs.get(LCDReg.STAT);
-            case AddressMap.REG_SCY:
-                return lcdRegs.get(LCDReg.SCY);
-            case AddressMap.REG_SCX:
-                return lcdRegs.get(LCDReg.SCX);
-            case AddressMap.REG_LY:
-                return lcdRegs.get(LCDReg.LY);
-            case AddressMap.REG_LYC:
-                return lcdRegs.get(LCDReg.LYC);
-            case AddressMap.REG_DMA:
-                return lcdRegs.get(LCDReg.DMA);
-            case AddressMap.REG_BGP:
-                return lcdRegs.get(LCDReg.BGP);
-            case AddressMap.REG_OBP0:
-                return lcdRegs.get(LCDReg.OBP0);
-            case AddressMap.REG_OBP1:
-                return lcdRegs.get(LCDReg.OBP1);
-            case AddressMap.REG_WY:
-                return lcdRegs.get(LCDReg.WY);
-            case AddressMap.REG_WX:
-                return lcdRegs.get(LCDReg.WX);
-            }
+            return lcdRegs.get(address - AddressMap.REGS_LCD_START);
         }
 
         return NO_DATA;
@@ -434,31 +368,20 @@ public final class LcdController implements Component, Clocked {
     public void write(int address, int data) {
         Preconditions.checkBits8(data);
 
-        // TODO if drawing, cpu cannot access VRAM and OAM
-
         if (Preconditions.checkBits16(address) >= AddressMap.VRAM_START && address < AddressMap.VRAM_END) {
-            // TODO cannot access during mode 3
             videoRamController.write(address, data);
         } else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END) {
-            // TODO cannot access during mode 2 or 3
             oamRamController.write(address, data);
         } else if (address >= AddressMap.REGS_LCD_START && address < AddressMap.REGS_LCD_END) {
             switch (address) {
             case AddressMap.REG_LCDC:
                 lcdRegs.set(LCDReg.LCDC, data);
-                if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN)) System.out.println("Window bit active");
                 if (!lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
                     turnOff();
                 }
                 break;
             case AddressMap.REG_LCD_STAT:
                 lcdRegs.set(LCDReg.STAT, (data & 0b1111_1000) | (lcdRegs.get(LCDReg.STAT) & 0b0000_0111));
-                break;
-            case AddressMap.REG_SCY:
-                lcdRegs.set(LCDReg.SCY, data);
-                break;
-            case AddressMap.REG_SCX:
-                lcdRegs.set(LCDReg.SCX, data);
                 break;
             case AddressMap.REG_LY:
                 modifyLYorLYC(LCDReg.LY, 0);
@@ -470,21 +393,8 @@ public final class LcdController implements Component, Clocked {
                 lcdRegs.set(LCDReg.DMA, data);
                 dmaController.start(data);
                 break;
-            case AddressMap.REG_BGP:
-                lcdRegs.set(LCDReg.BGP, data);
-                break;
-            case AddressMap.REG_OBP0:
-                lcdRegs.set(LCDReg.OBP0, data);
-                break;
-            case AddressMap.REG_OBP1:
-                lcdRegs.set(LCDReg.OBP1, data);
-                break;
-            case AddressMap.REG_WY:
-                lcdRegs.set(LCDReg.WY, data);
-                break;
-            case AddressMap.REG_WX:
-                lcdRegs.set(LCDReg.WX, data);
-                break;
+            default:
+                lcdRegs.set(address - AddressMap.REGS_LCD_START, data);
             }
         }
     }
