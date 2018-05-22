@@ -7,7 +7,7 @@ import javax.sound.sampled.LineUnavailableException;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
-import ch.epfl.gameboj.component.lcd.LcdController2;
+import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
@@ -31,7 +31,7 @@ public final class GameBoy {
     private final BootRomController bootRomController;
     private final Cpu cpu = new Cpu();
     private final Timer timer = new Timer(cpu);
-    private final LcdController2 lcdController = new LcdController2(cpu);
+    private final LcdController lcdController = new LcdController(cpu);
     private final Joypad joypad = new Joypad(cpu);
     private final SoundController soundController = new SoundController();
 
@@ -131,7 +131,7 @@ public final class GameBoy {
      *
      * @return le LcdController de la Gameboy
      */
-    public LcdController2 lcdController() {
+    public LcdController lcdController() {
         return lcdController;
     }
 

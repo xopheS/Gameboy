@@ -140,9 +140,7 @@ public final class LcdController implements Component, Clocked {
         }
     }
 
-    private void reallyCycle(int currentLine, int cycFromLn) {       
-        modifyLYorLYC(LCDReg.LY, currentLine);
-        
+    private void reallyCycle(int currentLine, int cycFromLn) {              
         if (currentLine < 144) {
             switch (cycFromLn) {
             case MODE2_DURATION:
@@ -156,18 +154,20 @@ public final class LcdController implements Component, Clocked {
                 break;
             case 0:
                 nextNonIdleCycle += MODE2_DURATION;
+                modifyLYorLYC(LCDReg.LY, currentLine);
                 setMode(2);
                 break;
             }
         } else {
-            nextNonIdleCycle += LINE_CYCLE_DURATION;
             if (currentLine == 144) {
                 setMode(1);
                 displayedImage = nextImageBuilder.build();
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-            } else if (currentLine == 153) {
                 winY = 0;
             }
+            
+            nextNonIdleCycle += LINE_CYCLE_DURATION;
+            modifyLYorLYC(LCDReg.LY, currentLine);
         }
     }
 
@@ -360,7 +360,7 @@ public final class LcdController implements Component, Clocked {
         List<Integer> fgSpriteInfo = new ArrayList<Integer>(10);
         
         for (int i = 0; i < spriteInfo.length; ++i) {
-            boolean isInBG = oamRamController.readAttr(i, ATTRIBUTES.BEHIND_BG);
+            boolean isInBG = oamRamController.readAttr(unpackIndex(spriteInfo[i]), ATTRIBUTES.BEHIND_BG);
             if (isInBG) {
                 bgSpriteInfo.add(spriteInfo[i]);
             } else {

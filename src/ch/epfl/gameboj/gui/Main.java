@@ -253,9 +253,8 @@ public class Main extends Application {
                 viewportRectangle.setTranslateX(gameboj.bus().read(AddressMap.REG_SCX)); // FIXME
                 viewportRectangle.setTranslateY(gameboj.bus().read(AddressMap.REG_SCY));
                 backgroundView.setImage(ImageConverter.convert(gameboj.lcdController().getBackground()));
-                // FIXME
                 windowView.setImage(ImageConverter.convert(gameboj.lcdController().getWindow()));
-//                spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
+                spriteView.setImage(ImageConverter.convert(gameboj.lcdController().getSprites()));
             }
         };
         
@@ -273,6 +272,7 @@ public class Main extends Application {
                 jp.keyPressed(Key.B);
                 break;
             case S:
+                System.out.println("Press start");
                 jp.keyPressed(Key.START);
                 break;
             case SPACE:
