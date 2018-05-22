@@ -66,11 +66,8 @@ public final class LcdController implements Component, Clocked {
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
 
-    int prevMode;
-    private int currentImage;
     long cycFromImg;
     long cycFromLn;
-    private long cyc;
 
     // TODO can only access HRAM during quick copy
 
@@ -128,12 +125,9 @@ public final class LcdController implements Component, Clocked {
             dmaController.copy();
         }
 
-        cyc = cycle;
-
         if (isOn() && cycle == nextNonIdleCycle) {
             long cycFromPowOn = cycle - lcdOnCycle; 
             cycFromImg = (int) (cycFromPowOn % IMAGE_CYCLE_DURATION);
-            currentImage = (int) Math.floorDiv(cycFromPowOn, IMAGE_CYCLE_DURATION);
             int currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
             cycFromLn = cycFromImg % LINE_CYCLE_DURATION;
             reallyCycle(currentLine, (int) cycFromLn);
@@ -210,8 +204,6 @@ public final class LcdController implements Component, Clocked {
             }
             break;
         }
-
-        prevMode = mode;
     }
 
     private LcdImageLine computeLine(int lineIndex) {
