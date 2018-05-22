@@ -1,10 +1,9 @@
 package ch.epfl.gameboj.component.memory;
 
-import ch.epfl.gameboj.component.Component;
-
 import java.util.Objects;
 
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.component.Component;
 
 /**
  * RamController : une mémoire vive dont le contenu peut changer au cours du temps.
@@ -13,7 +12,7 @@ import ch.epfl.gameboj.Preconditions;
  * @author David Cian (287967)
  */
 
-public final class RamController implements IRamController {
+public class RamController implements Component {
 
     private final Ram ram;
     private final int startAddress;

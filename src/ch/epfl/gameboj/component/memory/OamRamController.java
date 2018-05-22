@@ -7,10 +7,9 @@ import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
-public class OamRamController implements IRamController { 
-    public enum DISPLAY_DATA {
-        Y_COORD, X_COORD, TILE_INDEX, ATTRIBUTES
-    }
+public class OamRamController extends RamController { 
+
+    public enum DISPLAY_DATA { Y_COORD, X_COORD, TILE_INDEX, ATTRIBUTES }
     
     public enum ATTRIBUTES implements Bit {
         P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
@@ -22,10 +21,8 @@ public class OamRamController implements IRamController {
     public static final int SPRITE_XOFFSET = 8;
     public static final int SPRITE_YOFFSET = 16;
     
-    private IRamController ramController;
-    
-    public OamRamController(IRamController ramController) {
-        this.ramController = Objects.requireNonNull(ramController);
+    public OamRamController(Ram ram, int startAddress) {
+        super(ram, startAddress);
     }
     
     public Integer[] spritesIntersectingLine(int lineIndex, int height) {
@@ -71,15 +68,5 @@ public class OamRamController implements IRamController {
     
     public boolean readAttr(int spriteIndex, ATTRIBUTES attribute) {
         return Bits.test(readAttr(spriteIndex, DISPLAY_DATA.ATTRIBUTES), attribute);
-    }
-
-    @Override
-    public int read(int address) {
-        return ramController.read(address);
-    }
-
-    @Override
-    public void write(int address, int data) {
-        ramController.write(address, data);
     }    
 }

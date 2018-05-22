@@ -25,7 +25,6 @@ import ch.epfl.gameboj.component.memory.OamRamController;
 import ch.epfl.gameboj.component.memory.OamRamController.ATTRIBUTES;
 import ch.epfl.gameboj.component.memory.OamRamController.DISPLAY_DATA;
 import ch.epfl.gameboj.component.memory.Ram;
-import ch.epfl.gameboj.component.memory.RamController;
 import ch.epfl.gameboj.component.memory.VideoRamController;
 
 public final class LcdController implements Component, Clocked {
@@ -70,8 +69,8 @@ public final class LcdController implements Component, Clocked {
     public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
 
-        videoRamController = new VideoRamController(new RamController(new Ram(AddressMap.VRAM_SIZE), AddressMap.VRAM_START));
-        oamRamController = new OamRamController(new RamController(new Ram(AddressMap.OAM_SIZE), AddressMap.OAM_START));
+        videoRamController = new VideoRamController(new Ram(AddressMap.VRAM_SIZE), AddressMap.VRAM_START);
+        oamRamController = new OamRamController(new Ram(AddressMap.OAM_SIZE), AddressMap.OAM_START);
     }
 
     public LcdImage currentImage() {

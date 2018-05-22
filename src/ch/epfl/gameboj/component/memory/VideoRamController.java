@@ -1,17 +1,14 @@
 package ch.epfl.gameboj.component.memory;
 
-import java.util.Objects;
-
 import ch.epfl.gameboj.AddressMap;
 
-public class VideoRamController implements IRamController {
+public class VideoRamController extends RamController {
+
     public static final int BYTES_PER_TILE = 16;
     public static final int TILE_SOURCE_HALF = 128;
     
-    private IRamController ramController;
-    
-    public VideoRamController(IRamController ramController) {
-        this.ramController = Objects.requireNonNull(ramController);
+    public VideoRamController(Ram ram, int startAddress) {
+        super(ram, startAddress);
     }
     
     /**
@@ -59,15 +56,5 @@ public class VideoRamController implements IRamController {
                 throw new IllegalArgumentException("tile_type_index wrong! " + tileTypeIndex);
             }
         }
-    }
-
-    @Override
-    public int read(int address) {
-        return ramController.read(address);
-    }
-
-    @Override
-    public void write(int address, int data) {
-        ramController.write(address, data);
     }
 }
