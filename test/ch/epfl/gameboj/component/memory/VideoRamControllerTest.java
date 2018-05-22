@@ -28,8 +28,7 @@ class VideoRamControllerTest {
     @BeforeEach
     void setupBeforeEach() {
         Ram ram = new Ram(AddressMap.VRAM_SIZE);
-        RamController controller = new RamController(ram, AddressMap.VRAM_START);
-        testController = new VideoRamController(controller);
+        testController = new VideoRamController(ram, AddressMap.VRAM_START);
     }
 
     @Test

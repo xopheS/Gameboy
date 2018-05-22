@@ -103,7 +103,7 @@ public final class Cpu implements Component, Clocked {
         return Integer.numberOfTrailingZeros(pendingInterrupts());
     }
 
-    private void handleInterrupt() { // TODO recheck for precision/fidelity
+    private void handleInterrupt() {
         int i = prioritaryInterruptIndex();
         IF = Bits.set(IF, i, false);
         IME = false;
@@ -599,7 +599,6 @@ public final class Cpu implements Component, Clocked {
         }
             break;
         case STOP:
-            // TODO halt system clock
             throw new Error("STOP is not implemented");
         default:
             break;

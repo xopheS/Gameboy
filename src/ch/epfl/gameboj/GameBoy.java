@@ -11,7 +11,6 @@ import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
-import ch.epfl.gameboj.component.sound.SoundController;
 import ch.epfl.gameboj.component.time.Timer;
 
 /**
@@ -33,7 +32,6 @@ public final class GameBoy {
     private final Timer timer = new Timer(cpu);
     private final LcdController lcdController = new LcdController(cpu);
     private final Joypad joypad = new Joypad(cpu);
-    private final SoundController soundController = new SoundController();
 
     public static final long CYCLES_PER_SECOND = (long) Math.pow(2, 20);
     public static final double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / Math.pow(10, 9);
@@ -65,9 +63,6 @@ public final class GameBoy {
         lcdController.attachTo(bus);
 
         joypad.attachTo(bus);
-
-        //soundController.attachTo(bus);
-        // soundController.start(); // TODO change this
     }
 
     /**
@@ -95,7 +90,7 @@ public final class GameBoy {
      *
      * @return le cycle actuel
      */
-    public long cycles() {
+    public long getCycles() {
         return currentCycle;
     }
 
@@ -104,7 +99,7 @@ public final class GameBoy {
      *
      * @return le timer de la Gameboy
      */
-    public Timer timer() {
+    public Timer getTimer() {
         return timer;
     }
 
@@ -113,7 +108,7 @@ public final class GameBoy {
      *
      * @return le bus de la Gameboy
      */
-    public Bus bus() {
+    public Bus getBus() {
         return bus;
     }
 

@@ -13,7 +13,7 @@ public final class Joypad implements Component {
 
     private final Cpu cpu;
 
-    private int P1 = 0; //TODO connect P10-15 ports to P1 register
+    private int P1 = 0; 
     private int line0 = 0;
     private int line1 = 0;
 

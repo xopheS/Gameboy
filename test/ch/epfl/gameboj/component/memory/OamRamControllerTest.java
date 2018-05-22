@@ -1,20 +1,16 @@
 package ch.epfl.gameboj.component.memory;
 
-import static ch.epfl.gameboj.component.memory.OamRamController.SPRITE_ATTR_BYTES;
 import static ch.epfl.gameboj.component.memory.OamRamController.MAX_SPRITES;
+import static ch.epfl.gameboj.component.memory.OamRamController.SPRITE_ATTR_BYTES;
 import static ch.epfl.gameboj.component.memory.OamRamController.SPRITE_XOFFSET;
 import static ch.epfl.gameboj.component.memory.OamRamController.SPRITE_YOFFSET;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Arrays;
 import java.util.Random;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-
-import org.mockito.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
@@ -38,8 +34,7 @@ class OamRamControllerTest {
     @BeforeEach
     void setupBeforeEach() {
         Ram ram = new Ram(AddressMap.OAM_SIZE);
-        RamController controller = new RamController(ram, AddressMap.OAM_START);
-        testController = new OamRamController(controller);
+        testController = new OamRamController(ram, AddressMap.OAM_START);
     }
     
     @Test

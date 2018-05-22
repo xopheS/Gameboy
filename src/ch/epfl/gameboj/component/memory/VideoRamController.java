@@ -19,8 +19,9 @@ public class VideoRamController extends RamController {
      * @param msb
      * @return
      */
-    public int tileLineBytes(int tileTypeIndex, int tileLineIndex, boolean tileSource, boolean msb) {
-        return read(tileByteAddress(tileTypeIndex, tileLineIndex, tileSource) + (msb ? 1 : 0));
+    public int[] tileLineBytes(int tileTypeIndex, int tileLineIndex, boolean tileSource) {
+        int tileByteAddress = tileByteAddress(tileTypeIndex, tileLineIndex, tileSource);
+        return new int[] { read(tileByteAddress), read(tileByteAddress + 1) };
     }
 
     /**
@@ -31,8 +32,8 @@ public class VideoRamController extends RamController {
      * @param msb
      * @return
      */
-    public int tileLineBytes(int tileTypeIndex, int tileLineIndex, boolean msb) {
-        return tileLineBytes(tileTypeIndex, tileLineIndex, true, msb);
+    public int[] tileLineBytes(int tileTypeIndex, int tileLineIndex) {
+        return tileLineBytes(tileTypeIndex, tileLineIndex, true);
     }
     
     /**
@@ -43,8 +44,6 @@ public class VideoRamController extends RamController {
      * @return
      */
     public int tileByteAddress(int tileTypeIndex, int tileLineIndex, boolean tileSource) {
-        // TODO When double character composition, only even-numbered indexes can be
-        // selected, when odd will be the same as even, how to do this?
         if (tileSource) {
             return AddressMap.TILE_SOURCE[1] + tileTypeIndex * BYTES_PER_TILE + 2 * tileLineIndex;
         } else {

@@ -184,20 +184,20 @@ public final class BitVector {
         return new BitVector(orVector);
     }
 
-    public BitVector maskMSB(int index) {
+    private BitVector maskMSB(int index) {
         BitVector oneVector = new BitVector(size(), true);
         return oneVector.shift(index);
-    } // TODO public or private? make static
+    }
 
-    public BitVector maskLSB(int index) {
+    private BitVector maskLSB(int index) {
         return maskMSB(index).not();
-    } // TODO public or private? make static
+    }
 
     public BitVector mask(int startIndex, int endIndex) {
         BitVector maskMSB = maskMSB(startIndex);
         BitVector maskLSB = maskLSB(endIndex);
         return maskMSB.and(maskLSB);
-    } // TODO public or private? remove this? make static
+    } // TODO public or private?
 
     public BitVector clipMSB(int index) {
         return and(maskMSB(index));
@@ -205,18 +205,16 @@ public final class BitVector {
 
     public BitVector clipLSB(int index) {
         return and(maskLSB(index));
-    } // TODO unify this and clipLeft and add a boolean argument? use not operator
+    }
 
     public BitVector setBits(BitVector mask, boolean value) {
         return value ? this.or(mask) : this.and(mask.not());
     } // TODO use this???, also check for possible uses of maskMSB and maskLSB
 
-    // FIXME this works in the wrong direction
     public BitVector extractZeroExtended(int start, int size) {
         return extract(start, size, true);
     }
 
-    // FIXME this also probably works in the wrong direction
     public BitVector extractWrapped(int start, int size) {
         return extract(start, size, false);
     }

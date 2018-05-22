@@ -14,8 +14,7 @@ import ch.epfl.gameboj.bits.BitVector;
 
 public class LcdImage {
 
-    public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT,
-            Collections.nCopies(LCD_HEIGHT, BLANK_LCD_IMAGE_LINE));
+    public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT, Collections.nCopies(LCD_HEIGHT, BLANK_LCD_IMAGE_LINE));
 
     private final int width;
     private final int height;
@@ -55,8 +54,7 @@ public class LcdImage {
      * @return la couleur du pixel
      */
     public int get(int x, int y) {
-        Preconditions.checkArgument(x < width && x >= 0 && y < height && y >= 0,
-                "Pixel coordinates must be within the bounds of the screen");
+        Preconditions.checkArgument(x < width && x >= 0 && y < height && y >= 0, "Pixel coordinates must be within the bounds of the image");
         int lsb = imageLines.get(y).getLsb().testBit(x) ? 1 : 0;
         int msb = (imageLines.get(y).getMsb().testBit(x) ? 1 : 0) << 1;
         return (lsb | msb);

@@ -34,17 +34,17 @@ class BitVectorExtraTest {
                 is(equalTo("0000000000000000001111111100000000000000001100110000000000101010")));
     }
 
-    @Test
-    void testMaskMSB() {
-        assertThat(v1.maskMSB(10).toString(),
-                is(equalTo("1111111111111111111111111111111111111111111111111111110000000000")));
-    }
-
-    @Test
-    void testMaskLSB() {
-        assertThat(v1.maskLSB(10).not().toString(),
-                is(equalTo("1111111111111111111111111111111111111111111111111111110000000000")));
-    }
+//    @Test
+//    void testMaskMSB() {
+//        assertThat(v1.maskMSB(10).toString(),
+//                is(equalTo("1111111111111111111111111111111111111111111111111111110000000000")));
+//    }
+//
+//    @Test
+//    void testMaskLSB() {
+//        assertThat(v1.maskLSB(10).not().toString(),
+//                is(equalTo("1111111111111111111111111111111111111111111111111111110000000000")));
+//    }
 
     @Disabled
     @Test

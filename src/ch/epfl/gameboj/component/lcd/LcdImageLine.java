@@ -10,8 +10,7 @@ import ch.epfl.gameboj.bits.Bits;
 
 public class LcdImageLine {
 
-    public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR,
-            BLANK_LCD_VECTOR);
+    public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR, BLANK_LCD_VECTOR);
 
     private final BitVector LSB;
     private final BitVector MSB;
@@ -28,9 +27,7 @@ public class LcdImageLine {
      *            l'opacité (alpha)
      */
     public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
-
-        Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(),
-                "The three BitVectors must have the same length");
+        Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(), "The three BitVectors must have the same length");
 
         this.LSB = lsb;
         this.MSB = msb;
@@ -179,9 +176,6 @@ public class LcdImageLine {
         int size = size();
         Preconditions.checkArgument(other.size() == size, "The two image lines must have the same length");
         Objects.checkIndex(n, size);
-
-        // System.out.println("other msb clipped " + other.MSB.clipMSB(n));
-        // System.out.println("other lsb clipped " + other.LSB.clipMSB(n));
 
         return new LcdImageLine(MSB.clipLSB(n).or(other.MSB.clipMSB(n)), LSB.clipLSB(n).or(other.LSB.clipMSB(n)),
                 opacity.or(other.opacity));

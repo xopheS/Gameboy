@@ -1,7 +1,6 @@
 package ch.epfl.gameboj;
 
 public interface AddressMap {
-    // TODO CHECK FOR REDUNDANCY AND IMPRECISIONS
     int BOOT_ROM_START = 0x0000;
     // Jump vectors
     int[] RESETS = new int[] { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 };

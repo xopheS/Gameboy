@@ -11,9 +11,7 @@ public class OamRamController extends RamController {
 
     public enum DISPLAY_DATA { Y_COORD, X_COORD, TILE_INDEX, ATTRIBUTES }
     
-    public enum ATTRIBUTES implements Bit {
-        P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
-    }
+    public enum ATTRIBUTES implements Bit { P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG }
     
     public static final int MAX_SPRITES = 40;
     public static final int SPRITES_PER_LINE = 10;

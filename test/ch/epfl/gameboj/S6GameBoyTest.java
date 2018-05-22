@@ -61,12 +61,12 @@ public final class S6GameBoyTest {
                 assert romData.length == 0x8000;
                 GameBoy gb = new GameBoy(CartridgeTest.cartridgeWithData(romData));
                 RecordingComponent recordingC = new RecordingComponent(s);
-                recordingC.attachTo(gb.bus());
+                recordingC.attachTo(gb.getBus());
                 int cycles = reqCycles.next();
-                while (gb.cycles() < cycles) {
-                    long nextCycles = Math.min(gb.cycles() + 17_556, cycles);
+                while (gb.getCycles() < cycles) {
+                    long nextCycles = Math.min(gb.getCycles() + 17_556, cycles);
                     gb.runUntil(nextCycles);
-                    assertEquals(nextCycles, gb.cycles());
+                    assertEquals(nextCycles, gb.getCycles());
                     gb.cpu().requestInterrupt(Cpu.Interrupt.VBLANK);
                 }
             }

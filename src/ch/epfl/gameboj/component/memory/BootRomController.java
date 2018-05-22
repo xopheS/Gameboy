@@ -24,7 +24,7 @@ import ch.epfl.gameboj.component.cartridge.Cartridge;
  */
 public final class BootRomController implements Component {
     
-    private final Rom bootRom;
+    private final Rom bootRom = new Rom(BootRom.DATA);
     private final Cartridge cartridge;
     private boolean isActivated = true;
 
@@ -39,7 +39,6 @@ public final class BootRomController implements Component {
      *             si la cartouche fournie est null
      */
     public BootRomController(Cartridge cartridge) {
-        bootRom = new Rom(BootRom.DATA);
         this.cartridge = Objects.requireNonNull(cartridge, "The cartridge cannot be null.");
     }
     

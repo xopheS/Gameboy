@@ -12,10 +12,6 @@ public final class DmaController {
     private int startAddress;
     private int currentIndex = 0;
 
-    private DmaController() {
-
-    }
-
     void setBus(Bus bus) {
         this.bus = bus;
     }
@@ -24,10 +20,7 @@ public final class DmaController {
         if (!isActive) {
             startAddress = Preconditions.checkBits8(addressMSB) << Byte.SIZE;
             Preconditions.checkArgument(startAddress % 0x100 == 0, "The start address can only be set in increments of 0x100");
-            if (bus == null)
-                throw new IllegalStateException("The bus has not been set");
-            // if (isActive) throw new IllegalStateException("A quick copy is already taking
-            // place"); TODO: can a quick copy be initiated while another one is active?
+            if (bus == null) throw new IllegalStateException("The bus has not been set");
             isActive = true;
         }
     }

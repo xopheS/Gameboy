@@ -1,8 +1,5 @@
 package ch.epfl.gameboj.component.memory;
 
-import java.util.Collections;
-import java.util.Map;
-
 import ch.epfl.gameboj.Preconditions;
 
 /**
@@ -13,10 +10,6 @@ import ch.epfl.gameboj.Preconditions;
  */
 
 public final class Ram {
-    
-    private final Map<Integer, Integer> ramSizeNum = Collections.unmodifiableMap(Map.of(
-            0, 0x00)); //TODO finish this map
-
     private final byte[] data;
     
     /**
