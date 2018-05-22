@@ -1,7 +1,7 @@
 package ch.epfl.gameboj.component.memory;
 
 import static ch.epfl.gameboj.component.memory.OamRamController.SPRITE_ATTR_BYTES;
-import static ch.epfl.gameboj.component.memory.OamRamController.OAM_SPRITES;
+import static ch.epfl.gameboj.component.memory.OamRamController.MAX_SPRITES;
 import static ch.epfl.gameboj.component.memory.OamRamController.SPRITE_XOFFSET;
 import static ch.epfl.gameboj.component.memory.OamRamController.SPRITE_YOFFSET;
 
@@ -49,7 +49,7 @@ class OamRamControllerTest {
 
     @RepeatedTest(5)
     void testSpritesIntersectingLine() {
-        int sIndex1 = randomGen.nextInt(OAM_SPRITES), sIndex2 = randomGen.nextInt(OAM_SPRITES), sIndex3 = randomGen.nextInt(OAM_SPRITES);
+        int sIndex1 = randomGen.nextInt(MAX_SPRITES), sIndex2 = randomGen.nextInt(MAX_SPRITES), sIndex3 = randomGen.nextInt(MAX_SPRITES);
         placeSprite(sIndex1, 30, 50);
         placeSprite(sIndex2, 30, 52);
         placeSprite(sIndex3, 30, 51);

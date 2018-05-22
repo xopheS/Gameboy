@@ -16,8 +16,8 @@ public class OamRamController implements IRamController {
         P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
     }
     
-    public static final int OAM_SPRITES = 40;
-    private static final int MAX_SPRITES = 10;
+    public static final int MAX_SPRITES = 40;
+    public static final int SPRITES_PER_LINE = 10;
     public static final int SPRITE_ATTR_BYTES = 4;
     public static final int SPRITE_XOFFSET = 8;
     public static final int SPRITE_YOFFSET = 16;
@@ -31,15 +31,16 @@ public class OamRamController implements IRamController {
     public Integer[] spritesIntersectingLine(int lineIndex, int height) {
         int scanIndex = 0, foundSprites = 0;
 
-        Integer[] intersect = new Integer[MAX_SPRITES];
+        Integer[] intersect = new Integer[SPRITES_PER_LINE];
 
-        while (foundSprites < MAX_SPRITES && scanIndex < OAM_SPRITES) {
+        while (foundSprites < SPRITES_PER_LINE && scanIndex < MAX_SPRITES) {
             int spriteY = readAttr(scanIndex, DISPLAY_DATA.Y_COORD) - SPRITE_YOFFSET;
+            
             if (lineIndex >= spriteY && lineIndex < spriteY + height) {
                 intersect[foundSprites] = packSpriteInfo(scanIndex);
                 foundSprites++;
             }
-
+            
             scanIndex++;
         }
 
@@ -50,7 +51,7 @@ public class OamRamController implements IRamController {
         return intersectIndex;
     }
     
-    private Integer[] trimIntArray(Integer[] array, int trimIndex) {
+    public Integer[] trimIntArray(Integer[] array, int trimIndex) {
         Integer[] intersectIndex = new Integer[trimIndex];
 
         for (int i = 0; i < trimIndex; ++i) {
@@ -65,7 +66,7 @@ public class OamRamController implements IRamController {
     }
     
     public int readAttr(int spriteIndex, DISPLAY_DATA attr) {
-        return read(AddressMap.OAM_START + Objects.checkIndex(spriteIndex, OAM_SPRITES) * SPRITE_ATTR_BYTES + attr.ordinal());
+        return read(AddressMap.OAM_START + Objects.checkIndex(spriteIndex, MAX_SPRITES) * SPRITE_ATTR_BYTES + attr.ordinal());
     }
     
     public boolean readAttr(int spriteIndex, ATTRIBUTES attribute) {

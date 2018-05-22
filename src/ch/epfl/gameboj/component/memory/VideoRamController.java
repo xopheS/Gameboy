@@ -3,10 +3,10 @@ package ch.epfl.gameboj.component.memory;
 import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
-import ch.epfl.gameboj.Preconditions;
 
 public class VideoRamController implements IRamController {
     public static final int BYTES_PER_TILE = 16;
+    public static final int TILE_SOURCE_HALF = 128;
     
     private IRamController ramController;
     
@@ -23,7 +23,6 @@ public class VideoRamController implements IRamController {
      * @return
      */
     public int tileLineBytes(int tileTypeIndex, int tileLineIndex, boolean tileSource, boolean msb) {
-        Objects.checkIndex(tileTypeIndex, 384);
         return read(tileByteAddress(tileTypeIndex, tileLineIndex, tileSource) + (msb ? 1 : 0));
     }
 
@@ -50,12 +49,12 @@ public class VideoRamController implements IRamController {
         // TODO When double character composition, only even-numbered indexes can be
         // selected, when odd will be the same as even, how to do this?
         if (tileSource) {
-            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * BYTES_PER_TILE + tileLineIndex * 2;
+            return AddressMap.TILE_SOURCE[1] + tileTypeIndex * BYTES_PER_TILE + 2 * tileLineIndex;
         } else {
-            if (tileTypeIndex >= 0 && tileTypeIndex < 128) {
-                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex + 128) * BYTES_PER_TILE + tileLineIndex * 2;
+            if (tileTypeIndex >= 0 && tileTypeIndex < TILE_SOURCE_HALF) {
+                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex + TILE_SOURCE_HALF) * BYTES_PER_TILE + 2 * tileLineIndex;
             } else if (tileTypeIndex >= 128 && tileTypeIndex < 256) {
-                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex - 128) * BYTES_PER_TILE + tileLineIndex * 2;
+                return AddressMap.TILE_SOURCE[0] + (tileTypeIndex - TILE_SOURCE_HALF) * BYTES_PER_TILE + 2 * tileLineIndex;
             } else {
                 throw new IllegalArgumentException("tile_type_index wrong! " + tileTypeIndex);
             }
