@@ -188,15 +188,9 @@ public final class LcdController implements Component, Clocked {
         return lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS);
     }
 
-    private void setMode(int mode) {
-        Preconditions.checkArgument(mode >= 0 && mode < 4, "The mode must be between 0 and 3");
-        
+    private void setMode(int mode) {        
         lcdRegs.setBit(LCDReg.STAT, STAT.MODE0, Bits.test(mode, 0));
         lcdRegs.setBit(LCDReg.STAT, STAT.MODE1, Bits.test(mode, 1));
-
-        if (currentImage == 1) {
-            System.out.println("cycles: " + cyc + " since frame: " + cycFromImg + " | mode: " + prevMode + " -> " + mode);
-        }
         
         switch (mode) {
         case 0:
@@ -208,10 +202,7 @@ public final class LcdController implements Component, Clocked {
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) {
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
             }
-            if (currentImage == 1) {
-                System.out.println("cycles: " + cyc + " since frame: " + cycFromImg + " | request VBLANK interrupt");
-            }
-            cpu.requestInterrupt(Interrupt.VBLANK); // TODO before or after lcd stat?
+            cpu.requestInterrupt(Interrupt.VBLANK);
             break;
         case 2:
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE2)) {
@@ -463,6 +454,7 @@ public final class LcdController implements Component, Clocked {
             switch (address) {
             case AddressMap.REG_LCDC:
                 lcdRegs.set(LCDReg.LCDC, data);
+                if (lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN)) System.out.println("Window bit active");
                 if (!lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS)) {
                     turnOff();
                 }
@@ -507,9 +499,6 @@ public final class LcdController implements Component, Clocked {
 
     private void modifyLYorLYC(LCDReg reg, int data) {
         Preconditions.checkArgument(reg == LCDReg.LY || reg == LCDReg.LYC);
-        
-        if (currentImage == 1 && reg == LCDReg.LY && data != lcdRegs.get(LCDReg.LY))
-            System.out.println("cycles: " + cyc + " since frame: " + cycFromImg + " | LY: " + lcdRegs.get(LCDReg.LY) + " -> " + data);
 
         lcdRegs.set(reg, Preconditions.checkBits8(data));
 

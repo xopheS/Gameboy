@@ -72,18 +72,18 @@ public class Main extends Application {
         emulationView.setFitWidth(2 * LCD_WIDTH);
         emulationView.setFitHeight(2 * LCD_HEIGHT);
 
-//        BorderPane simpleBorderPane = new BorderPane(emulationView);
-//
-//        Scene simpleModeScreen = new Scene(simpleBorderPane);
-//
-//        BorderPane extendedBorderPane = new BorderPane();
-//
-//        // extendedBorderPane.setTop(toolBar); TODO fix code duplication
-//        extendedBorderPane.setCenter(emulationView); // Copy the emulation view actually or it doesn't work TODO
-//
-//        // TODO add gameboy overlay
-//
-//        Scene extendedModeScreen = new Scene(extendedBorderPane);
+        BorderPane simpleBorderPane = new BorderPane(emulationView);
+
+        Scene simpleModeScreen = new Scene(simpleBorderPane);
+
+        BorderPane extendedBorderPane = new BorderPane();
+
+        // extendedBorderPane.setTop(toolBar); TODO fix code duplication
+        extendedBorderPane.setCenter(emulationView); // Copy the emulation view actually or it doesn't work TODO
+
+        // TODO add gameboy overlay
+
+        Scene extendedModeScreen = new Scene(extendedBorderPane);
 
         // Development mode screen
         BorderPane developmentBorderPane = new BorderPane();
@@ -272,7 +272,6 @@ public class Main extends Application {
                 jp.keyPressed(Key.B);
                 break;
             case S:
-                System.out.println("Press start");
                 jp.keyPressed(Key.START);
                 break;
             case SPACE:
@@ -291,13 +290,6 @@ public class Main extends Application {
                 jp.keyPressed(Key.LEFT);
                 break;
             }
-
-            /*
-             * switch (e.getText()) { //TODO this doesn't work, why? case "A":
-             * System.out.println("yiss"); jp.keyPressed(Key.A); break; case "B":
-             * jp.keyPressed(Key.B); break; case "S": jp.keyPressed(Key.START); break; case
-             * "Space": jp.keyPressed(Key.START); break; }
-             */
         });
 
         node.setOnKeyReleased(e -> {
@@ -308,7 +300,7 @@ public class Main extends Application {
             case B:
                 jp.keyReleased(Key.B);
                 break;
-            case C:
+            case S:
                 jp.keyReleased(Key.START);
                 break;
             case SPACE:
@@ -327,12 +319,6 @@ public class Main extends Application {
                 jp.keyReleased(Key.LEFT);
                 break;
             }
-
-            /*
-             * switch (e.getText()) { case "A": jp.keyReleased(Key.A); break; case "B":
-             * jp.keyReleased(Key.B); break; case "S": jp.keyReleased(Key.START); break;
-             * case "Space": jp.keyReleased(Key.START); break; }
-             */
         });
     }
 }
