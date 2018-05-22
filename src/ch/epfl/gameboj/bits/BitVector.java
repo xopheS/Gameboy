@@ -21,17 +21,6 @@ public final class BitVector {
 
     private final int[] bitVector;
 
-    // TEST FUNCTION////////////////////////////////////////////
-    public static BitVector rand() {
-        int[] val = { -1, -8, 2839, 7 };
-        return new BitVector(val);
-    }
-
-    public BitVector(BitVector b) {
-        this(b.bitVector);
-    }
-    //////////////////////////////////////////////////////////
-
     private static int[] bitVector(int size, boolean initialValue) {
         Preconditions.checkArgument(size % Integer.SIZE == 0 && size > 0);
         int[] bitVector = new int[size / Integer.SIZE];

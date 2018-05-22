@@ -85,57 +85,27 @@ public final class GameBoy {
         }
     }
 
-    /**
-     * Getter du cycle actuel.
-     *
-     * @return le cycle actuel
-     */
     public long getCycles() {
         return currentCycle;
     }
 
-    /**
-     * Getter du timer.
-     *
-     * @return le timer de la Gameboy
-     */
     public Timer getTimer() {
         return timer;
     }
 
-    /**
-     * Getter du bus.
-     *
-     * @return le bus de la Gameboy
-     */
     public Bus getBus() {
         return bus;
     }
 
-    /**
-     * Getter du cpu.
-     *
-     * @return le processeur de la Gameboy
-     */
-    public Cpu cpu() {
+    public Cpu getCpu() {
         return cpu;
     }
 
-    /**
-     * Getter de LcdController.
-     *
-     * @return le LcdController de la Gameboy
-     */
-    public LcdController lcdController() {
+    public LcdController getLcdController() {
         return lcdController;
     }
 
-    /**
-     * Getter du joypad.
-     *
-     * @return le joypad de la Gameboy
-     */
-    public Joypad joypad() {
+    public Joypad getJoypad() {
         return joypad;
     }
 }

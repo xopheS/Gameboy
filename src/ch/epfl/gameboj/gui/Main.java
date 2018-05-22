@@ -49,7 +49,7 @@ public class Main extends Application {
         BorderPane mainPane = new BorderPane(emulationView);
         
         Scene mainScene = new Scene(mainPane);
-        setInput(mainScene, gameboj.joypad());
+        setInput(mainScene, gameboj.getJoypad());
 
         primaryStage.setScene(mainScene);
         primaryStage.show();
@@ -64,7 +64,7 @@ public class Main extends Application {
 
                 gameboj.runUntil(elapsedCycles);
 
-                emulationView.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
+                emulationView.setImage(ImageConverter.convert(gameboj.getLcdController().currentImage()));
             }
         }.start();
     }

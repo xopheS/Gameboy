@@ -46,7 +46,7 @@ public class OamRamController extends RamController {
         return intersectIndex;
     }
     
-    public Integer[] trimIntArray(Integer[] array, int trimIndex) {
+    private Integer[] trimIntArray(Integer[] array, int trimIndex) {
         Integer[] intersectIndex = new Integer[trimIndex];
 
         for (int i = 0; i < trimIndex; ++i) {
@@ -56,7 +56,7 @@ public class OamRamController extends RamController {
         return intersectIndex;
     }
     
-    public int packSpriteInfo(int spriteIndex) {
+    private int packSpriteInfo(int spriteIndex) {
         return Bits.make16(readAttr(spriteIndex, DISPLAY_DATA.X_COORD), spriteIndex);
     }
     

@@ -30,9 +30,7 @@ public final class ImageConverter {
         PixelWriter pWriter = wImage.getPixelWriter();
 
         for (int y = 0; y < lcdImage.getHeight(); ++y) {
-
             for (int x = 0; x < lcdImage.getWidth(); ++x) {
-
                 int color = 0;
 
                 switch (lcdImage.get(x, y)) {
@@ -53,8 +51,7 @@ public final class ImageConverter {
                 pWriter.setArgb(x, y, color);
             }
         }
-
+        
         return wImage;
     }
-
 }

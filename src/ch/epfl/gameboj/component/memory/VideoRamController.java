@@ -26,6 +26,7 @@ public class VideoRamController extends RamController {
 
     /**
      * Cette méthode permet d'obtenir un octet (msb ou lsb) dans les 384 tuiles du tileset, pour un sprite.
+     * 
      * @param tileTypeIndex
      * @param tileLineIndex
      * @param tileSource
@@ -38,12 +39,13 @@ public class VideoRamController extends RamController {
     
     /**
      * Cette méthode permet d'obtenir l'adresse d'un octet correspondant au lsb ou msb d'une ligne donnée d'une tuile donnée.
+     * 
      * @param tileTypeIndex
      * @param tileLineIndex
      * @param tileSource
      * @return
      */
-    public int tileByteAddress(int tileTypeIndex, int tileLineIndex, boolean tileSource) {
+    private int tileByteAddress(int tileTypeIndex, int tileLineIndex, boolean tileSource) {
         if (tileSource) {
             return AddressMap.TILE_SOURCE[1] + tileTypeIndex * BYTES_PER_TILE + 2 * tileLineIndex;
         } else {
