@@ -53,9 +53,6 @@ public interface Preconditions {
      * @param b
      *            L'expression booléenne à tester
      *
-     * @param msg
-     *            Le message à afficher en cas d'exception
-     *
      * @throws IllegalArgumentException
      *             Si l'évaluation de b retourne false
      */

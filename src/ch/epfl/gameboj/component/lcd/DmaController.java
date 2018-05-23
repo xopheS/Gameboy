@@ -5,8 +5,8 @@ import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
 
 public final class DmaController {
-    private final static int COPY_LENGTH = 160;
-    private final static DmaController dmaController = new DmaController();
+    private static final int COPY_LENGTH = 160;
+    private static final DmaController dmaController = new DmaController();
     private Bus bus;
     private boolean isActive = false;
     private int startAddress;

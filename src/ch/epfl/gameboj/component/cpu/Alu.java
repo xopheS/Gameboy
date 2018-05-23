@@ -115,7 +115,7 @@ public final class Alu {
     public static int add(int l, int r, boolean c0) {
         int initialCarry = c0 ? 1 : 0;
         int javaSum = Preconditions.checkBits8(l) + Preconditions.checkBits8(r) + initialCarry;
-        int result = Bits.clip(8, javaSum);
+        int result = Bits.clip(Byte.SIZE, javaSum);
         return packValueZNHC(result, result == 0, false, Bits.clip(4, l) + Bits.clip(4, r) + initialCarry > 0xF,
                 javaSum > 0xFF);
     }
@@ -161,7 +161,7 @@ public final class Alu {
      * @see #add16H(int, int)
      */
     public static int add16L(int l, int r) {
-        int lAdd = add(Bits.clip(8, Preconditions.checkBits16(l)), Bits.clip(8, Preconditions.checkBits16(r)));
+        int lAdd = add(Bits.clip(Byte.SIZE, Preconditions.checkBits16(l)), Bits.clip(8, Preconditions.checkBits16(r)));
         return packValueZNHC(Bits.clip(16, l + r), false, false, Bits.test(lAdd, Flag.H.index()), Bits.test(lAdd, Flag.C.index()));
     }
 

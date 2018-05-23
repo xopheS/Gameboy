@@ -90,7 +90,6 @@ public final class BitVector {
                 | (bitVector[Math.floorMod((startIntIndex + 1), bitVector.length)] << (Integer.SIZE - f.mod));
     }
 
-    // Constructeur privé
     private BitVector(int[] bitVector) {
         this.bitVector = bitVector;
     }

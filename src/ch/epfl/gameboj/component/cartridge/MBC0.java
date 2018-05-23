@@ -13,10 +13,10 @@ import ch.epfl.gameboj.component.memory.Rom;
  * @author David Cian (287967)
  *
  */
-public class MBC0 implements Component {
+public class MBC0 implements Component { 
+    private static final int MBC0_SIZE = 32768;
 
     private final Rom rom;
-    private final static int MBC0_SIZE = 32768;
 
     /**
      * Ceci est le constructeur publique de MBC0, qui effectue l'empaquetage d'une

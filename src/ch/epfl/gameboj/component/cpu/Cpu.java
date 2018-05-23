@@ -24,21 +24,21 @@ public final class Cpu implements Component, Clocked {
     private static final Opcode[] DIRECT_OPCODE_TABLE = buildOpcodeTable(Opcode.Kind.DIRECT);
     private static final Opcode[] PREFIXED_OPCODE_TABLE = buildOpcodeTable(Opcode.Kind.PREFIXED);
 
-    public static final int OPCODE_PREFIX = 0xCB;
+    private static final int OPCODE_PREFIX = 0xCB;
 
     private Bus bus;
     private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
 
     // PC = program counter, stores the address of the next instruction
-    private int PC = 0;
+    private int PC;
     // SP = stack pointer, stores the address of the top of the stack
-    private int SP = 0;
+    private int SP;
     // IME = interrupt master enable, tells us if interrupts are enabled or not
-    private boolean IME = false;
+    private boolean IME;
     // IE = interrupt enable, tells us if corresponding interrupt is enabled
-    private int IE = 0;
+    private int IE;
     // IF = interrupt flags, tells us if corresponding interrupt is happening
-    private int IF = 0;
+    private int IF;
 
     private enum Reg implements Register {
         A, F, B, C, D, E, H, L
