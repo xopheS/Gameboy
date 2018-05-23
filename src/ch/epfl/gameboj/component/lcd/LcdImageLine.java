@@ -8,6 +8,13 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.Bits;
 
+/**
+ * Cette classe représente une ligne de l'image qui va s'afficher à l'écran de la gameboj
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public class LcdImageLine {
 
     public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR, BLANK_LCD_VECTOR);

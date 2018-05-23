@@ -1,3 +1,4 @@
+
 package ch.epfl.gameboj.component.lcd;
 
 import static ch.epfl.gameboj.component.lcd.LcdImage.BLANK_LCD_IMAGE;
@@ -28,6 +29,13 @@ import ch.epfl.gameboj.component.memory.OamRamController.DISPLAY_DATA;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.VideoRamController;
 
+/**
+ * Cette classe modélise le controlleur de l'écran à cristaux liquide de la Gameboy.
+ *
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class LcdController implements Component, Clocked {
 
     private enum LCDReg implements Register { LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX }
@@ -74,6 +82,12 @@ public final class LcdController implements Component, Clocked {
         oamRamController = new OamRamController(new Ram(AddressMap.OAM_SIZE), AddressMap.OAM_START);
     }
 
+    
+  /**
+   * Cette méthode retourne l'image actuellement affichée à l'écran
+   * 
+   * @return l'image affichée à l'écran
+   */
     public LcdImage currentImage() {
         return Objects.requireNonNull(displayedImage, "Displayed image cannot be null");
     }

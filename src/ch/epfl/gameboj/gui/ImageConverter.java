@@ -5,6 +5,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
+/**
+ * Cette classe représente le convertisseur d'image de la gameboj en image JavaFX
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class ImageConverter {
 
     private enum JavaFXColor {
@@ -25,6 +32,13 @@ public final class ImageConverter {
         }
     }
 
+  /**
+   * Cette méthode convertit l'image donnée en argument en image JavaFx
+   * 
+   * @param lcdImage
+   *          l'image
+   * @return une image JavaFx
+   */
     public static Image convert(LcdImage lcdImage) {
         WritableImage wImage = new WritableImage(lcdImage.getWidth(), lcdImage.getHeight());
         PixelWriter pWriter = wImage.getPixelWriter();

@@ -12,6 +12,13 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 
+/**
+ * Cette classe représente une image qui va s'afficher à l'écran de la gameboj
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public class LcdImage {
 
     public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT, Collections.nCopies(LCD_HEIGHT, BLANK_LCD_IMAGE_LINE));

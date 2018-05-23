@@ -7,10 +7,30 @@ import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
+
+/**
+ * Cette classe représente le controlleur de la mémoire d'attributs d'objets du controlleur lcd
+ *
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ */
 public class OamRamController extends RamController { 
 
+  
+    /**
+     * Représente les informations d'affichage d'un sprite
+     * @author Christophe Saad (282557)
+     * @author David Cian (287967)
+     *
+     */
     public enum DISPLAY_DATA { Y_COORD, X_COORD, TILE_INDEX, ATTRIBUTES }
     
+    /**
+     * Représente les attributs d'un sprite
+     * @author Christophe Saad (282557)
+     * @author David Cian (287967)
+     *
+     */
     public enum ATTRIBUTES implements Bit { P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG }
     
     public static final int MAX_SPRITES = 40;
@@ -19,18 +39,29 @@ public class OamRamController extends RamController {
     public static final int SPRITE_XOFFSET = 8;
     public static final int SPRITE_YOFFSET = 16;
     
+    
+  /**
+   * Construit un contrôleur pour la mémoire d'attributs d'objets donnée en argument, accessible à
+   * partir de l'adresse donnée
+   * 
+   * @param ram
+   *          la mémoire d'attributs d'objets
+   * @param startAddress
+   *          l'adresse de début
+   */
     public OamRamController(Ram ram, int startAddress) {
         super(ram, startAddress);
     }
     
-    /**
-     * Cette méthode calcule les sprites qui intersectent la ligne d'index donné.
-     * @param lineIndex
-     * l'index de la ligne
-     * @param height
-     * la hauteur des sprites
-     * @return un tableau contenant les abscisses et les index des tuiles
-     */
+  /**
+   * Cette méthode calcule les sprites qui intersectent la ligne d'index donné.
+   * 
+   * @param lineIndex
+   *          l'index de la ligne
+   * @param height
+   *          la hauteur des sprites
+   * @return un tableau contenant les abscisses et les index des tuiles
+   */
     public Integer[] spritesIntersectingLine(int lineIndex, int height) {
         int scanIndex = 0, foundSprites = 0;
 
@@ -68,11 +99,30 @@ public class OamRamController extends RamController {
         return Bits.make16(readAttr(spriteIndex, DISPLAY_DATA.X_COORD), spriteIndex);
     }
     
+
+  /**
+   * Cette méthode permet de lire les informations d'affichage d'un sprite
+   * 
+   * @param spriteIndex
+   *          l'index du sprite
+   * @param attr
+   *          l'information à extraire
+   * @return une valeur de 8 bits représentant l'information
+   */
     public int readAttr(int spriteIndex, DISPLAY_DATA attr) {
         return read(AddressMap.OAM_START 
             + Objects.checkIndex(spriteIndex, MAX_SPRITES) * SPRITE_ATTR_BYTES + attr.ordinal());
     }
     
+  /**
+   * Cette méthode permet de lire les attributs d'un sprite
+   * 
+   * @param spriteIndex
+   *          l'index du sprite
+   * @param attribute
+   *          l'attribut à lire
+   * @return la valeur de l'attribut
+   */
     public boolean readAttr(int spriteIndex, ATTRIBUTES attribute) {
         return Bits.test(readAttr(spriteIndex, DISPLAY_DATA.ATTRIBUTES), attribute);
     }    

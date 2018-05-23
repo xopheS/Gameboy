@@ -9,6 +9,13 @@ import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
+/**
+ * Cette classe représente le clavier de la gameboj.
+ *
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class Joypad implements Component {
 
     private final Cpu cpu;
@@ -17,8 +24,21 @@ public final class Joypad implements Component {
     private int line0 = 0;
     private int line1 = 0;
 
+    
+    /**
+     * Touches du clavier
+     * @author Christophe Saad (282557)
+     * @author David Cian (287967)
+     *
+     */
     public enum Key { RIGHT, LEFT, UP, DOWN, A, B, SELECT, START }
     
+    /**
+     * Etat du clavier
+     * @author Christophe Saad (282557)
+     * @author David Cian (287967)
+     *
+     */
     public enum KBState implements Bit { COL0, COL1, COL2, COL3, LINE0, LINE1, UNUSED_6, UNUSED_7 }
     
     private static final int LINE_LENGTH = 4;

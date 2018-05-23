@@ -9,5 +9,12 @@ package ch.epfl.gameboj.component;
  */
 public interface Clocked {
 
+    
+  /**
+   * Cette méthode décrit le fonctionnement du composant
+   * 
+   * @param cycle
+   *          la valeur du cycle actuel
+   */
     void cycle(long cycle);
 }
