@@ -23,6 +23,14 @@ public class OamRamController extends RamController {
         super(ram, startAddress);
     }
     
+    /**
+     * Cette méthode calcule les sprites qui intersectent la ligne d'index donné.
+     * @param lineIndex
+     * l'index de la ligne
+     * @param height
+     * la hauteur des sprites
+     * @return un tableau contenant les abscisses et les index des tuiles
+     */
     public Integer[] spritesIntersectingLine(int lineIndex, int height) {
         int scanIndex = 0, foundSprites = 0;
 
@@ -61,7 +69,8 @@ public class OamRamController extends RamController {
     }
     
     public int readAttr(int spriteIndex, DISPLAY_DATA attr) {
-        return read(AddressMap.OAM_START + Objects.checkIndex(spriteIndex, MAX_SPRITES) * SPRITE_ATTR_BYTES + attr.ordinal());
+        return read(AddressMap.OAM_START 
+            + Objects.checkIndex(spriteIndex, MAX_SPRITES) * SPRITE_ATTR_BYTES + attr.ordinal());
     }
     
     public boolean readAttr(int spriteIndex, ATTRIBUTES attribute) {

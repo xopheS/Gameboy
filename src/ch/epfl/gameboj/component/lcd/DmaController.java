@@ -8,9 +8,9 @@ public final class DmaController {
     private static final int COPY_LENGTH = 160;
     private static final DmaController dmaController = new DmaController();
     private Bus bus;
-    private boolean isActive = false;
+    private boolean isActive;
     private int startAddress;
-    private int currentIndex = 0;
+    private int currentIndex;
 
     void setBus(Bus bus) {
         this.bus = bus;
@@ -19,7 +19,8 @@ public final class DmaController {
     void start(int addressMSB) {
         if (!isActive) {
             startAddress = Preconditions.checkBits8(addressMSB) << Byte.SIZE;
-            Preconditions.checkArgument(startAddress % 0x100 == 0, "The start address can only be set in increments of 0x100");
+            Preconditions.checkArgument(startAddress % 0x100 == 0,
+                "The start address can only be set in increments of 0x100");
             if (bus == null) throw new IllegalStateException("The bus has not been set");
             isActive = true;
         }

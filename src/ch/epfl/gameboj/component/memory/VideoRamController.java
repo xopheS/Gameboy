@@ -5,7 +5,8 @@ import ch.epfl.gameboj.AddressMap;
 public class VideoRamController extends RamController {
 
     public static final int BYTES_PER_TILE = 16;
-    public static final int TILE_SOURCE_HALF = 128;
+    public static final int TILE_SOURCE_SIZE = 256;
+    public static final int TILE_SOURCE_HALF = TILE_SOURCE_SIZE / 2;
     
     public VideoRamController(Ram ram, int startAddress) {
         super(ram, startAddress);
@@ -40,7 +41,8 @@ public class VideoRamController extends RamController {
     }
     
     /**
-     * Cette méthode permet d'obtenir l'adresse d'un octet correspondant au lsb ou msb d'une ligne donnée d'une tuile donnée.
+     * Cette méthode permet d'obtenir l'adresse d'un octet correspondant
+     *  au lsb ou msb d'une ligne donnée d'une tuile donnée.
      * 
      * @param tileTypeIndex
      * l'index de la tuile dans le tileset
@@ -56,7 +58,7 @@ public class VideoRamController extends RamController {
         } else {
             if (tileTypeIndex >= 0 && tileTypeIndex < TILE_SOURCE_HALF) {
                 return AddressMap.TILE_SOURCE[0] + (tileTypeIndex + TILE_SOURCE_HALF) * BYTES_PER_TILE + 2 * tileLineIndex;
-            } else if (tileTypeIndex >= 128 && tileTypeIndex < 256) {
+            } else if (tileTypeIndex >= TILE_SOURCE_HALF && tileTypeIndex < TILE_SOURCE_SIZE) {
                 return AddressMap.TILE_SOURCE[0] + (tileTypeIndex - TILE_SOURCE_HALF) * BYTES_PER_TILE + 2 * tileLineIndex;
             } else {
                 throw new IllegalArgumentException("tile_type_index wrong! " + tileTypeIndex);
