@@ -36,27 +36,34 @@ public final class LcdController implements Component, Clocked {
 
     private enum STAT implements Bit { MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED7 }
 
-    // A tile is 8 x 8 bits
+    // Une tuile a une taille de 8 x 8 pixels
     private static final int TILE_SIZE = 8;
-    // Background size: 256 x 256, 32 x 32 tiles
+    // Taille de l'image de fond: 256 x 256 pixels, 32 x 32 tuiles
     private static final int BG_SIZE = 256;
     private static final int BG_TILE_SIZE = BG_SIZE / TILE_SIZE;
-    // Resolution: 160 x 144, 20 x 18 tiles
+    // Résolution: 160 x 144, 20 x 18 tuiles
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
     private static final int WIN_SIZE = BG_SIZE, WIN_TILE_SIZE = BG_TILE_SIZE;
-    // Max sprites: 40 per screen, 10 per line
+    // L'abscisse de la fenêtre à l'écran est décalée de 7 pixels vers la droite
     private static final int WX_OFFSET = 7;
-    // Cycle durations
+    // Durées en cycle des modes/opérations
     private static final int MODE2_DURATION = 20, MODE3_DURATION = 43, MODE0_DURATION = 51;
     public static final int LINE_CYCLE_DURATION = MODE2_DURATION + MODE3_DURATION + MODE0_DURATION;
     public static final int IMAGE_CYCLE_DURATION = 154 * LINE_CYCLE_DURATION;
+    // L'image actuellement affichée par le contrôleur LCD
     private LcdImage displayedImage = BLANK_LCD_IMAGE;
+    // Un contrôleur pour la VRAM
     private final VideoRamController videoRamController;
+    // Un contrôleur pour la OAM
     private final OamRamController oamRamController;
     private final Cpu cpu;
+    // Cet attribut stocke le prochain cycle où des opérations sont à effectuer
     private long nextNonIdleCycle = Long.MAX_VALUE;
+    // Cet attribut représente l'index de la ligne de la fenêtre à être dessinée
     private int winY;
+    // Ce constructeur permet de construire la prochaine image
     private LcdImage.Builder nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+    // Un contrôleur DMA permet d'assurer la copie rapide
     private final DmaController dmaController = DmaController.getDmaController();
     private final RegisterFile<Register> lcdRegs = new RegisterFile<>(LCDReg.values());
     private long lcdOnCycle;
@@ -74,30 +81,50 @@ public final class LcdController implements Component, Clocked {
         oamRamController = new OamRamController(new Ram(AddressMap.OAM_SIZE), AddressMap.OAM_START);
     }
 
+    /**
+     * Ce getter retourne l'image actuelle du contrôleur LCD.
+     * @return
+     */
     public LcdImage currentImage() {
         return Objects.requireNonNull(displayedImage, "Displayed image cannot be null");
     }
 
     @Override
     public void cycle(long cycle) {
+        // Si le contrôleur était éteint et doit être rallumé, il est allumé
         if (nextNonIdleCycle == Long.MAX_VALUE && isOn()) {
             turnOn(cycle);
         }
 
+        // Si la copie DMA est active, effectue la copie à raison d'un octet par cycle
         if (dmaController.isActive()) {
             dmaController.copy();
         }
 
+        // Si le contrôleur est allumé et qu'il y a quelquechose à faire pendant ce cycle, effectue un cycle
         if (isOn() && cycle == nextNonIdleCycle) {
+            // Le nombre de cycles depuis l'allumage
             long cycFromPowOn = cycle - lcdOnCycle; 
+            // Le nombre de cycles depuis le début du dessin de l'image
             long cycFromImg = (int) (cycFromPowOn % IMAGE_CYCLE_DURATION);
+            // L'index de la ligne en train d'être dessinée (entre 0 et 153)
             int currentLine = (int) (cycFromImg / LINE_CYCLE_DURATION);
+            // Le nombre de cycles depuis le début du dessin de la ligne
             long cycFromLn = cycFromImg % LINE_CYCLE_DURATION;
             reallyCycle(currentLine, (int) cycFromLn);
         }
     }
 
-    private void reallyCycle(int currentLine, int cycFromLn) {              
+    /**
+     * Cette méthode gère les opérations à effectuer, elle n'est appelée que s'il y en a.
+     * 
+     * @param currentLine
+     * la ligne actuellement en cours de dessin
+     * @param cycFromLn
+     * le nombre de cycles depuis le début du dessin de la ligne
+     */
+    private void reallyCycle(int currentLine, int cycFromLn) {        
+        // Si la l'index de la ligne est celui d'une ligne "réelle", il faut passer par le cycle de dessin à trois sous-cycles
         if (currentLine < LCD_HEIGHT) {
             switch (cycFromLn) {
             case MODE2_DURATION:
@@ -107,10 +134,12 @@ public final class LcdController implements Component, Clocked {
             case MODE2_DURATION + MODE3_DURATION:
                 nextNonIdleCycle += MODE0_DURATION;
                 setMode(0);
+                // La ligne actuelle est effectivement dessinée lors du début du mode de dessin des sprites
                 nextImageBuilder.setLine(currentLine, computeLine(currentLine));
                 break;
             case 0:
                 nextNonIdleCycle += MODE2_DURATION;
+                // A la fin d'un cycle de dessin d'une ligne, l'index de la ligne est mis à jour
                 modifyLYorLYC(LCDReg.LY, currentLine);
                 setMode(2);
                 break;
@@ -118,8 +147,10 @@ public final class LcdController implements Component, Clocked {
         } else {
             if (currentLine == LCD_HEIGHT) {
                 setMode(1);
+                // Lors de l'entrée dans la période vertical blank (VBLANK, mode 1), l'image entière est mise à jour
                 displayedImage = nextImageBuilder.build();
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+                // L'index de la ligne de la fenêtre est remis à zéro, afin de pouvoir recommencer lors de la prochaine image
                 winY = 0;
             }
             
@@ -128,15 +159,29 @@ public final class LcdController implements Component, Clocked {
         }
     }
 
+    /**
+     * Cette méthode permet d'éteindre le contrôleur.
+     */
     private void turnOff() {
+        // Le mode est mis à 0 (cela est arbitrairement vrai dans les vraies GameBoy)
         setMode(0);
+        // L'index de la ligne dessinée est forcé à 0
         modifyLYorLYC(LCDReg.LY, 0);
         nextNonIdleCycle = Long.MAX_VALUE;
     }
 
+    /**
+     * Cette méthode permet d'allumer/rallumer le contrôleur.
+     * 
+     * @param cycle
+     * le cycle pendant lequel le rallumage se passe
+     */
     private void turnOn(long cycle) {
+        // Le cycle d'allumage est mis à jour
         lcdOnCycle = cycle;
+        // Le prochain cycle "actif" devient celui de l'allumage
         nextNonIdleCycle = cycle;
+        // Le contrôleur recommence instantanément à dessiner la prochaine image
         setMode(2);
     }
 
@@ -144,7 +189,15 @@ public final class LcdController implements Component, Clocked {
         return lcdRegs.testBit(LCDReg.LCDC, LCDC.LCD_STATUS);
     }
 
-    private void setMode(int mode) {        
+    /**
+     * Cette méthode permet de changer les modes de manière correcte, c'est à dire
+     * en faisant attention aux interruptions (VBLANK et LCD_STAT).
+     * 
+     * @param mode
+     * le mode dans lequel il faut passer
+     */
+    private void setMode(int mode) { 
+        // La valeur du mode actuel est mise à jour
         lcdRegs.setBit(LCDReg.STAT, STAT.MODE0, Bits.test(mode, 0));
         lcdRegs.setBit(LCDReg.STAT, STAT.MODE1, Bits.test(mode, 1));
         
@@ -158,6 +211,7 @@ public final class LcdController implements Component, Clocked {
             if (lcdRegs.testBit(LCDReg.STAT, STAT.INT_MODE1)) {
                 cpu.requestInterrupt(Interrupt.LCD_STAT);
             }
+            // Lors du passage au mode 1, une interruption VBLANK est levée inconditionnellement
             cpu.requestInterrupt(Interrupt.VBLANK);
             break;
         case 2:
@@ -168,10 +222,18 @@ public final class LcdController implements Component, Clocked {
         }
     }
 
+    /**
+     * Cette méthode permet de calculer une ligne d'index donné.
+     * 
+     * @param lineIndex
+     * l'index de la ligne
+     * @return la ligne
+     */
     private LcdImageLine computeLine(int lineIndex) {
         LcdImageLine nextLine = BLANK_LCD_IMAGE_LINE, fgSpriteLine = BLANK_LCD_IMAGE_LINE;
 
         int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
+        adjustedWX = adjustedWX < 0 ? 0 : adjustedWX;
         
         int spriteHeight = getHeight();
 
@@ -319,7 +381,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private boolean isWindowActive(int adjustedWX) {
-        return (adjustedWX >= 0 && adjustedWX < LCD_WIDTH && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN));
+    	return adjustedWX < LCD_WIDTH && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN);
     }
     
     private boolean areSpritesActive() {

@@ -29,7 +29,7 @@ public final class Cartridge implements Component {
 
     /**
      * Ceci est le constructeur public de Cartridge, il y met dedans les contenus
-     * d'un fichier ROM.
+     * d'un fichier ROM (extension .gb).
      *
      * @param romFile
      *            Le fichier ROM (read-only memory) dont les contenus sont copiés
