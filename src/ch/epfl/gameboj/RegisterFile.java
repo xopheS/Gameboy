@@ -108,4 +108,14 @@ public final class RegisterFile<E extends Register> {
     public void setBit(E reg, Bit bit, boolean newValue) {
         set(reg, Bits.set(get(reg), bit.index(), newValue));
     }
+    
+    public int asInt(E reg, Bit... bits) {
+    	int number = 0;
+    	
+    	for (int i = 0; i < bits.length; ++i) {
+    		number = Bits.set(number, i, testBit(reg, bits[i]));
+    	}
+    	
+    	return number;
+    }
 }

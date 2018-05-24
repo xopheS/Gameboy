@@ -2,6 +2,8 @@ package ch.epfl.gameboj;
 
 import java.util.Objects;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -9,6 +11,7 @@ import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
+import ch.epfl.gameboj.component.sound.SoundController;
 import ch.epfl.gameboj.component.time.Timer;
 
 /**
@@ -29,6 +32,7 @@ public final class GameBoy {
     private final Cpu cpu = new Cpu();
     private final Timer timer = new Timer(cpu);
     private final LcdController lcdController = new LcdController(cpu);
+    private final SoundController soundController;
     private final Joypad joypad = new Joypad(cpu);
 
     public static final long CYCLES_PER_SECOND = (long) Math.pow(2, 20);
@@ -41,16 +45,20 @@ public final class GameBoy {
      *
      * @param cartridge
      *            La cartouche que la Gameboy va exécuter
+     * @throws LineUnavailableException 
      *
      * @throws NullPointerException
      *             si la cartouche est null
      */
-    public GameBoy(Cartridge cartridge) {
+    public GameBoy(Cartridge cartridge) throws LineUnavailableException {
         bootRomController = new BootRomController(Objects.requireNonNull(cartridge));
         bootRomController.attachTo(bus);
 
         workRamController.attachTo(bus);
         workRamEchoController.attachTo(bus);
+        
+        soundController = new SoundController(cpu);
+        soundController.attachTo(bus);
 
         cpu.attachTo(bus);
 
@@ -75,6 +83,7 @@ public final class GameBoy {
         Preconditions.checkArgument(currentCycle <= cycle);
         while (currentCycle < cycle) {
             timer.cycle(currentCycle);
+            soundController.cycle(currentCycle);
             lcdController.cycle(currentCycle);
             cpu.cycle(currentCycle);
             currentCycle++;

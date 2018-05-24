@@ -77,6 +77,37 @@ public final class LcdController implements Component, Clocked {
     public LcdImage currentImage() {
         return Objects.requireNonNull(displayedImage, "Displayed image cannot be null");
     }
+    
+    public LcdImage getBackground() {
+        LcdImage.Builder backgroundBuilder = new LcdImage.Builder(BG_SIZE, BG_SIZE);
+        for (int y = 0; y < BG_SIZE; ++y) {
+            backgroundBuilder.setLine(y, computeBGorWinLine(y, true));
+        }
+        return backgroundBuilder.build();
+    }
+
+    public LcdImage getWindow() {
+        LcdImage.Builder windowBuilder = new LcdImage.Builder(WIN_SIZE, WIN_SIZE);
+        for (int y = 0; y < WIN_SIZE; ++y) {
+            windowBuilder.setLine(y, computeBGorWinLine(y, false));
+        }
+        return windowBuilder.build();
+    }
+
+    public LcdImage[] getSprites() {
+        LcdImage.Builder bgSpriteBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+        LcdImage.Builder fgSpriteBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+        
+        int spriteHeight = getHeight();
+
+        for (int y = 0; y < LCD_HEIGHT; ++y) {
+            Integer[] spriteInfo = oamRamController.spritesIntersectingLine(y, spriteHeight);
+            Integer[][] spriteLayerInfo = spriteLayerInfo(spriteInfo);
+            bgSpriteBuilder.setLine(y, computeSpriteLine(spriteLayerInfo[0], y, spriteHeight));
+            fgSpriteBuilder.setLine(y, computeSpriteLine(spriteLayerInfo[1], y, spriteHeight));
+        }
+        return new LcdImage[] { bgSpriteBuilder.build(), fgSpriteBuilder.build() };
+    }
 
     @Override
     public void cycle(long cycle) {

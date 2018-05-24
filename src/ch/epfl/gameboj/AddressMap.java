@@ -66,31 +66,41 @@ public interface AddressMap {
     // Sound registers
     int REGS_NR_START = 0xFF10;
     // Sound 1 registers
+    int REGS_S1_START = 0xFF10;
     int REG_NR10 = 0xFF10;
     int REG_NR11 = 0xFF11;
     int REG_NR12 = 0xFF12;
     int REG_NR13 = 0xFF13;
     int REG_NR14 = 0xFF14;
+    int REGS_S1_END = 0xFF15, REGS_S1_SIZE = REGS_S1_END - REGS_S1_END;
     // Sound 2 registers
+    int REGS_S2_START = 0xFF16;
     int REG_NR21 = 0xFF16;
     int REG_NR22 = 0xFF17;
     int REG_NR23 = 0xFF18;
     int REG_NR24 = 0xFF19;
+    int REGS_S2_END = 0xFF1A, REGS_S2_SIZE = REGS_S2_END - REGS_S2_END;
     // Sound 3 registers
+    int REGS_S3_START = 0xFF1A;
     int REG_NR30 = 0xFF1A;
     int REG_NR31 = 0xFF1B;
     int REG_NR32 = 0xFF1C;
     int REG_NR33 = 0xFF1D;
     int REG_NR34 = 0xFF1E;
+    int REGS_S3_END = 0xFF20, REGS_S3_SIZE = REGS_S3_END - REGS_S3_END;
     // Sound 4 registers
+    int REGS_S4_START = 0xFF20;
     int REG_NR41 = 0xFF20;
     int REG_NR42 = 0xFF21;
     int REG_NR43 = 0xFF22;
     int REG_NR44 = 0xFF23;
+    int REGS_S4_END = 0xFF24, REGS_S4_SIZE = REGS_S4_END - REGS_S4_END;
     // Sound controller registers
+    int REGS_SC_START = 0xFF24;
     int REG_NR50 = 0xFF24;
     int REG_NR51 = 0xFF25;
     int REG_NR52 = 0xFF26;
+    int REGS_SC_END = 0xFF27, REGS_SC_SIZE = REGS_SC_END - REGS_SC_START;
     int REGS_NR_END = 0xFF27;
     int WAVE_RAM_START = 0xFF30;
     int WAVE_RAM_END = 0xFF3F, WAVE_RAM_SIZE = WAVE_RAM_END - WAVE_RAM_START;
