@@ -203,6 +203,7 @@ public final class LcdController implements Component, Clocked {
         LcdImageLine nextLine = BLANK_LCD_IMAGE_LINE, fgSpriteLine = BLANK_LCD_IMAGE_LINE;
 
         int adjustedWX = lcdRegs.get(LCDReg.WX) - WX_OFFSET;
+        adjustedWX = adjustedWX < 0 ? 0 : adjustedWX;
         
         int spriteHeight = getHeight();
 
@@ -350,7 +351,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private boolean isWindowActive(int adjustedWX) {
-        return (adjustedWX >= 0 && adjustedWX < LCD_WIDTH && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN));
+        return adjustedWX < LCD_WIDTH && lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN);
     }
     
     private boolean areSpritesActive() {
