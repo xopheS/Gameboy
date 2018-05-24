@@ -3,10 +3,12 @@ package ch.epfl.gameboj.gui;
 import static ch.epfl.gameboj.GameBoy.CYCLES_PER_NANOSECOND;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
+import static ch.epfl.gameboj.component.lcd.LcdController.IMAGE_CYCLE_DURATION;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +18,7 @@ import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
 
 import ch.epfl.gameboj.AddressMap;
+import ch.epfl.gameboj.CartridgeDisassembler;
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Joypad;
@@ -33,12 +36,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -49,9 +54,11 @@ import javafx.stage.Stage;
 public class Main extends Application {
     private static GameBoy gameboj;
     boolean isPaused;
+    boolean isSpeedButtonPressed;
     long start;
     long timeOnPause;
     long pauseTime;
+    int cycleSpeed = 1;
     AnimationTimer animationTimer;
 
     private static final Map<Key, String> keyToString = Map.of(Key.A, "A", Key.B, "B", Key.START, "S", Key.SELECT,
@@ -64,11 +71,13 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException, LineUnavailableException, InterruptedException {
         List<String> cmdArgs = getParameters().getRaw();
-        Preconditions.checkArgument(cmdArgs.size() == 1, () -> System.exit(1));
+        Preconditions.checkArgument(cmdArgs.size() <= 2, () -> System.exit(1));
 
         String fileName = cmdArgs.get(0); // TODO change this
-
-        gameboj = new GameBoy(Cartridge.ofFile(new File(fileName))); // FIXME
+        String saveFileName = cmdArgs.size() == 2 ? cmdArgs.get(1) : null;
+        
+        gameboj = saveFileName == null ? new GameBoy(Cartridge.ofFile(new File(fileName))) 
+        		: new GameBoy(Cartridge.ofFile(new File(fileName)), saveFileName); // FIXME
 
         // TODO replace gameboj with clever name
         primaryStage.setTitle("gameboj: the GameBoy emulator");
@@ -136,11 +145,46 @@ public class Main extends Application {
         MenuItem stepByStepMenuItem = new MenuItem("Step by step execution");
         MenuItem decompileMenuItem = new MenuItem("Decompile");
         MenuItem showStateMenuItem = new MenuItem("Show Gameboy state");
-        debugMenu.getItems().addAll(stepByStepMenuItem, decompileMenuItem, showStateMenuItem);
+        MenuItem disassembleBootMenuItem = new MenuItem("Dissassemble boot rom");
+        disassembleBootMenuItem.setOnAction(e -> {
+        	try {
+				FileWriter writer = new FileWriter("bootrom.txt");
+				writer.write(CartridgeDisassembler.decompileBootRom());
+				writer.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        });
+        MenuItem disassembleHeaderMenuItem = new MenuItem("Disassemble cartridge header");
+        disassembleHeaderMenuItem.setOnAction(e -> {
+        	try {
+				FileWriter writer = new FileWriter("Z80 Assembly " + fileName.concat("_header.txt"));
+				writer.write(CartridgeDisassembler.decompileHeader(fileName));
+				writer.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        });
+        debugMenu.getItems().addAll(stepByStepMenuItem, decompileMenuItem, disassembleBootMenuItem,
+        		disassembleHeaderMenuItem, showStateMenuItem);
 
         Menu optionsMenu = new Menu("Options"); // gameboy options
         MenuItem changeSpeedMenuItem = new MenuItem("Change speed");
         MenuItem gameboyConfigurationMenuItem = new MenuItem("Configuration");
+        gameboyConfigurationMenuItem.setOnAction(e -> {
+        	Slider volumeSlider = new Slider();
+        	volumeSlider.setMin(0);
+        	volumeSlider.setMax(100);
+        	volumeSlider.setValue(50);
+        	GridPane configPane = new GridPane();
+        	configPane.getChildren().add(volumeSlider);
+        	Scene gbConfigScene = new Scene(configPane);
+        	Stage gbConfigStage = new Stage();
+        	gbConfigStage.setScene(gbConfigScene);
+        	gbConfigStage.show();
+        });
         optionsMenu.getItems().addAll(changeSpeedMenuItem, gameboyConfigurationMenuItem);
 
         Menu windowMenu = new Menu("Window"); // workspace visual control
@@ -214,18 +258,31 @@ public class Main extends Application {
                 animationTimer.stop();
                 timeOnPause = System.nanoTime();
             }
-        });
-        
-        Button screenshot = new Button("Screen");
-        screenshot.setOnAction(e -> {
+        });       
+        Button screenshotButton = new Button("Screen");
+        screenshotButton.setOnAction(e -> {
 			try {
 				screenshot();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-		});
-        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton,screenshot, new Button("Save")); 
+		});       
+        Button speedTimes5Button = new Button("x3");
+        speedTimes5Button.setOnAction(e -> {
+        	if (isSpeedButtonPressed) {
+                cycleSpeed = 1;
+                isSpeedButtonPressed = false;
+            } else {
+                cycleSpeed = 3;
+                isSpeedButtonPressed = true;
+            }
+        });
+        Button saveButton = new Button("Save");
+        saveButton.setOnAction(e -> {
+        	gameboj.getCartridge().toFile("currentSave.gb");
+        });
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, saveButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
 
@@ -262,9 +319,9 @@ public class Main extends Application {
                 long elapsed = now - start - pauseTime;
                 long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
 
-                gameboj.runUntil(elapsedCycles);
+                gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
 
-                emulationView.requestFocus(); // TODO change this???
+                emulationView.requestFocus();
                 emulationView.setImage(ImageConverter.convert(gameboj.getLcdController().currentImage()));
 
                 viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
@@ -349,8 +406,6 @@ public class Main extends Application {
         BufferedImage i = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
         ImageIO.write(SwingFXUtils.fromFXImage(ImageConverter.convert(screenshot), i), "png", new File("ScreenCaptures/" + date + ".png"));
     }
-
-
 }
 
 

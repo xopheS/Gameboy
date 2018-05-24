@@ -81,5 +81,8 @@ public final class BootRomController implements Component {
             cartridge.write(address, data);
         }
     }
-
+    
+    public void setCartridgeRam(byte[] byteArray) {
+    	cartridge.setMBCRam(byteArray);
+    }
 }

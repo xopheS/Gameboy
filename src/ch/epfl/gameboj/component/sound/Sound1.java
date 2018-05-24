@@ -93,7 +93,6 @@ public final class Sound1 implements Component, Clocked {
 		Preconditions.checkBits8(data);
 		
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S1_START && address < AddressMap.REGS_S1_END) {
-			System.out.println("Write in sound 1");
 			switch (address) {
 			case AddressMap.REG_NR14:
 				soundRegs.set(Reg.NR14, data);

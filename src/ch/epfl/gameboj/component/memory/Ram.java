@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component.memory;
 
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.component.cartridge.Saveable;
 
 /**
  * Ram : une mémoire vive dont le contenu peut changer au cours du temps.
@@ -9,8 +10,8 @@ import ch.epfl.gameboj.Preconditions;
  * @author David Cian (287967)
  */
 
-public final class Ram {
-    private final byte[] data;
+public final class Ram implements Saveable {
+    private byte[] data;
     
     /**
      * Constructeur qui construit une mémoire vive (tableau de byte) de taille
@@ -71,4 +72,12 @@ public final class Ram {
         data[index] = (byte) Preconditions.checkBits8(value);
     }
     
+    public void setByteArray(byte[] byteArray) {
+    	data = byteArray;
+    }
+
+	@Override
+	public byte[] getByteArray() {
+		return data;
+	}    
 }

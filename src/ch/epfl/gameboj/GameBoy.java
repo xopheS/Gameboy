@@ -1,5 +1,9 @@
 package ch.epfl.gameboj;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Objects;
 
 import javax.sound.sampled.LineUnavailableException;
@@ -29,6 +33,7 @@ public final class GameBoy {
     private final RamController workRamController = new RamController(workRam, AddressMap.WRAM_BANK_0_START, AddressMap.WRAM_BANK_1_END);
     private final RamController workRamEchoController = new RamController(workRam, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
     private final BootRomController bootRomController;
+    private final Cartridge loadedCartridge;
     private final Cpu cpu = new Cpu();
     private final Timer timer = new Timer(cpu);
     private final LcdController lcdController = new LcdController(cpu);
@@ -39,6 +44,27 @@ public final class GameBoy {
     public static final double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / Math.pow(10, 9);
 
     private long currentCycle;
+    
+    public GameBoy(Cartridge cartridge) throws LineUnavailableException {
+    	loadedCartridge = cartridge;
+    	
+        bootRomController = new BootRomController(Objects.requireNonNull(cartridge));
+        bootRomController.attachTo(bus);
+
+        workRamController.attachTo(bus);
+        workRamEchoController.attachTo(bus);
+        
+        soundController = new SoundController(cpu);
+        soundController.attachTo(bus);
+
+        cpu.attachTo(bus);
+
+        timer.attachTo(bus);
+
+        lcdController.attachTo(bus);
+
+        joypad.attachTo(bus);
+    }
 
     /**
      * Constructeur qui initialise une Gameboy avec une cartouche donnée.
@@ -50,8 +76,19 @@ public final class GameBoy {
      * @throws NullPointerException
      *             si la cartouche est null
      */
-    public GameBoy(Cartridge cartridge) throws LineUnavailableException {
+    public GameBoy(Cartridge cartridge, String saveFileName) throws LineUnavailableException {
+    	loadedCartridge = cartridge;
+    	
         bootRomController = new BootRomController(Objects.requireNonNull(cartridge));
+        try (FileInputStream fis = new FileInputStream(saveFileName)) {
+			bootRomController.setCartridgeRam(fis.readAllBytes());
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         bootRomController.attachTo(bus);
 
         workRamController.attachTo(bus);
@@ -112,5 +149,9 @@ public final class GameBoy {
 
     public Joypad getJoypad() {
         return joypad;
+    }
+    
+    public Cartridge getCartridge() {
+    	return loadedCartridge;
     }
 }

@@ -3,6 +3,8 @@ package ch.epfl.gameboj.component.memory;
 import java.util.Arrays;
 import java.util.Objects;
 
+import ch.epfl.gameboj.component.cartridge.Saveable;
+
 /**
  * Rom : une mémoire morte à contenu immuable.
  *
@@ -10,7 +12,7 @@ import java.util.Objects;
  * @author David Cian (287967)
  */
 
-public final class Rom {
+public final class Rom implements Saveable {
 
     private final byte[] data;
 
@@ -50,4 +52,15 @@ public final class Rom {
     public int read(int index) {
         return Byte.toUnsignedInt(data[Objects.checkIndex(index, data.length)]);
     }
+
+	@Override
+	public byte[] getByteArray() {
+		return data;
+	}
+
+	@Override
+	public void setByteArray(byte[] byteArray) {
+		// TODO Auto-generated method stub
+		
+	}
 }

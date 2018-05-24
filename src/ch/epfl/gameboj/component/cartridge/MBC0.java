@@ -13,7 +13,7 @@ import ch.epfl.gameboj.component.memory.Rom;
  * @author David Cian (287967)
  *
  */
-public class MBC0 implements Component { 
+public class MBC0 implements MBC { 
     private static final int MBC0_SIZE = 32768;
 
     private final Rom rom;
@@ -63,4 +63,15 @@ public class MBC0 implements Component {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
     }
+
+	@Override
+	public byte[] getByteArray() {
+		return rom.getByteArray();
+	}
+
+	@Override
+	public void setByteArray(byte[] byteArray) {
+		// TODO Auto-generated method stub
+		
+	}
 }
