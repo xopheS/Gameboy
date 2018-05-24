@@ -4,12 +4,15 @@ import static ch.epfl.gameboj.GameBoy.CYCLES_PER_NANOSECOND;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
 
 import ch.epfl.gameboj.AddressMap;
@@ -21,6 +24,7 @@ import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -211,7 +215,17 @@ public class Main extends Application {
                 timeOnPause = System.nanoTime();
             }
         });
-        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, new Button("Screen"), new Button("Save")); 
+        
+        Button screenshot = new Button("Screen");
+        screenshot.setOnAction(e -> {
+			try {
+				screenshot();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton,screenshot, new Button("Save")); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
 
@@ -327,4 +341,19 @@ public class Main extends Application {
             }
         });
     }
+
+    private void screenshot() throws IOException {
+        LcdImage screenshot = gameboj.getLcdController().currentImage();
+        Date d = new Date();
+        String date = Long.toString(d.getTime());
+        BufferedImage i = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
+        ImageIO.write(SwingFXUtils.fromFXImage(ImageConverter.convert(screenshot), i), "png", new File("ScreenCaptures/" + date + ".png"));
+    }
+
+
 }
+
+
+
+
+

@@ -7,7 +7,7 @@ import javafx.scene.image.WritableImage;
 
 public final class ImageConverter {
 
-    private enum JavaFXColor {
+    public static enum JavaFXColor {
         COLOR0(0xFF, 0xFF, 0xFF, 0xFF), COLOR1(0xFF, 0xD3, 0xD3, 0xD3), COLOR2(0xFF, 0xA9, 0xA9, 0xA9), COLOR3(0xFF,
                 0x00, 0x00, 0x00);
 
@@ -23,6 +23,7 @@ public final class ImageConverter {
         int getARG_B() {
             return alpha << Byte.SIZE * 3 | red << Byte.SIZE * 2 | green << Byte.SIZE | blue;
         }
+        
     }
 
     public static Image convert(LcdImage lcdImage) {
