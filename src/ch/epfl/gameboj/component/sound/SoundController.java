@@ -12,6 +12,7 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
+import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -73,8 +74,18 @@ public final class SoundController implements Component, Clocked {
 			}
 			
 			if (soundRegs.testBit(Reg.NR52, NR52.SOUND2)) {
-				soundBuffers[1][soundBufferIndex] = 0;
+				soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[((sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32];
+				
+				sound2.incIndex();
 			}
+			
+			soundBuffers[0][soundBufferIndex] = (byte) sound1.getWave()[((sound1.getIndex() * sound1.getFrequency()) / SAMPLE_RATE) % 32];
+			
+			sound1.incIndex();
+			
+			soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[((sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32];
+			
+			sound1.incIndex();
 			
 			if (soundRegs.testBit(Reg.NR52, NR52.SOUND3)) {
 				soundBuffers[2][soundBufferIndex] = 0;
@@ -98,10 +109,6 @@ public final class SoundController implements Component, Clocked {
 	private void setSoundBufferByte(int byteIndex) {
 		int mono1 = 0, mono2 = 0;
 		
-		mono1 += soundBuffers[0][byteIndex] + soundBuffers[1][byteIndex] + soundBuffers[2][byteIndex] + soundBuffers[3][byteIndex];
-		
-		mono2 += soundBuffers[0][byteIndex] + soundBuffers[1][byteIndex] + soundBuffers[2][byteIndex] + soundBuffers[3][byteIndex];
-		
 		soundBuffer[byteIndex * 2] = (byte) mono1;
 		soundBuffer[byteIndex * 2 + 1] = (byte) mono2;
 	}
@@ -120,7 +127,6 @@ public final class SoundController implements Component, Clocked {
 	@Override
 	public int read(int address) {
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_SC_START && address < AddressMap.REGS_SC_END) {
-//			System.out.println("read");
 			return soundRegs.get(address - AddressMap.REGS_SC_START);
 		}
 		
@@ -132,8 +138,25 @@ public final class SoundController implements Component, Clocked {
 		Preconditions.checkBits8(data);
 		
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_SC_START && address < AddressMap.REGS_SC_END) {
-//			System.out.println("write");
 			soundRegs.set(address - AddressMap.REGS_SC_START, data);
+			if (address == AddressMap.REG_NR52) {
+				System.out.println(Integer.toBinaryString(data));
+				if (Bits.test(data, NR52.POW)) {
+					System.out.println("Sound on");
+				}
+				if (Bits.test(data, NR52.SOUND1)) {
+					System.out.println("Sound 1 on");
+				}
+				if (Bits.test(data, NR52.SOUND2)) {
+					System.out.println("Sound 2 on");
+				}
+				if (Bits.test(data, NR52.SOUND3)) {
+					System.out.println("Sound 3 on");
+				}
+				if (Bits.test(data, NR52.SOUND4)) {
+					System.out.println("Sound 4 on");
+				}
+			}
 		}
 	}	
 }
