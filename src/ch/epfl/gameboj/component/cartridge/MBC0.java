@@ -13,7 +13,7 @@ import ch.epfl.gameboj.component.memory.Rom;
  * @author David Cian (287967)
  *
  */
-public class MBC0 implements Component {
+public final class MBC0 implements Component {
 	// Ceci est la taille d'un Memory Bank Controller de type 0 (MBC0)
 	private static final int MBC0_SIZE = 32768;
 

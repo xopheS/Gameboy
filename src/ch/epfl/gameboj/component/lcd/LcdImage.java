@@ -12,7 +12,7 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 
-public class LcdImage {
+public final class LcdImage {
 
 	public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT,
 			Collections.nCopies(LCD_HEIGHT, BLANK_LCD_IMAGE_LINE));

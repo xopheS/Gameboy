@@ -2,7 +2,7 @@ package ch.epfl.gameboj.component.memory;
 
 import ch.epfl.gameboj.AddressMap;
 
-public class VideoRamController extends RamController {
+public final class VideoRamController extends RamController {
 
 	public static final int BYTES_PER_TILE = 16;
 	public static final int TILE_SOURCE_SIZE = 256;

@@ -15,7 +15,7 @@ import ch.epfl.gameboj.Preconditions;
  */
 public final class DmaController {
 	private static final int COPY_LENGTH = 160;
-	private static final DmaController dmaController = new DmaController();
+	private static final DmaController DMA_CONTROLLER = new DmaController();
 	private Bus bus;
 	private boolean isActive;
 	private int startAddress;
@@ -84,7 +84,7 @@ public final class DmaController {
 	 * @return le contrôleur DMA
 	 */
 	static DmaController getDmaController() {
-		return dmaController;
+		return DMA_CONTROLLER;
 	}
 
 	boolean isActive() {

@@ -14,7 +14,7 @@ import ch.epfl.gameboj.bits.Bits;
  * @author David Cian (287967)
  *
  */
-public class OamRamController extends RamController {
+public final class OamRamController extends RamController {
 
 	public enum DISPLAY_DATA {
 		Y_COORD, X_COORD, TILE_INDEX, ATTRIBUTES

@@ -8,13 +8,15 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.Bits;
 
-public class LcdImageLine {
+public final class LcdImageLine {
 
 	public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR,
 			BLANK_LCD_VECTOR);
+	
+	private static final int DMG_COLORS = 4;
 
-	private final BitVector LSB;
-	private final BitVector MSB;
+	private final BitVector lsb;
+	private final BitVector msb;
 	private final BitVector opacity;
 
 	/**
@@ -31,21 +33,21 @@ public class LcdImageLine {
 		Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(),
 				"The three BitVectors must have the same length");
 
-		this.LSB = lsb;
-		this.MSB = msb;
+		this.lsb = lsb;
+		this.msb = msb;
 		this.opacity = opacity;
 	}
 
 	public int size() {
-		return LSB.size();
+		return lsb.size();
 	}
 
 	public BitVector getLsb() {
-		return this.LSB;
+		return this.lsb;
 	}
 
 	public BitVector getMsb() {
-		return this.MSB;
+		return this.msb;
 	}
 
 	public BitVector getOpacity() {
@@ -61,7 +63,7 @@ public class LcdImageLine {
 	 * @return la ligne décalée
 	 */
 	public LcdImageLine shift(int distance) {
-		return new LcdImageLine(MSB.shift(-distance), LSB.shift(-distance), opacity.shift(-distance));
+		return new LcdImageLine(msb.shift(-distance), lsb.shift(-distance), opacity.shift(-distance));
 	}
 
 	/**
@@ -75,12 +77,12 @@ public class LcdImageLine {
 	 * @return la ligne d'image extraite
 	 */
 	public LcdImageLine extractWrapped(int pixel, int size) {
-		return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size),
+		return new LcdImageLine(msb.extractWrapped(pixel, size), lsb.extractWrapped(pixel, size),
 				opacity.extractWrapped(pixel, size));
 	}
 
 	public LcdImageLine extractZeroExtended(int pixel, int size) {
-		return new LcdImageLine(MSB.extractZeroExtended(pixel, size), LSB.extractZeroExtended(pixel, size),
+		return new LcdImageLine(msb.extractZeroExtended(pixel, size), lsb.extractZeroExtended(pixel, size),
 				opacity.extractZeroExtended(pixel, size));
 	}
 
@@ -100,7 +102,7 @@ public class LcdImageLine {
 		LcdImageLine coloredLine = this;
 
 		// Une itération est faite sur les 4 couleurs du DMG (Dot Matrix Game)
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < DMG_COLORS; i++) {
 
 			// La couleur correspondante, qui doit remplacer celle représentée par i
 			int color = Bits.extract(palette, 2 * i, 2);
@@ -109,16 +111,16 @@ public class LcdImageLine {
 			// sélectionnés avec un masque
 			switch (i) {
 			case 0:
-				mask = MSB.not().and(LSB.not());
+				mask = msb.not().and(lsb.not());
 				break;
 			case 1:
-				mask = MSB.not().and(LSB);
+				mask = msb.not().and(lsb);
 				break;
 			case 2:
-				mask = MSB.and(LSB.not());
+				mask = msb.and(lsb.not());
 				break;
 			case 3:
-				mask = MSB.and(LSB);
+				mask = msb.and(lsb);
 				break;
 			}
 
@@ -140,9 +142,9 @@ public class LcdImageLine {
 	 * @return la ligne coloriée
 	 */
 	private LcdImageLine setColor(BitVector mask, int color) {
-		BitVector msbCopy = MSB.extractZeroExtended(0, size()), lsbCopy = LSB.extractZeroExtended(0, size());
+		BitVector msbCopy = msb.extractZeroExtended(0, size()), lsbCopy = lsb.extractZeroExtended(0, size());
 
-		switch (Objects.checkIndex(color, 4)) {
+		switch (Objects.checkIndex(color, DMG_COLORS)) {
 		case 0:
 			msbCopy = msbCopy.setBits(mask, false);
 			lsbCopy = lsbCopy.setBits(mask, false);
@@ -174,8 +176,8 @@ public class LcdImageLine {
 	public LcdImageLine below(LcdImageLine other) {
 		Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
 
-		BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
-		BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
+		BitVector newMSB = (msb.and(other.opacity.not())).or(other.msb.and(other.opacity));
+		BitVector newLSB = (lsb.and(other.opacity.not())).or(other.lsb.and(other.opacity));
 
 		return new LcdImageLine(newMSB, newLSB, opacity.or(other.opacity));
 	}
@@ -194,8 +196,8 @@ public class LcdImageLine {
 		Preconditions.checkArgument(other.size() == size() && opacity.size() == size(),
 				"The two lines and the opacity vector must have the same length");
 
-		BitVector newMSB = MSB.and(opacity.not()).or(other.MSB.and(opacity));
-		BitVector newLSB = LSB.and(opacity.not()).or(other.LSB.and(opacity));
+		BitVector newMSB = msb.and(opacity.not()).or(other.msb.and(opacity));
+		BitVector newLSB = lsb.and(opacity.not()).or(other.lsb.and(opacity));
 
 		return new LcdImageLine(newMSB, newLSB, this.opacity.or(opacity));
 	}
@@ -214,19 +216,19 @@ public class LcdImageLine {
 		Preconditions.checkArgument(other.size() == size, "The two image lines must have the same length");
 		Objects.checkIndex(n, size);
 
-		return new LcdImageLine(MSB.clipLSB(n).or(other.MSB.clipMSB(n)), LSB.clipLSB(n).or(other.LSB.clipMSB(n)),
+		return new LcdImageLine(msb.clipLSB(n).or(other.msb.clipMSB(n)), lsb.clipLSB(n).or(other.lsb.clipMSB(n)),
 				opacity.or(other.opacity));
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		return (o instanceof LcdImageLine) && LSB.equals(((LcdImageLine) o).getLsb())
-				&& MSB.equals(((LcdImageLine) o).getMsb()) && opacity.equals(((LcdImageLine) o).getOpacity());
+		return (o instanceof LcdImageLine) && lsb.equals(((LcdImageLine) o).getLsb())
+				&& msb.equals(((LcdImageLine) o).getMsb()) && opacity.equals(((LcdImageLine) o).getOpacity());
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(MSB, LSB, opacity);
+		return Objects.hash(msb, lsb, opacity);
 	}
 
 	public static final class Builder {
