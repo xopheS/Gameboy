@@ -31,6 +31,7 @@ import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -39,6 +40,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -49,6 +51,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
+import javafx.scene.effect.PerspectiveTransform;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -182,15 +186,38 @@ public class Main extends Application {
         Menu optionsMenu = new Menu("Options"); // gameboy options
         MenuItem changeSpeedMenuItem = new MenuItem("Change speed");
         MenuItem gameboyConfigurationMenuItem = new MenuItem("Configuration");
+        
         gameboyConfigurationMenuItem.setOnAction(e -> {
         	Label volumeLabel = new Label("Global volume");
+        	Label themeLabel = new Label("Gameboy theme");
         	Slider volumeSlider = new Slider();
         	volumeSlider.setMin(0);
         	volumeSlider.setMax(100);
         	volumeSlider.setValue(50);
+        	ChoiceBox<String> gbThemes = new ChoiceBox<>(FXCollections.observableArrayList(
+            	    "First", "Second", "Third")
+            );
+        	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
+        		switch (n) {
+        		case "First":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(20);
+        			break;
+        		case "Second":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(100);
+        			break;
+        		case "Third":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(150);
+        			break;
+        		default:
+        			System.out.println("problem");
+        			break;
+        		}
+        	});
         	GridPane configPane = new GridPane();
         	configPane.add(volumeLabel, 0, 0);
         	configPane.add(volumeSlider, 0, 1);
+        	configPane.add(themeLabel, 0, 2);
+        	configPane.add(gbThemes, 0, 3);
         	Scene gbConfigScene = new Scene(configPane);
         	Stage gbConfigStage = new Stage();
         	gbConfigStage.setScene(gbConfigScene);
@@ -385,11 +412,32 @@ public class Main extends Application {
         PasswordField passwordField = new PasswordField();
         loginPane.add(passwordField, 1, 2);
         
-        Button noAccountButton = new Button("Continue without log in");
+        Button noAccountButton = new Button("Continue without login");
         noAccountButton.setOnAction(e -> {
         	primaryStage.setScene(modeChoiceScreen);
         });
-        loginPane.add(noAccountButton, 1, 4);
+        
+        Button login = new Button("Log in");
+        Image icon = new Image("File:cartoon-gameboy-gameboy-sbstn723-on-deviantart.png", 150,150,true, true, true);
+        
+        loginPane.add(noAccountButton, 2, 5);
+        loginPane.add(login, 1, 5);
+        ImageView shearedGameboyView = new ImageView();
+        PerspectiveTransform shear = new PerspectiveTransform();
+        shear.setUlx(13);
+        shear.setUly(-2);
+        shear.setUrx(50);
+        shear.setUry(0);
+        shear.setLrx(37);
+        shear.setLry(28);
+        shear.setLlx(0);
+        shear.setLly(25);
+        shearedGameboyView.setEffect(shear);
+        shearedGameboyView.setRotate(21);
+        shearedGameboyView.setTranslateX(47);
+        shearedGameboyView.setTranslateY(46);
+        loginPane.add(new ImageView(icon), 2, 1, 1, 2);
+        loginPane.add(shearedGameboyView, 2, 1, 1, 2);       
         
         Scene loginScreen = new Scene(loginPane);
         loginScreen.setOnKeyPressed(e -> {
@@ -413,6 +461,7 @@ public class Main extends Application {
         	}
         });
 
+        primaryStage.getIcons().add(new Image("file:gb_icon.png"));
         primaryStage.setScene(loginScreen); // TODO set to splash screen
         primaryStage.show();
 
@@ -427,7 +476,9 @@ public class Main extends Application {
                 gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
 
                 emulationView.requestFocus();
-                emulationView.setImage(ImageConverter.convert(gameboj.getLcdController().currentImage()));
+                Image screenImage = ImageConverter.convert(gameboj.getLcdController().currentImage());
+                emulationView.setImage(screenImage);
+                shearedGameboyView.setImage(screenImage);
 
                 viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
                 viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));

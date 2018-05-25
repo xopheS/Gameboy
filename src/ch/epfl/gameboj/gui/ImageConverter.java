@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.gui;
 
+import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelWriter;
@@ -19,11 +21,34 @@ public final class ImageConverter {
             this.green = green;
             this.blue = blue;
         }
-
-        int getARG_B() {
-            return alpha << Byte.SIZE * 3 | red << Byte.SIZE * 2 | green << Byte.SIZE | blue;
+        
+        void setAlpha(int i) {
+        	this.alpha = i;
         }
         
+        void setRed(int red) {
+        	this.red = red;
+        }
+        
+        void setGreen(int green) {
+        	this.green = green;
+        }
+        
+        void setBlue(int blue) {
+        	this.blue = blue;
+        }
+        
+        void setARGB(int argb) {
+        	Preconditions.checkBits8(argb);
+        	this.alpha = Bits.extract(argb, 0, Byte.SIZE);
+        	this.red = Bits.extract(argb, Byte.SIZE, Byte.SIZE);
+        	this.green = Bits.extract(argb, 2 * Byte.SIZE, Byte.SIZE);
+        	this.blue = Bits.extract(argb, 3 * Byte.SIZE, Byte.SIZE);
+        }
+
+        int getARGB() {
+            return alpha << Byte.SIZE * 3 | red << Byte.SIZE * 2 | green << Byte.SIZE | blue;
+        }       
     }
 
     public static Image convert(LcdImage lcdImage) {
@@ -36,16 +61,16 @@ public final class ImageConverter {
 
                 switch (lcdImage.get(x, y)) {
                 case 0:
-                    color = JavaFXColor.COLOR0.getARG_B();
+                    color = JavaFXColor.COLOR0.getARGB();
                     break;
                 case 1:
-                    color = JavaFXColor.COLOR1.getARG_B();
+                    color = JavaFXColor.COLOR1.getARGB();
                     break;
                 case 2:
-                    color = JavaFXColor.COLOR2.getARG_B();
+                    color = JavaFXColor.COLOR2.getARGB();
                     break;
                 case 3:
-                    color = JavaFXColor.COLOR3.getARG_B();
+                    color = JavaFXColor.COLOR3.getARGB();
                     break;
                 }
 
