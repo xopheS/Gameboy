@@ -825,7 +825,6 @@ public final class Cpu implements Component, Clocked {
      */
     @Override
     public int read(int address) {
-        // TODO refactor with switch and default case
         if (Preconditions.checkBits16(address) == AddressMap.REG_IE) {
             return IE;
         } else if (address == AddressMap.REG_IF) {

@@ -13,54 +13,55 @@ import ch.epfl.gameboj.component.memory.Rom;
  * @author David Cian (287967)
  *
  */
-public class MBC0 implements Component { 
-    private static final int MBC0_SIZE = 32768;
+public class MBC0 implements Component {
+	// Ceci est la taille d'un Memory Bank Controller de type 0 (MBC0)
+	private static final int MBC0_SIZE = 32768;
 
-    private final Rom rom;
+	private final Rom rom;
 
-    /**
-     * Ceci est le constructeur publique de MBC0, qui effectue l'empaquetage d'une
-     * ROM dans une cartouche de type MBC0.
-     *
-     * @param rom
-     *            La ROM (read-only memory) utilisée comme base du MBC0
-     *
-     * @throws IllegalArgumentException
-     *             si la ROM fournie a une capacité différente de 32768, celle d'un
-     *             MBC0 dans la réalité
-     *
-     * @throws NullPointerException
-     *             si la ROM fournie est null
-     */
-    public MBC0(Rom rom) {
-        if (rom.size() != MBC0_SIZE) {
-            throw new IllegalArgumentException("The provided ROM must have a capacity of 32768.");
-        }
+	/**
+	 * Ceci est le constructeur publique de MBC0, qui effectue l'empaquetage d'une
+	 * ROM dans une cartouche de type MBC0.
+	 *
+	 * @param rom
+	 *            La ROM (read-only memory) utilisée comme base du MBC0
+	 *
+	 * @throws IllegalArgumentException
+	 *             si la ROM fournie a une capacité différente de 32768, celle d'un
+	 *             MBC0 dans la réalité
+	 *
+	 * @throws NullPointerException
+	 *             si la ROM fournie est null
+	 */
+	public MBC0(Rom rom) {
+		if (rom.size() != MBC0_SIZE) {
+			throw new IllegalArgumentException("The provided ROM must have a capacity of 32768.");
+		}
 
-        this.rom = Objects.requireNonNull(rom, "The provided ROM cannot be null.");
-    }
+		this.rom = Objects.requireNonNull(rom, "The provided ROM cannot be null.");
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ch.epfl.gameboj.component.Component#read(int)
-     */
-    @Override
-    public int read(int address) {
-        if (Preconditions.checkBits16(address) >= 0 && address < MBC0_SIZE) {
-            return rom.read(address);
-        }
-        return NO_DATA;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.epfl.gameboj.component.Component#read(int)
+	 */
+	@Override
+	public int read(int address) {
+		if (Preconditions.checkBits16(address) >= 0 && address < MBC0_SIZE) {
+			return rom.read(address);
+		}
+		return NO_DATA;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ch.epfl.gameboj.component.Component#write(int, int)
-     */
-    @Override
-    public void write(int address, int data) {
-        Preconditions.checkBits16(address);
-        Preconditions.checkBits8(data);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.epfl.gameboj.component.Component#write(int, int)
+	 */
+	@Override
+	public void write(int address, int data) {
+		Preconditions.checkBits16(address);
+		Preconditions.checkBits8(data);
+	}
 }

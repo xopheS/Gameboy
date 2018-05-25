@@ -18,65 +18,65 @@ import ch.epfl.gameboj.component.memory.Rom;
  * @author David Cian (287967)
  *
  */
-public final class Cartridge implements Component {    
-    private static final int[] RAM_SIZES = new int[] { 0, 2048, 8192, 32768 };
+public final class Cartridge implements Component {
+	private static final int[] RAM_SIZES = new int[] { 0, 2048, 8192, 32768 };
 
-    private final Component mbc;
+	private final Component mbc;
 
-    private Cartridge(Component mbc) {
-        this.mbc = Objects.requireNonNull(mbc);
-    }
+	private Cartridge(Component mbc) {
+		this.mbc = Objects.requireNonNull(mbc);
+	}
 
-    /**
-     * Ceci est le constructeur public de Cartridge, il y met dedans les contenus
-     * d'un fichier ROM (extension .gb).
-     *
-     * @param romFile
-     *            Le fichier ROM (read-only memory) dont les contenus sont copiés
-     * @return nouvelle cartouche avec les contenus du fichier
-     * @throws FileNotFoundException
-     *             si le fichier n'est pas trouvé
-     * @throws IOException
-     *             si un problème de lecture intervient
-     */
-    public static Cartridge ofFile(File romFile) throws FileNotFoundException, IOException {
+	/**
+	 * Ceci est le constructeur public de Cartridge, il y met dedans les contenus
+	 * d'un fichier ROM (extension .gb).
+	 *
+	 * @param romFile
+	 *            Le fichier ROM (read-only memory) dont les contenus sont copiés
+	 * @return nouvelle cartouche avec les contenus du fichier
+	 * @throws FileNotFoundException
+	 *             si le fichier n'est pas trouvé
+	 * @throws IOException
+	 *             si un problème de lecture intervient
+	 */
+	public static Cartridge ofFile(File romFile) throws FileNotFoundException, IOException {
 
-        try (FileInputStream fis = new FileInputStream(romFile)) {
-            byte[] fileBytes = fis.readAllBytes();
+		try (FileInputStream fis = new FileInputStream(romFile)) {
+			byte[] fileBytes = fis.readAllBytes();
 
-            switch (fileBytes[AddressMap.CARTRIDGE_TYPE]) {
-            case 0:
-                return new Cartridge(new MBC0(new Rom(fileBytes)));
-            case 1:
-                return new Cartridge(new MBC1(new Rom(fileBytes), RAM_SIZES[fileBytes[AddressMap.RAM_SIZE]]));
-            case 2:
-                return new Cartridge(new MBC1(new Rom(fileBytes), RAM_SIZES[fileBytes[AddressMap.RAM_SIZE]]));
-            case 3:
-                return new Cartridge(new MBC1(new Rom(fileBytes), RAM_SIZES[fileBytes[AddressMap.RAM_SIZE]]));
-            }
-            
-            throw new IllegalArgumentException("Cartridge file is not valid");
-        }
-    }
+			switch (fileBytes[AddressMap.CARTRIDGE_TYPE]) {
+			case 0:
+				return new Cartridge(new MBC0(new Rom(fileBytes)));
+			case 1:
+				return new Cartridge(new MBC1(new Rom(fileBytes), RAM_SIZES[fileBytes[AddressMap.RAM_SIZE]]));
+			case 2:
+				return new Cartridge(new MBC1(new Rom(fileBytes), RAM_SIZES[fileBytes[AddressMap.RAM_SIZE]]));
+			case 3:
+				return new Cartridge(new MBC1(new Rom(fileBytes), RAM_SIZES[fileBytes[AddressMap.RAM_SIZE]]));
+			}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ch.epfl.gameboj.component.Component#read(int)
-     */
-    @Override
-    public int read(int address) {
-        return mbc.read(Preconditions.checkBits16(address));
-    }
+			throw new IllegalArgumentException("Cartridge file is not valid");
+		}
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ch.epfl.gameboj.component.Component#write(int, int)
-     */
-    @Override
-    public void write(int address, int data) {
-        mbc.write(Preconditions.checkBits16(address), Preconditions.checkBits8(data));
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.epfl.gameboj.component.Component#read(int)
+	 */
+	@Override
+	public int read(int address) {
+		return mbc.read(Preconditions.checkBits16(address));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.epfl.gameboj.component.Component#write(int, int)
+	 */
+	@Override
+	public void write(int address, int data) {
+		mbc.write(Preconditions.checkBits16(address), Preconditions.checkBits8(data));
+	}
 
 }

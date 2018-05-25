@@ -10,224 +10,261 @@ import ch.epfl.gameboj.bits.Bits;
 
 public class LcdImageLine {
 
-    public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR, BLANK_LCD_VECTOR);
+	public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR,
+			BLANK_LCD_VECTOR);
 
-    private final BitVector LSB;
-    private final BitVector MSB;
-    private final BitVector opacity;
+	private final BitVector LSB;
+	private final BitVector MSB;
+	private final BitVector opacity;
 
-    /**
-     * Construit une ligne d'image.
-     * 
-     * @param msb
-     *            les most significant bits
-     * @param lsb
-     *            les least significant bits
-     * @param opacity
-     *            l'opacité (alpha)
-     */
-    public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
-        Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(), "The three BitVectors must have the same length");
+	/**
+	 * Construit une ligne d'image.
+	 * 
+	 * @param msb
+	 *            les most significant bits
+	 * @param lsb
+	 *            les least significant bits
+	 * @param opacity
+	 *            l'opacité (alpha)
+	 */
+	public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
+		Preconditions.checkArgument(lsb.size() == msb.size() && msb.size() == opacity.size(),
+				"The three BitVectors must have the same length");
 
-        this.LSB = lsb;
-        this.MSB = msb;
-        this.opacity = opacity;
-    }
+		this.LSB = lsb;
+		this.MSB = msb;
+		this.opacity = opacity;
+	}
 
-    public int size() {
-        return LSB.size();
-    }
+	public int size() {
+		return LSB.size();
+	}
 
-    public BitVector getLsb() {
-        return this.LSB;
-    }
+	public BitVector getLsb() {
+		return this.LSB;
+	}
 
-    public BitVector getMsb() {
-        return this.MSB;
-    }
+	public BitVector getMsb() {
+		return this.MSB;
+	}
 
-    public BitVector getOpacity() {
-        return this.opacity;
-    }
+	public BitVector getOpacity() {
+		return this.opacity;
+	}
 
-    public LcdImageLine shift(int distance) {
-        return new LcdImageLine(MSB.shift(-distance), LSB.shift(-distance), opacity.shift(-distance));
-    }
+	/**
+	 * Cette méthode permet de décaler une ligne d'image vers la droite (si la
+	 * distance est positive), ou vers la gauche si elle est négative.
+	 * 
+	 * @param distance
+	 *            la distance de décalage
+	 * @return la ligne décalée
+	 */
+	public LcdImageLine shift(int distance) {
+		return new LcdImageLine(MSB.shift(-distance), LSB.shift(-distance), opacity.shift(-distance));
+	}
 
-    public LcdImageLine extractWrapped(int pixel, int size) {
-        return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size), opacity.extractWrapped(pixel, size));
-    }
-    
-    public LcdImageLine extractZeroExtended(int pixel, int size) {
-        return new LcdImageLine(MSB.extractZeroExtended(pixel, size), LSB.extractZeroExtended(pixel, size), opacity.extractZeroExtended(pixel, size));
-    }
+	/**
+	 * Cette méthode permet d'effectuer une extraction par enroulement sur la ligne
+	 * d'image.
+	 * 
+	 * @param pixel
+	 *            l'index de départ
+	 * @param size
+	 *            la taille de la ligne extraite
+	 * @return la ligne d'image extraite
+	 */
+	public LcdImageLine extractWrapped(int pixel, int size) {
+		return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size),
+				opacity.extractWrapped(pixel, size));
+	}
 
-    /**
-     * Change les couleurs d'une ligne en lui appliquant une palette.
-     * 
-     * @param palette
-     *            la palette à appliquer
-     * @return la ligne coloriée
-     */
-    public LcdImageLine mapColors(int palette) {
-        if (Preconditions.checkBits8(palette) == 0b11100100) {
-            return this;
-        }
+	public LcdImageLine extractZeroExtended(int pixel, int size) {
+		return new LcdImageLine(MSB.extractZeroExtended(pixel, size), LSB.extractZeroExtended(pixel, size),
+				opacity.extractZeroExtended(pixel, size));
+	}
 
-        BitVector mask = null;
-        LcdImageLine coloredLine = this;
+	/**
+	 * Change les couleurs d'une ligne en lui appliquant une palette.
+	 * 
+	 * @param palette
+	 *            la palette à appliquer
+	 * @return la ligne coloriée
+	 */
+	public LcdImageLine mapColors(int palette) {
+		if (Preconditions.checkBits8(palette) == 0b11100100) {
+			return this;
+		}
 
-        for (int i = 0; i < 4; i++) {
+		BitVector mask = null;
+		LcdImageLine coloredLine = this;
 
-            int color = Bits.extract(palette, 2 * i, 2);
+		// Une itération est faite sur les 4 couleurs du DMG (Dot Matrix Game)
+		for (int i = 0; i < 4; i++) {
 
-            switch (i) {
-            case 0:
-                mask = MSB.not().and(LSB.not());
-                break;
-            case 1:
-                mask = MSB.not().and(LSB);
-                break;
-            case 2:
-                mask = MSB.and(LSB.not());
-                break;
-            case 3:
-                mask = MSB.and(LSB);
-                break;
-            }
+			// La couleur correspondante, qui doit remplacer celle représentée par i
+			int color = Bits.extract(palette, 2 * i, 2);
 
-            coloredLine = coloredLine.setColor(mask, color);
-        }
+			// D'abord, seuls les pixels originellement de la couleur représentée par i sont
+			// sélectionnés avec un masque
+			switch (i) {
+			case 0:
+				mask = MSB.not().and(LSB.not());
+				break;
+			case 1:
+				mask = MSB.not().and(LSB);
+				break;
+			case 2:
+				mask = MSB.and(LSB.not());
+				break;
+			case 3:
+				mask = MSB.and(LSB);
+				break;
+			}
 
-        return coloredLine;
-    }
+			// Leur couleur est transformée
+			coloredLine = coloredLine.setColor(mask, color);
+		}
 
-    private LcdImageLine setColor(BitVector mask, int color) {
-        BitVector msbCopy = MSB.extractZeroExtended(0, size()), lsbCopy = LSB.extractZeroExtended(0, size());
+		return coloredLine;
+	}
 
-        switch (Objects.checkIndex(color, 4)) {
-        case 0:
-            msbCopy = msbCopy.setBits(mask, false);
-            lsbCopy = lsbCopy.setBits(mask, false);
-            break;
-        case 1:
-            msbCopy = msbCopy.setBits(mask, false);
-            lsbCopy = lsbCopy.setBits(mask, true);
-            break;
-        case 2:
-            msbCopy = msbCopy.setBits(mask, true);
-            lsbCopy = lsbCopy.setBits(mask, false);
-            break;
-        case 3:
-            msbCopy = msbCopy.setBits(mask, true);
-            lsbCopy = lsbCopy.setBits(mask, true);
-            break;
-        }
+	/**
+	 * Cette méthode permet de changer la couleurs des pixels de la ligne
+	 * sélectionnés avec un masque.
+	 * 
+	 * @param mask
+	 *            le masque de sélection
+	 * @param color
+	 *            la couleur à leur appliquer
+	 * @return la ligne coloriée
+	 */
+	private LcdImageLine setColor(BitVector mask, int color) {
+		BitVector msbCopy = MSB.extractZeroExtended(0, size()), lsbCopy = LSB.extractZeroExtended(0, size());
 
-        return new LcdImageLine(msbCopy, lsbCopy, opacity);
-    }
+		switch (Objects.checkIndex(color, 4)) {
+		case 0:
+			msbCopy = msbCopy.setBits(mask, false);
+			lsbCopy = lsbCopy.setBits(mask, false);
+			break;
+		case 1:
+			msbCopy = msbCopy.setBits(mask, false);
+			lsbCopy = lsbCopy.setBits(mask, true);
+			break;
+		case 2:
+			msbCopy = msbCopy.setBits(mask, true);
+			lsbCopy = lsbCopy.setBits(mask, false);
+			break;
+		case 3:
+			msbCopy = msbCopy.setBits(mask, true);
+			lsbCopy = lsbCopy.setBits(mask, true);
+			break;
+		}
 
-    // other & opacity | this & notOpacity
-    /**
-     * Superpose une ligne avec une autre, en la mettant en dessous.
-     * 
-     * @param other
-     *            l'autre ligne qui est au-dessus
-     * @return la nouvelle ligne
-     */
-    public LcdImageLine below(LcdImageLine other) {
-        Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
+		return new LcdImageLine(msbCopy, lsbCopy, opacity);
+	}
 
-        BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
-        BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
+	/**
+	 * Superpose une ligne avec une autre, en la mettant en dessous.
+	 * 
+	 * @param other
+	 *            l'autre ligne qui est au-dessus
+	 * @return la nouvelle ligne
+	 */
+	public LcdImageLine below(LcdImageLine other) {
+		Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
 
-        return new LcdImageLine(newMSB, newLSB, opacity.or(other.opacity));
-    }
+		BitVector newMSB = (MSB.and(other.opacity.not())).or(other.MSB.and(other.opacity));
+		BitVector newLSB = (LSB.and(other.opacity.not())).or(other.LSB.and(other.opacity));
 
-    /**
-     * Superpose une ligne avec une autre, en la mettant en dessous.
-     * 
-     * @param other
-     *            l'autre ligne
-     * @param opacity
-     *            l'opacité à utiliser
-     * @return la nouvelle ligne
-     */
-    public LcdImageLine below(LcdImageLine other, BitVector opacity) {
-        Preconditions.checkArgument(other.size() == size() && opacity.size() == size(),
-                "The two lines and the opacity vector must have the same length");
+		return new LcdImageLine(newMSB, newLSB, opacity.or(other.opacity));
+	}
 
-        BitVector newMSB = MSB.and(opacity.not()).or(other.MSB.and(opacity));
-        BitVector newLSB = LSB.and(opacity.not()).or(other.LSB.and(opacity));
+	/**
+	 * Superpose une ligne avec une autre, en la mettant en dessous, avec une
+	 * opacité donnée.
+	 * 
+	 * @param other
+	 *            l'autre ligne
+	 * @param opacity
+	 *            l'opacité à utiliser
+	 * @return la nouvelle ligne
+	 */
+	public LcdImageLine below(LcdImageLine other, BitVector opacity) {
+		Preconditions.checkArgument(other.size() == size() && opacity.size() == size(),
+				"The two lines and the opacity vector must have the same length");
 
-        return new LcdImageLine(newMSB, newLSB, this.opacity.or(opacity));
-    }
+		BitVector newMSB = MSB.and(opacity.not()).or(other.MSB.and(opacity));
+		BitVector newLSB = LSB.and(opacity.not()).or(other.LSB.and(opacity));
 
-    /**
-     * Joint deux lignes, à partir d'un index.
-     * 
-     * @param other
-     *            l'autre ligne
-     * @param n
-     *            l'index de démarcation
-     * @return la nouvelle ligne
-     */
-    public LcdImageLine join(LcdImageLine other, int n) {
-        int size = size();
-        Preconditions.checkArgument(other.size() == size, "The two image lines must have the same length");
-        Objects.checkIndex(n, size);
+		return new LcdImageLine(newMSB, newLSB, this.opacity.or(opacity));
+	}
 
-        return new LcdImageLine(MSB.clipLSB(n).or(other.MSB.clipMSB(n)), LSB.clipLSB(n).or(other.LSB.clipMSB(n)),
-                opacity.or(other.opacity));
-    }
+	/**
+	 * Joint deux lignes, à partir d'un index.
+	 * 
+	 * @param other
+	 *            l'autre ligne
+	 * @param n
+	 *            l'index de démarcation
+	 * @return la nouvelle ligne
+	 */
+	public LcdImageLine join(LcdImageLine other, int n) {
+		int size = size();
+		Preconditions.checkArgument(other.size() == size, "The two image lines must have the same length");
+		Objects.checkIndex(n, size);
 
-    @Override
-    public boolean equals(Object o) {
-        return (o instanceof LcdImageLine) && LSB.equals(((LcdImageLine) o).getLsb())
-                && MSB.equals(((LcdImageLine) o).getMsb()) && opacity.equals(((LcdImageLine) o).getOpacity());
-    }
+		return new LcdImageLine(MSB.clipLSB(n).or(other.MSB.clipMSB(n)), LSB.clipLSB(n).or(other.LSB.clipMSB(n)),
+				opacity.or(other.opacity));
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(MSB, LSB, opacity);
-    }
+	@Override
+	public boolean equals(Object o) {
+		return (o instanceof LcdImageLine) && LSB.equals(((LcdImageLine) o).getLsb())
+				&& MSB.equals(((LcdImageLine) o).getMsb()) && opacity.equals(((LcdImageLine) o).getOpacity());
+	}
 
-    public static final class Builder {
+	@Override
+	public int hashCode() {
+		return Objects.hash(MSB, LSB, opacity);
+	}
 
-        BitVector.Builder msbBuilder;
-        BitVector.Builder lsbBuilder;
+	public static final class Builder {
 
-        public Builder(int width) {
-            msbBuilder = new BitVector.Builder(width);
-            lsbBuilder = new BitVector.Builder(width);
-        }
+		BitVector.Builder msbBuilder;
+		BitVector.Builder lsbBuilder;
 
-        /**
-         * Modifie les octets d'une ligne.
-         * 
-         * @param index
-         *            l'index des octets à modifier (en bits)
-         * @param byteMSB
-         *            l'octet des MSB
-         * @param byteLSB
-         *            l'octet des LSB
-         * @return le constructeur
-         */
-        public Builder setBytes(int index, int byteMSB, int byteLSB) {
-            msbBuilder.setByte(index, byteMSB);
-            lsbBuilder.setByte(index, byteLSB);
-            return this;
-        }
+		public Builder(int width) {
+			msbBuilder = new BitVector.Builder(width);
+			lsbBuilder = new BitVector.Builder(width);
+		}
 
-        /**
-         * Construit la ligne.
-         * 
-         * @return la ligne
-         */
-        public LcdImageLine build() {
-            BitVector lsb = lsbBuilder.build();
-            BitVector msb = msbBuilder.build();
-            return new LcdImageLine(msb, lsb, msb.or(lsb));
-        }
-    }
+		/**
+		 * Modifie les octets d'une ligne.
+		 * 
+		 * @param index
+		 *            l'index des octets à modifier (en bits)
+		 * @param byteMSB
+		 *            l'octet des MSB
+		 * @param byteLSB
+		 *            l'octet des LSB
+		 * @return le constructeur
+		 */
+		public Builder setBytes(int index, int byteMSB, int byteLSB) {
+			msbBuilder.setByte(index, byteMSB);
+			lsbBuilder.setByte(index, byteLSB);
+			return this;
+		}
+
+		/**
+		 * Construit la ligne.
+		 * 
+		 * @return la ligne
+		 */
+		public LcdImageLine build() {
+			BitVector lsb = lsbBuilder.build();
+			BitVector msb = msbBuilder.build();
+			return new LcdImageLine(msb, lsb, msb.or(lsb));
+		}
+	}
 }
