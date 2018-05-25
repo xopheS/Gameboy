@@ -9,6 +9,13 @@ import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
+/**
+ * Cette classe modélise le Joypad de la GameBoy.
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class Joypad implements Component {
 	private final Cpu cpu;
 
@@ -16,10 +23,12 @@ public final class Joypad implements Component {
 	private int line0 = 0;
 	private int line1 = 0;
 
+	// Enumération représentant les touches du Joypad
 	public enum Key {
 		RIGHT, LEFT, UP, DOWN, A, B, SELECT, START
 	}
 
+	// Enumération représentant les bits d'état du Joypad
 	private enum KBState implements Bit {
 		COL0, COL1, COL2, COL3, LINE0, LINE1, UNUSED_6, UNUSED_7
 	}
@@ -84,6 +93,9 @@ public final class Joypad implements Component {
 
 	@Override
 	public int read(int address) {
+		/* Comme la méthode read est la seule interface permettant d'obtenir la valeur 
+		 * du registre P1, celui-ci n'est calculé que lors de la lecture.
+		 */
 		computeP1();
 
 		// Les valeurs sont "active-low", donc pour maintenir une classe plus logique,

@@ -15,12 +15,19 @@ import ch.epfl.gameboj.Preconditions;
  */
 public final class DmaController {
 	private static final int COPY_LENGTH = 160;
+	/* DmaController est un singleton, car non seulement n'existe-t-il qu'un seul contrôleur
+	 * physiquement, mais il n'y a pas besoin d'instancier la classe plus qu'une fois
+	 */
 	private static final DmaController DMA_CONTROLLER = new DmaController();
 	private Bus bus;
 	private boolean isActive;
 	private int startAddress;
 	private int currentIndex;
 
+	private DmaController() {
+		
+	}
+	
 	void setBus(Bus bus) {
 		this.bus = bus;
 	}
@@ -86,7 +93,7 @@ public final class DmaController {
 	static DmaController getDmaController() {
 		return DMA_CONTROLLER;
 	}
-
+	
 	boolean isActive() {
 		return isActive;
 	}

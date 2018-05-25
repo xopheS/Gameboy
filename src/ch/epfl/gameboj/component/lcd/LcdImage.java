@@ -12,6 +12,13 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 
+/**
+ * Cette classe modélise de manière abstraite une image LCD de la GameBoy.
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class LcdImage {
 
 	public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT,

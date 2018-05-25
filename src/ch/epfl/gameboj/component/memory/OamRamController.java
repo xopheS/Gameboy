@@ -8,7 +8,7 @@ import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
 /**
- * Cette classe rajoute des fonctionnalités de VRAM à un RamController.
+ * Cette classe rajoute des fonctionnalités d'OAM à un RamController.
  * 
  * @author Christophe Saad (282557)
  * @author David Cian (287967)
@@ -16,19 +16,21 @@ import ch.epfl.gameboj.bits.Bits;
  */
 public final class OamRamController extends RamController {
 
+	// Enumération des informations présentes dans l'OAM pour chaque sprite
 	public enum DISPLAY_DATA {
 		Y_COORD, X_COORD, TILE_INDEX, ATTRIBUTES
 	}
 
+	// Enumération des attributs présents dans le dernier octet des informations d'un sprite
 	public enum ATTRIBUTES implements Bit {
 		P_NUM0, P_NUM1, P_NUM2, VRAM_BANK, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
 	}
 
 	// Maximum 40 sprites peuvent être sur l'écran en même temps
-	public static final int MAX_SPRITES = 40;
+	private static final int MAX_SPRITES = 40;
 	// Maximum 10 sprites peuvent être sur une ligne en même temps
 	public static final int SPRITES_PER_LINE = 10;
-	public static final int SPRITE_ATTR_BYTES = DISPLAY_DATA.values().length;
+	private static final int SPRITE_ATTR_BYTES = DISPLAY_DATA.values().length;
 	// Le décalage de l'abscisse et de l'ordonnée des sprites, imposé pour garder
 	// leurs coordonnées positives
 	public static final int SPRITE_XOFFSET = 8;

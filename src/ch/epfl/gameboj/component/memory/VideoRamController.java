@@ -2,11 +2,18 @@ package ch.epfl.gameboj.component.memory;
 
 import ch.epfl.gameboj.AddressMap;
 
+/**
+ * Cette classe rajoute des fonctionnalités de VRAM à un RamController.
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class VideoRamController extends RamController {
 
-	public static final int BYTES_PER_TILE = 16;
-	public static final int TILE_SOURCE_SIZE = 256;
-	public static final int TILE_SOURCE_HALF = TILE_SOURCE_SIZE / 2;
+	private static final int BYTES_PER_TILE = 16;
+	private static final int TILE_SOURCE_SIZE = 256;
+	private static final int TILE_SOURCE_HALF = TILE_SOURCE_SIZE / 2;
 
 	public VideoRamController(Ram ram, int startAddress) {
 		super(ram, startAddress);

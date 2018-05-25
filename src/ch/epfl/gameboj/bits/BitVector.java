@@ -189,6 +189,12 @@ public final class BitVector {
 		this(size, false);
 	}
 
+	/**
+	 * Ce getter retourne le tableau sous-jacent d'entiers du vecteur de bits, 
+	 * en préservant l'immuabilité de la classe
+	 * 
+	 * @return une copie du tableau sous-jacent
+	 */
 	public int[] getArray() {
 		return Arrays.copyOf(this.bitVector, this.bitVector.length);
 	}

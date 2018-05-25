@@ -28,6 +28,13 @@ import ch.epfl.gameboj.component.memory.OamRamController.DISPLAY_DATA;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.VideoRamController;
 
+/**
+ * Cette classe modélise un contrôleur LCD, qui gère l'affichage des images à l'écran.
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class LcdController implements Component, Clocked {
 
 	private enum LCDReg implements Register {
@@ -58,10 +65,15 @@ public final class LcdController implements Component, Clocked {
 	public static final int IMAGE_CYCLE_DURATION = 154 * LINE_CYCLE_DURATION;
 	// L'image actuellement affichée par le contrôleur LCD
 	private LcdImage displayedImage = BLANK_LCD_IMAGE;
-	// Un contrôleur pour la VRAM
+	/* Les contrôleurs ci-dessous sont des sous-classes de RamController,
+	 * car ils permettent d'avoir une grande cohésion et un couplage faible (en plus
+	 * de mieux respecter la séparation des préoccupations et le principe de responsabilité unique)
+	 */
+	// Un contrôleur pour la VRAM, permettant l'utilisation de méthodes utilitaires en lien avec la VRAM
 	private final VideoRamController videoRamController;
-	// Un contrôleur pour la OAM
+	// Un contrôleur pour la OAM, permettant l'utilisation de méthodes utilitaires en lien avec l'OAM
 	private final OamRamController oamRamController;
+	
 	private final Cpu cpu;
 	// Cet attribut stocke le prochain cycle où des opérations sont à effectuer
 	private long nextNonIdleCycle = Long.MAX_VALUE;
@@ -310,22 +322,22 @@ public final class LcdController implements Component, Clocked {
 			int addressInVram;
 			// L'index de la tuile dans la VRAM
 			int tileIndexInVram;
+			// L'index de la ligne au sein de la tuile
+			int tileLineIndex;
 
 			if (bg) {
 				tileIndexInVram = (((lcdRegs.get(LCDReg.SCY) + lineIndex) % BG_SIZE) / TILE_SIZE) * BG_TILE_SIZE + i;
+				int displayDataArea = lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA) ? 1 : 0;
+				addressInVram = AddressMap.BG_DISPLAY_DATA[displayDataArea] + tileIndexInVram;
+				tileLineIndex = bgTileLineIndex(lineIndex);
 			} else {
 				tileIndexInVram = (lineIndex / TILE_SIZE) * WIN_TILE_SIZE + i;
-			}
-
-			if (bg ? lcdRegs.testBit(LCDReg.LCDC, LCDC.BG_AREA) : lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA)) {
-				addressInVram = AddressMap.BG_DISPLAY_DATA[1] + tileIndexInVram;
-			} else {
-				addressInVram = AddressMap.BG_DISPLAY_DATA[0] + tileIndexInVram;
+				int displayDataArea = lcdRegs.testBit(LCDReg.LCDC, LCDC.WIN_AREA) ? 1 : 0;
+				addressInVram = AddressMap.BG_DISPLAY_DATA[displayDataArea] + tileIndexInVram;
+				tileLineIndex = winTileLineIndex(lineIndex);
 			}
 
 			int tileTypeIndex = videoRamController.read(addressInVram);
-
-			int tileLineIndex = bg ? bgTileLineIndex(lineIndex) : winTileLineIndex(lineIndex);
 
 			// Les octets (MSB et LSB) de la ligne de la tuile
 			int[] tileLineBytes = videoRamController.tileLineBytes(tileTypeIndex, tileLineIndex, tileSource);

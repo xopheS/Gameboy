@@ -22,9 +22,22 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+/**
+ * Cette classe contient le point d'entrée de l'application Java, elle gère l'interface de l'utilisateur.
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public class Main extends Application {
 	private static GameBoy gameboj;
 
+	/**
+	 * Point d'entrée du programme
+	 * 
+	 * @param args
+	 *            les arguments de lancement
+	 */
 	public static void main(String[] args) {
 		Application.launch(args);
 	}
