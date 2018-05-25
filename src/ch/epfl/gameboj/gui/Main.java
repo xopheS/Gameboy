@@ -100,8 +100,10 @@ public class Main extends Application {
         Scene splashScreen = new Scene(splashScreenRoot, 200, 200);
 
         ImageView emulationView = new ImageView();
-        emulationView.setFitWidth(2 * LCD_WIDTH);
-        emulationView.setFitHeight(2 * LCD_HEIGHT);
+//        emulationView.setFitWidth(2 * LCD_WIDTH);
+//        emulationView.setFitHeight(2 * LCD_HEIGHT);
+        emulationView.setFitWidth(1.1 * LCD_WIDTH);
+        emulationView.setFitHeight(1.1 * LCD_HEIGHT);
 
         BorderPane simpleBorderPane = new BorderPane(emulationView);
 
@@ -200,16 +202,13 @@ public class Main extends Application {
         	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
         		switch (n) {
         		case "First":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(20);
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFF27FF2);
         			break;
         		case "Second":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(100);
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF922AB1);
         			break;
         		case "Third":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(150);
-        			break;
-        		default:
-        			System.out.println("problem");
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFADB803);
         			break;
         		}
         	});
@@ -367,9 +366,14 @@ public class Main extends Application {
         ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, saveButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
-
+        
         developmentBorderPane.setTop(topBox);
-        developmentBorderPane.setCenter(emulationView);
+        ImageView gameboySkin = new ImageView(new Image("file:game-boy-vector-free-download-cartoon-gameboy.jpg"));
+        Pane emulationPane = new Pane(gameboySkin);
+        emulationView.setTranslateX(130);
+        emulationView.setTranslateY(70);
+        emulationPane.getChildren().add(emulationView);
+        developmentBorderPane.setCenter(emulationPane);
         developmentBorderPane.setLeft(leftViewPane);
 
         Scene developmentModeScreen = new Scene(developmentBorderPane);
@@ -381,7 +385,10 @@ public class Main extends Application {
         Button extendedModeButton = new Button("Extended Mode");
         extendedModeButton.setOnAction(e -> primaryStage.setScene(extendedModeScreen));
         Button developmentModeButton = new Button("Development Mode");
-        developmentModeButton.setOnAction(e -> primaryStage.setScene(developmentModeScreen));
+        developmentModeButton.setOnAction(e -> {
+        	primaryStage.setScene(developmentModeScreen);
+        	primaryStage.setMaximized(true);
+        });
         VBox modeButtonsBox = new VBox(10);
 
         modeButtonsBox.getChildren().addAll(simpleModeButton, extendedModeButton, developmentModeButton);

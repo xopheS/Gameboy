@@ -39,7 +39,6 @@ public final class ImageConverter {
         }
         
         void setARGB(int argb) {
-        	Preconditions.checkBits8(argb);
         	this.alpha = Bits.extract(argb, 0, Byte.SIZE);
         	this.red = Bits.extract(argb, Byte.SIZE, Byte.SIZE);
         	this.green = Bits.extract(argb, 2 * Byte.SIZE, Byte.SIZE);
