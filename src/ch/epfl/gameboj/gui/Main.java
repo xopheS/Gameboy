@@ -44,8 +44,10 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -181,12 +183,14 @@ public class Main extends Application {
         MenuItem changeSpeedMenuItem = new MenuItem("Change speed");
         MenuItem gameboyConfigurationMenuItem = new MenuItem("Configuration");
         gameboyConfigurationMenuItem.setOnAction(e -> {
+        	Label volumeLabel = new Label("Global volume");
         	Slider volumeSlider = new Slider();
         	volumeSlider.setMin(0);
         	volumeSlider.setMax(100);
         	volumeSlider.setValue(50);
         	GridPane configPane = new GridPane();
-        	configPane.getChildren().add(volumeSlider);
+        	configPane.add(volumeLabel, 0, 0);
+        	configPane.add(volumeSlider, 0, 1);
         	Scene gbConfigScene = new Scene(configPane);
         	Stage gbConfigStage = new Stage();
         	gbConfigStage.setScene(gbConfigScene);
@@ -227,7 +231,23 @@ public class Main extends Application {
         Menu preferencesMenu = new Menu("Preferences"); // program preferences
         MenuItem themeMenuItem = new MenuItem("Theme");
         MenuItem skinsMenuItem = new MenuItem("Skins");
-        preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem);
+        MenuItem languageMenuItem = new MenuItem("Language");
+        languageMenuItem.setOnAction(e -> {
+        	GridPane languageSelectionPane = new GridPane();
+        	ToggleGroup languageSelectionGroup = new ToggleGroup();
+        	RadioButton englishButton = new RadioButton("English");
+        	englishButton.setSelected(true);
+        	englishButton.setToggleGroup(languageSelectionGroup);
+        	RadioButton frenchButton = new RadioButton("French");
+        	frenchButton.setToggleGroup(languageSelectionGroup);
+        	languageSelectionPane.add(englishButton, 0, 0);
+        	languageSelectionPane.add(frenchButton, 0, 1);
+        	Scene languageSelectionScene = new Scene(languageSelectionPane);
+        	Stage languageSelectionStage = new Stage();
+        	languageSelectionStage.setScene(languageSelectionScene);
+        	languageSelectionStage.show();
+        });
+        preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem, languageMenuItem);
 
         Menu helpMenu = new Menu("Help"); // help functionality
         MenuItem programmingManualMenuItem = new MenuItem("Nintendo programming manual");
@@ -243,6 +263,34 @@ public class Main extends Application {
         tbResetButton.setOnAction(e -> {
             try {
                 gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
+                
+                animationTimer.stop();
+                
+                start = System.nanoTime();
+                
+                animationTimer = new AnimationTimer() {
+                    @Override
+                    public void handle(long now) {
+                        long elapsed = now - start - pauseTime;
+                        long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
+
+                        gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
+
+                        emulationView.requestFocus();
+                        emulationView.setImage(ImageConverter.convert(gameboj.getLcdController().currentImage()));
+
+                        viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
+                        viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
+                        backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
+                        windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));
+                        
+                        LcdImage[] spriteLayerImages = gameboj.getLcdController().getSprites();
+                        bgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[0]));
+                        fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
+                    }
+                };
+                
+                animationTimer.start();
             } catch (FileNotFoundException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
@@ -341,7 +389,7 @@ public class Main extends Application {
         noAccountButton.setOnAction(e -> {
         	primaryStage.setScene(modeChoiceScreen);
         });
-        loginPane.add(noAccountButton, 1, 3);
+        loginPane.add(noAccountButton, 1, 4);
         
         Scene loginScreen = new Scene(loginPane);
         loginScreen.setOnKeyPressed(e -> {
@@ -354,9 +402,10 @@ public class Main extends Application {
         			ps.setString(2, passwordField.getText());
         			ResultSet result = ps.executeQuery();
         			if (result.next()) {
-        				System.out.println("login successful!");
+        				primaryStage.setScene(modeChoiceScreen);
         			} else {
-        				System.out.println("login unsuccesful");
+        				Text loginResultText = new Text("Username/password wrong");
+        				loginPane.add(loginResultText, 0, 3);
         			}
         		} catch (SQLException ex) {
         			ex.printStackTrace();
