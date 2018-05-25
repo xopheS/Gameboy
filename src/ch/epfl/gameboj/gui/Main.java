@@ -1,18 +1,22 @@
 package ch.epfl.gameboj.gui;
 
 import static ch.epfl.gameboj.GameBoy.CYCLES_PER_NANOSECOND;
+import static ch.epfl.gameboj.component.lcd.LcdController.IMAGE_CYCLE_DURATION;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
-import static ch.epfl.gameboj.component.lcd.LcdController.IMAGE_CYCLE_DURATION;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
@@ -29,14 +33,19 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -48,6 +57,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -60,9 +70,6 @@ public class Main extends Application {
     long pauseTime;
     int cycleSpeed = 1;
     AnimationTimer animationTimer;
-
-    private static final Map<Key, String> keyToString = Map.of(Key.A, "A", Key.B, "B", Key.START, "S", Key.SELECT,
-            "Space"); // TODO use this, invert mapping
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -303,12 +310,61 @@ public class Main extends Application {
         VBox modeButtonsBox = new VBox(10);
 
         modeButtonsBox.getChildren().addAll(simpleModeButton, extendedModeButton, developmentModeButton);
+        modeButtonsBox.setAlignment(Pos.CENTER);
+        modeButtonsBox.setPadding(new Insets(25, 25, 25, 25));
 
         BorderPane modeChoicePane = new BorderPane(modeButtonsBox);
 
         Scene modeChoiceScreen = new Scene(modeChoicePane);
+        
+        // Login screen
+        GridPane loginPane = new GridPane();
+        loginPane.setAlignment(Pos.CENTER);
+        loginPane.setHgap(10);
+        loginPane.setVgap(10);
+        loginPane.setPadding(new Insets(25, 25, 25, 25));
+        
+        Text loginText = new Text("Please log in");
+        loginPane.add(loginText, 0, 0, 2, 1);
+        
+        Label usernameLabel = new Label("Username:");
+        loginPane.add(usernameLabel, 0, 1);
+        TextField usernameField = new TextField();
+        loginPane.add(usernameField, 1, 1);
+        
+        Label passwordLabel = new Label("Password:");
+        loginPane.add(passwordLabel, 0, 2);
+        PasswordField passwordField = new PasswordField();
+        loginPane.add(passwordField, 1, 2);
+        
+        Button noAccountButton = new Button("Continue without log in");
+        noAccountButton.setOnAction(e -> {
+        	primaryStage.setScene(modeChoiceScreen);
+        });
+        loginPane.add(noAccountButton, 1, 3);
+        
+        Scene loginScreen = new Scene(loginPane);
+        loginScreen.setOnKeyPressed(e -> {
+        	if (e.getCode() == KeyCode.ENTER) {
+        		try {
+        			Connection connection = DriverManager.getConnection("jdbc:mysql://sql7.freemysqlhosting.net:3306/sql7239737", "sql7239737", "QTbGGaykPd");
+        			PreparedStatement ps = 
+        					connection.prepareStatement("SELECT `Username`, `Password` FROM `Gameboj Users` WHERE `Username` = ? AND `Password` = ?");
+        			ps.setString(1, usernameField.getText());
+        			ps.setString(2, passwordField.getText());
+        			ResultSet result = ps.executeQuery();
+        			if (result.next()) {
+        				System.out.println("login successful!");
+        			} else {
+        				System.out.println("login unsuccesful");
+        			}
+        		} catch (SQLException ex) {
+        			ex.printStackTrace();
+        		}
+        	}
+        });
 
-        primaryStage.setScene(modeChoiceScreen); // TODO set to splash screen
+        primaryStage.setScene(loginScreen); // TODO set to splash screen
         primaryStage.show();
 
         start = System.nanoTime();
