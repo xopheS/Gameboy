@@ -5,11 +5,14 @@ import static ch.epfl.gameboj.component.lcd.LcdController.IMAGE_CYCLE_DURATION;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_HEIGHT;
 import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
 
+import java.awt.Desktop;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -328,7 +331,29 @@ public class Main extends Application {
 
         Menu helpMenu = new Menu("Help"); // help functionality
         MenuItem programmingManualMenuItem = new MenuItem("Nintendo programming manual");
+        programmingManualMenuItem.setOnAction(e -> {
+        	try {
+				Desktop.getDesktop().browse(new URI("http://chrisantonellis.com/files/gameboy/gb-programming-manual.pdf"));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (URISyntaxException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        });
         MenuItem aboutMenuItem = new MenuItem("About");
+        aboutMenuItem.setOnAction(e -> {
+        	try {
+				Desktop.getDesktop().browse(new URI("https://dave_and_chris.gitlab.io/gameboj/"));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (URISyntaxException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        });
         helpMenu.getItems().addAll(programmingManualMenuItem, aboutMenuItem);
 
         MenuBar mainMenuBar = new MenuBar();
