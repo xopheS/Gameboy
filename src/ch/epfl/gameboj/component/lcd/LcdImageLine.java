@@ -8,6 +8,13 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.Bits;
 
+/**
+ * Cette classe représente une ligne d'une image LCD.
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public class LcdImageLine {
 
     public static final LcdImageLine BLANK_LCD_IMAGE_LINE = new LcdImageLine(BLANK_LCD_VECTOR, BLANK_LCD_VECTOR, BLANK_LCD_VECTOR);
@@ -54,6 +61,14 @@ public class LcdImageLine {
         return new LcdImageLine(MSB.shift(-distance), LSB.shift(-distance), opacity.shift(-distance));
     }
 
+    /**
+	 * Cette méthode permet de décaler une ligne d'image vers la droite (si la
+	 * distance est positive), ou vers la gauche si elle est négative.
+	 * 
+	 * @param distance
+	 *            la distance de décalage
+	 * @return la ligne décalée
+	 */
     public LcdImageLine extractWrapped(int pixel, int size) {
         return new LcdImageLine(MSB.extractWrapped(pixel, size), LSB.extractWrapped(pixel, size), opacity.extractWrapped(pixel, size));
     }
@@ -77,10 +92,14 @@ public class LcdImageLine {
         BitVector mask = null;
         LcdImageLine coloredLine = this;
 
+		// Une itération est faite sur les 4 couleurs du DMG (Dot Matrix Game)
         for (int i = 0; i < 4; i++) {
 
+			// La couleur correspondante, qui doit remplacer celle représentée par i
             int color = Bits.extract(palette, 2 * i, 2);
 
+            // D'abord, seuls les pixels originellement de la couleur représentée par i sont
+         	// sélectionnés avec un masque
             switch (i) {
             case 0:
                 mask = MSB.not().and(LSB.not());
@@ -95,13 +114,25 @@ public class LcdImageLine {
                 mask = MSB.and(LSB);
                 break;
             }
-
+			
+            // Leur couleur est transformée
             coloredLine = coloredLine.setColor(mask, color);
         }
 
         return coloredLine;
     }
 
+    
+    /**
+	 * Cette méthode permet de changer la couleurs des pixels de la ligne
+	 * sélectionnés avec un masque.
+	 * 
+	 * @param mask
+	 *            le masque de sélection
+	 * @param color
+	 *            la couleur à leur appliquer
+	 * @return la ligne coloriée
+	 */
     private LcdImageLine setColor(BitVector mask, int color) {
         BitVector msbCopy = MSB.extractZeroExtended(0, size()), lsbCopy = LSB.extractZeroExtended(0, size());
 
@@ -127,14 +158,13 @@ public class LcdImageLine {
         return new LcdImageLine(msbCopy, lsbCopy, opacity);
     }
 
-    // other & opacity | this & notOpacity
     /**
-     * Superpose une ligne avec une autre, en la mettant en dessous.
-     * 
-     * @param other
-     *            l'autre ligne qui est au-dessus
-     * @return la nouvelle ligne
-     */
+	 * Superpose une ligne avec une autre, en la mettant en dessous.
+	 * 
+	 * @param other
+	 *            l'autre ligne qui est au-dessus
+	 * @return la nouvelle ligne
+	 */
     public LcdImageLine below(LcdImageLine other) {
         Preconditions.checkArgument(other.size() == size(), "The two lines must have the same length");
 
@@ -192,6 +222,15 @@ public class LcdImageLine {
         return Objects.hash(MSB, LSB, opacity);
     }
 
+    
+    /**
+	 * Cette classe permet de construire une ligne d'une image lcd (comme
+	 * celle-ci est immuable).
+	 * 
+	 * @author Christophe Saad (282557)
+	 * @author David Cian (287967)
+	 *
+	 */
     public static final class Builder {
 
         BitVector.Builder msbBuilder;

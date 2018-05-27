@@ -205,18 +205,33 @@ public class Main extends Application {
         	volumeSlider.setMax(100);
         	volumeSlider.setValue(50);
         	ChoiceBox<String> gbThemes = new ChoiceBox<>(FXCollections.observableArrayList(
-            	    "First", "Second", "Third")
+            	    "Standard", "Creepy", "Beautiful Day", "Night")
             );
         	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
         		switch (n) {
-        		case "First":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFF27FF2);
+        		case "Standard":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFFFFFFF);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFD3D3D3);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFFA9A9A9);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF000000);
         			break;
-        		case "Second":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF922AB1);
+        		case "Creepy":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFA10684);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFF00FF00);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFFFF0921);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFFB3B191);
         			break;
-        		case "Third":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFADB803);
+        		case "Beautiful Day":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF25FDE9);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFFCDC12);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFF3A9D23);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF3F2204);
+        			break;
+        		case "Night":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF1B019B);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFAFAFAF);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFF303030);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF000000);
         			break;
         		}
         	});
@@ -390,6 +405,7 @@ public class Main extends Application {
         developmentBorderPane.setTop(topBox);
         ImageView gameboySkin = new ImageView(new Image("file:game-boy-vector-free-download-cartoon-gameboy.jpg"));
         Pane emulationPane = new Pane(gameboySkin);
+        
         emulationView.setTranslateX(130);
         emulationView.setTranslateY(70);
         emulationPane.getChildren().add(emulationView);
