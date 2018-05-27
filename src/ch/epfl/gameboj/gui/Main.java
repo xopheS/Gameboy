@@ -240,8 +240,11 @@ public class Main extends Application {
         	configPane.add(volumeSlider, 0, 1);
         	configPane.add(themeLabel, 0, 2);
         	configPane.add(gbThemes, 0, 3);
-        	Scene gbConfigScene = new Scene(configPane);
+        	Scene gbConfigScene = new Scene(configPane, 130, 75);
         	Stage gbConfigStage = new Stage();
+        	gbConfigStage.setX(100);
+        	gbConfigStage.setY(100);
+        	
         	gbConfigStage.setScene(gbConfigScene);
         	gbConfigStage.show();
         });
@@ -433,7 +436,7 @@ public class Main extends Application {
 
         BorderPane modeChoicePane = new BorderPane(modeButtonsBox);
 
-        Scene modeChoiceScreen = new Scene(modeChoicePane);
+        Scene modeChoiceScreen = new Scene(modeChoicePane, 435, 275);
         
         // Login screen
         GridPane loginPane = new GridPane();
