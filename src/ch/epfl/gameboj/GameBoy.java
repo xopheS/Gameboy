@@ -16,6 +16,7 @@ import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 import ch.epfl.gameboj.component.sound.SoundController;
 import ch.epfl.gameboj.component.time.Timer;
+import ch.epfl.gameboj.gui.Main;
 
 /**
  * Cette classe modélise la Gameboy en entier, avec tous ses composants
@@ -40,7 +41,7 @@ public final class GameBoy {
     private final Joypad joypad = new Joypad(cpu);
 
     public static final long CYCLES_PER_SECOND = (long) Math.pow(2, 20);
-    public static final double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / Math.pow(10, 9);
+    public static final double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / 1e9;
 
     private long currentCycle;
     
@@ -120,7 +121,9 @@ public final class GameBoy {
         final long cycleCopy = cycle;
         while (currentCycle < cycle) {
             timer.cycle(currentCycle);
-            soundController.cycle(currentCycle);
+            if (!Main.isMuted) { //FIXME
+                soundController.cycle(currentCycle);
+            }
             lcdController.cycle(currentCycle);
             cpu.cycle(currentCycle);
             currentCycle++;

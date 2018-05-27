@@ -18,6 +18,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
@@ -34,6 +36,8 @@ import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
@@ -70,16 +74,20 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class Main extends Application {
+	private Locale currentLocale = new Locale("ro", "RO");
+	private ResourceBundle currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
     private static GameBoy gameboj;
     boolean isPaused;
     boolean isSpeedButtonPressed;
     boolean isScreenCapOn;
+    public static boolean isMuted;
     List<Image> screenCapFrames = new ArrayList<>();
     long start;
     long timeOnPause;
     long pauseTime;
     int cycleSpeed = 1;
     AnimationTimer animationTimer;
+    public static DoubleProperty currentVolume = new SimpleDoubleProperty();
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -95,6 +103,8 @@ public class Main extends Application {
         
         gameboj = saveFileName == null ? new GameBoy(Cartridge.ofFile(new File(fileName))) 
         		: new GameBoy(Cartridge.ofFile(new File(fileName)), saveFileName); // FIXME
+        
+        currentVolume.set(0);
 
         // TODO replace gameboj with clever name
         primaryStage.setTitle("gameboj: the GameBoy emulator");
@@ -132,10 +142,10 @@ public class Main extends Application {
 
         VBox topBox = new VBox();
 
-        Menu fileMenu = new Menu("File"); // file related functionality
-        MenuItem saveCartridgeMenuItem = new MenuItem("Save");
-        MenuItem saveAsCartridgeMenuItem = new MenuItem("Save as");
-        MenuItem loadCartridgeMenuItem = new MenuItem("Load");
+        Menu fileMenu = new Menu(currentGuiBundle.getString("file")); // file related functionality
+        MenuItem saveCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("save"));
+        MenuItem saveAsCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("saveAs"));
+        MenuItem loadCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("load"));
         loadCartridgeMenuItem.setOnAction(e -> {
             FileChooser gamePakChooser = new FileChooser();
             gamePakChooser.setTitle("Choose Game Pak");
@@ -152,9 +162,9 @@ public class Main extends Application {
 				e1.printStackTrace();
 			}
         });
-        MenuItem exitMenuItem = new MenuItem("Exit");
+        MenuItem exitMenuItem = new MenuItem(currentGuiBundle.getString("exit"));
         exitMenuItem.setOnAction(e -> System.exit(0));
-        fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, loadCartridgeMenuItem);
+        fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem);
 
         Menu dumpMenu = new Menu("Dump"); // dumping related functionality
         MenuItem dumpTileSourceMenuItem = new MenuItem("Dump tile source");
@@ -164,7 +174,7 @@ public class Main extends Application {
         dumpMenu.getItems().addAll(dumpTileSourceMenuItem, dumpBackgroundMenuItem, dumpWindowMenuItem,
                 dumpSpritesMenuItem);
 
-        Menu debugMenu = new Menu("Debug"); // debugging related functionality
+        Menu debugMenu = new Menu(currentGuiBundle.getString("debug")); // debugging related functionality
         MenuItem stepByStepMenuItem = new MenuItem("Step by step execution");
         MenuItem decompileMenuItem = new MenuItem("Decompile");
         MenuItem showStateMenuItem = new MenuItem("Show Gameboy state");
@@ -193,40 +203,42 @@ public class Main extends Application {
         debugMenu.getItems().addAll(stepByStepMenuItem, decompileMenuItem, disassembleBootMenuItem,
         		disassembleHeaderMenuItem, showStateMenuItem);
 
-        Menu optionsMenu = new Menu("Options"); // gameboy options
+        Menu optionsMenu = new Menu(currentGuiBundle.getString("options")); // gameboy options
         MenuItem changeSpeedMenuItem = new MenuItem("Change speed");
         MenuItem gameboyConfigurationMenuItem = new MenuItem("Configuration");
         
+        Label volumeLabel = new Label("Global volume");
+    	Label themeLabel = new Label("Gameboy theme");
+    	Slider volumeSlider = new Slider();
+    	volumeSlider.setMin(0);
+    	volumeSlider.setMax(100);
+    	volumeSlider.setValue(50);
+    	currentVolume.bind(volumeSlider.valueProperty());
+    	ChoiceBox<String> gbThemes = new ChoiceBox<>(FXCollections.observableArrayList(
+        	    "First", "Second", "Third")
+        );
+    	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
+    		switch (n) {
+    		case "First":
+    			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFF27FF2);
+    			break;
+    		case "Second":
+    			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF922AB1);
+    			break;
+    		case "Third":
+    			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFADB803);
+    			break;
+    		}
+    	});
+    	GridPane configPane = new GridPane();
+    	configPane.add(volumeLabel, 0, 0);
+    	configPane.add(volumeSlider, 0, 1);
+    	configPane.add(themeLabel, 0, 2);
+    	configPane.add(gbThemes, 0, 3);
+    	Scene gbConfigScene = new Scene(configPane);
+    	Stage gbConfigStage = new Stage();
+        
         gameboyConfigurationMenuItem.setOnAction(e -> {
-        	Label volumeLabel = new Label("Global volume");
-        	Label themeLabel = new Label("Gameboy theme");
-        	Slider volumeSlider = new Slider();
-        	volumeSlider.setMin(0);
-        	volumeSlider.setMax(100);
-        	volumeSlider.setValue(50);
-        	ChoiceBox<String> gbThemes = new ChoiceBox<>(FXCollections.observableArrayList(
-            	    "First", "Second", "Third")
-            );
-        	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
-        		switch (n) {
-        		case "First":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFF27FF2);
-        			break;
-        		case "Second":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF922AB1);
-        			break;
-        		case "Third":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFADB803);
-        			break;
-        		}
-        	});
-        	GridPane configPane = new GridPane();
-        	configPane.add(volumeLabel, 0, 0);
-        	configPane.add(volumeSlider, 0, 1);
-        	configPane.add(themeLabel, 0, 2);
-        	configPane.add(gbThemes, 0, 3);
-        	Scene gbConfigScene = new Scene(configPane);
-        	Stage gbConfigStage = new Stage();
         	gbConfigStage.setScene(gbConfigScene);
         	gbConfigStage.show();
         });
@@ -266,18 +278,34 @@ public class Main extends Application {
         MenuItem themeMenuItem = new MenuItem("Theme");
         MenuItem skinsMenuItem = new MenuItem("Skins");
         MenuItem languageMenuItem = new MenuItem("Language");
+        GridPane languageSelectionPane = new GridPane();
+    	ToggleGroup languageSelectionGroup = new ToggleGroup();
+    	RadioButton englishButton = new RadioButton(Locale.ENGLISH.getDisplayName());
+    	englishButton.setOnAction(e -> {
+    		currentLocale = Locale.ENGLISH;
+    		currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
+    		
+    	});
+    	englishButton.setSelected(true);
+    	englishButton.setToggleGroup(languageSelectionGroup);
+    	RadioButton frenchButton = new RadioButton(Locale.FRANCE.getDisplayName());
+    	frenchButton.setOnAction(e -> {
+    		currentLocale = Locale.FRANCE;
+    		currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
+    	});
+    	frenchButton.setToggleGroup(languageSelectionGroup);
+    	RadioButton romanianButton = new RadioButton(new Locale("ro", "RO").getDisplayName());
+    	romanianButton.setOnAction(e -> {
+    		currentLocale = Locale.forLanguageTag("ro_RO");
+    		currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
+    	});
+    	romanianButton.setToggleGroup(languageSelectionGroup);
+    	languageSelectionPane.add(englishButton, 0, 0);
+    	languageSelectionPane.add(frenchButton, 0, 1);
+    	languageSelectionPane.add(romanianButton, 0, 2);
+    	Scene languageSelectionScene = new Scene(languageSelectionPane);
+    	Stage languageSelectionStage = new Stage();
         languageMenuItem.setOnAction(e -> {
-        	GridPane languageSelectionPane = new GridPane();
-        	ToggleGroup languageSelectionGroup = new ToggleGroup();
-        	RadioButton englishButton = new RadioButton("English");
-        	englishButton.setSelected(true);
-        	englishButton.setToggleGroup(languageSelectionGroup);
-        	RadioButton frenchButton = new RadioButton("French");
-        	frenchButton.setToggleGroup(languageSelectionGroup);
-        	languageSelectionPane.add(englishButton, 0, 0);
-        	languageSelectionPane.add(frenchButton, 0, 1);
-        	Scene languageSelectionScene = new Scene(languageSelectionPane);
-        	Stage languageSelectionStage = new Stage();
         	languageSelectionStage.setScene(languageSelectionScene);
         	languageSelectionStage.show();
         });
@@ -383,7 +411,15 @@ public class Main extends Application {
         		recorder.start();
         	}
         });
-        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, toggleScreenCapButton, saveButton); 
+        Button muteButton = new Button("Mute/Unmute");
+        muteButton.setOnAction(e -> {
+        	if (isMuted) {
+        		isMuted = false;
+        	} else {
+        		isMuted = true;
+        	}
+        });
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, toggleScreenCapButton, muteButton, saveButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
         
