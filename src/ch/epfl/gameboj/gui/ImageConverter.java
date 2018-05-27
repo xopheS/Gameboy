@@ -1,12 +1,19 @@
 package ch.epfl.gameboj.gui;
 
-import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
+/**
+ * Cette classe utilitaire permet de faire la liaison entre le format LcdImage
+ * et Image (de JavaFX).
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public final class ImageConverter {
 
     public static enum JavaFXColor {
@@ -39,10 +46,10 @@ public final class ImageConverter {
         }
         
         void setARGB(int argb) {
-        	this.alpha = Bits.extract(argb, 0, Byte.SIZE);
-        	this.red = Bits.extract(argb, Byte.SIZE, Byte.SIZE);
-        	this.green = Bits.extract(argb, 2 * Byte.SIZE, Byte.SIZE);
-        	this.blue = Bits.extract(argb, 3 * Byte.SIZE, Byte.SIZE);
+        	this.alpha = Bits.extract(argb, 3 * Byte.SIZE, Byte.SIZE);
+        	this.red = Bits.extract(argb, 2*Byte.SIZE, Byte.SIZE);
+        	this.green = Bits.extract(argb, Byte.SIZE, Byte.SIZE);
+        	this.blue = Bits.extract(argb, 0, Byte.SIZE);
         }
 
         int getARGB() {
@@ -50,6 +57,13 @@ public final class ImageConverter {
         }       
     }
 
+    /**
+	 * Cette méthode permet de convertir une image lcd en image JavaFX
+	 * 
+	 * @param lcdImage
+	 *            l'image à convertir
+	 * @return l'image JavaFX
+	 */
     public static Image convert(LcdImage lcdImage) {
         WritableImage wImage = new WritableImage(lcdImage.getWidth(), lcdImage.getHeight());
         PixelWriter pWriter = wImage.getPixelWriter();

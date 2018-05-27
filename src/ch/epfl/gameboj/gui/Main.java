@@ -215,18 +215,33 @@ public class Main extends Application {
     	volumeSlider.setValue(50);
     	currentVolume.bind(volumeSlider.valueProperty());
     	ChoiceBox<String> gbThemes = new ChoiceBox<>(FXCollections.observableArrayList(
-        	    "First", "Second", "Third")
+            	    "Standard", "Creepy", "Beautiful Day", "Night")
         );
     	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
     		switch (n) {
-    		case "First":
-    			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFF27FF2);
+        		case "Standard":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFFFFFFF);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFD3D3D3);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFFA9A9A9);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF000000);
+        			break;
+        		case "Creepy":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFA10684);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFF00FF00);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFFFF0921);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFFB3B191);
     			break;
-    		case "Second":
-    			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF922AB1);
+        		case "Beautiful Day":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF25FDE9);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFFCDC12);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFF3A9D23);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF3F2204);
     			break;
-    		case "Third":
-    			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFADB803);
+        		case "Night":
+        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF1B019B);
+        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFAFAFAF);
+        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFF303030);
+        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF000000);
     			break;
     		}
     	});
@@ -235,7 +250,7 @@ public class Main extends Application {
     	configPane.add(volumeSlider, 0, 1);
     	configPane.add(themeLabel, 0, 2);
     	configPane.add(gbThemes, 0, 3);
-    	Scene gbConfigScene = new Scene(configPane);
+        	Scene gbConfigScene = new Scene(configPane, 130, 75);
     	Stage gbConfigStage = new Stage();
         
         gameboyConfigurationMenuItem.setOnAction(e -> {
@@ -453,7 +468,7 @@ public class Main extends Application {
 
         BorderPane modeChoicePane = new BorderPane(modeButtonsBox);
 
-        Scene modeChoiceScreen = new Scene(modeChoicePane);
+        Scene modeChoiceScreen = new Scene(modeChoicePane, 435, 275);
         
         // Login screen
         GridPane loginPane = new GridPane();

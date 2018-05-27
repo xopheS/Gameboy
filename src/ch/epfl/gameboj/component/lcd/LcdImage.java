@@ -12,6 +12,13 @@ import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 
+/**
+ * Cette classe modélise de manière abstraite une image LCD de la GameBoy.
+ * 
+ * @author Christophe Saad (282557)
+ * @author David Cian (287967)
+ *
+ */
 public class LcdImage {
 
     public static final LcdImage BLANK_LCD_IMAGE = new LcdImage(LCD_WIDTH, LCD_HEIGHT, Collections.nCopies(LCD_HEIGHT, BLANK_LCD_IMAGE_LINE));
@@ -75,6 +82,15 @@ public class LcdImage {
         return Objects.hash(height, width, imageLines);
     }
 
+    
+    /**
+	 * Cette classe permet de construire une Image lcd (comme
+	 * celle-ci est immuable).
+	 * 
+	 * @author Christophe Saad (282557)
+	 * @author David Cian (287967)
+	 *
+	 */
     public static final class Builder {
         int builderHeight;
         int builderWidth;
