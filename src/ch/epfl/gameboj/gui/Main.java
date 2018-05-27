@@ -105,7 +105,7 @@ public class Main extends Application {
         splashPane.setCenter(splashView);
         splashView.fitWidthProperty().bind(splashPane.widthProperty());
         splashView.fitHeightProperty().bind(splashPane.heightProperty());
-        Scene splashScreen = new Scene(splashPane, 200, 200);
+        Scene splashScreen = new Scene(splashPane, 435, 275);
 
         ImageView emulationView = new ImageView();
 //        emulationView.setFitWidth(2 * LCD_WIDTH);
@@ -480,7 +480,7 @@ public class Main extends Application {
         shearedGameboyView.setTranslateX(47);
         shearedGameboyView.setTranslateY(46);
         loginPane.add(new ImageView(icon), 2, 1, 1, 2);
-        loginPane.add(shearedGameboyView, 2, 1, 1, 2);       
+        loginPane.add(shearedGameboyView, 2, 1, 1, 2); 
         
         Scene loginScreen = new Scene(loginPane);
         loginScreen.setOnKeyPressed(e -> {
