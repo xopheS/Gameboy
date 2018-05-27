@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.component.sound;
 
+import static ch.epfl.gameboj.component.sound.SoundController.SAMPLE_RATE;
+
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
@@ -8,7 +10,7 @@ import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 
-public final class Sound1 implements Component, Clocked {
+public final class Sound1 extends SoundCircuit implements Component, Clocked {
 	private enum Reg implements Register { NR10, NR11, NR12, NR13, NR14 }
 	
 	private enum NR10 implements Bit { SWEEP_SHIFT0, SWEEP_SHIFT1, SWEEP_SHIFT2, SWEEP_INC, SWEEP_TIME0, SWEEP_TIME1, SWEEP_TIME2, UNUSED7 }
@@ -21,9 +23,68 @@ public final class Sound1 implements Component, Clocked {
 	
 	private final RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
 	
+	private final SoundController controller;
+	
 	private int index;
+	private int length;
+	
+	private int internalFreq;
+	
+	private Envelope volume = new Envelope();
+	private int sweepIndex;
+	private int sweepLength;
+	private int sweepDirection;
+	private int sweepShift;
 	
 	private int[] wave = new int[32];
+	
+	public Sound1(SoundController controller) {
+		this.controller = controller;
+	}
+	
+	public Envelope getVolume() {
+		return volume;
+	}
+	
+	public void setVolume(Envelope volume) {
+		this.volume = volume;
+	}
+	
+	public int getSweepIndex() {
+		return sweepIndex;
+	}
+	
+	public void setSweepIndex(int sweepIndex) {
+		this.sweepIndex = sweepIndex;
+	}
+	
+	public void decSweepIndex() {
+		sweepIndex--;
+	}
+	
+	public int getSweepLength() {
+		return sweepLength;
+	}
+	
+	public void setSweepLength(int sweepLength) {
+		this.sweepLength = sweepLength;
+	}
+	
+	public int getSweepDirection() {
+		return sweepDirection;
+	}
+	
+	public void setSweepDirection(int sweepDirection) {
+		this.sweepDirection = sweepDirection;
+	}
+	
+	public int getSweepShift() {
+		return sweepShift;
+	}
+	
+	public void setSweepShift(int sweepShift) {
+		this.sweepShift = sweepShift;
+	}
 	
 	public int[] getWave() {
 		int dutyLength = 0;
@@ -50,6 +111,23 @@ public final class Sound1 implements Component, Clocked {
 		return wave;
 	}
 	
+	public boolean isCounterActive() {
+		return soundRegs.testBit(Reg.NR14, NR14.COUNTER);
+	}
+	
+	public void setLength() {
+		length =  ((64 - soundRegs.asInt(Reg.NR11, NR11.S_LENGTH0, NR11.S_LENGTH1, NR11.S_LENGTH2, NR11.S_LENGTH3, NR11.S_LENGTH4, NR11.S_LENGTH5))
+				* SAMPLE_RATE) / 256;
+	}
+	
+	public int getLength() {
+		return length;
+	}
+	
+	public void decLength() {
+		length--;
+	}
+	
 	public int getIndex() {
 		return index;
 	}
@@ -58,20 +136,42 @@ public final class Sound1 implements Component, Clocked {
 		index++;
 	}
 	
-	public boolean needsInit() {
-		return soundRegs.testBit(Reg.NR14, NR14.INIT);
-	}
-	
-	private boolean isContinuous() {
-		return soundRegs.testBit(Reg.NR14, NR14.COUNTER);
+	public int getDefaultBase() {
+		return soundRegs.asInt(Reg.NR12, NR12.ENV_DEF0, NR12.ENV_DEF1, NR12.ENV_DEF2, NR12.ENV_DEF3);
 	}
 	
 	private int getWaveDuty() {
 		return soundRegs.asInt(Reg.NR11, NR11.DUTY0, NR11.DUTY1);
 	}
 	
-	public int getFrequency() {
-		return soundRegs.get(Reg.NR13);
+	public void setInternalFreq(int internalFreq) {
+		this.internalFreq = internalFreq;
+	}
+	
+	public int getInternalFreq() {
+		return internalFreq;
+	}
+	
+	public int getDefaultInternalFrequency() {
+		int freqData = soundRegs.get(Reg.NR13) | (soundRegs.asInt(Reg.NR14, NR14.HIGH_FREQ0, NR14.HIGH_FREQ1, NR14.HIGH_FREQ2) << Byte.SIZE); 
+		return freqData;
+	}
+	
+	public float getFrequency() {
+		return (4194304 / (8 * (2048 - internalFreq)));
+	}
+	
+	public boolean isReset() {
+		return soundRegs.testBit(Reg.NR14, NR14.INIT);
+	}
+	
+	public void reset() {
+		index = 0;
+		volume.setBase(getDefaultBase());
+		volume.setDirection(soundRegs.testBit(Reg.NR12, NR12.ENVELOPE) ? 1 : 0);
+		volume.setStepLength(soundRegs.asInt(Reg.NR12, NR12.ENV_LENGTH0, NR12.ENV_LENGTH1, NR12.ENV_LENGTH2));
+		volume.setIndex(volume.getStepLength());
+		soundRegs.setBit(Reg.NR14, NR14.INIT, false);
 	}
 	
 	@Override
@@ -93,16 +193,7 @@ public final class Sound1 implements Component, Clocked {
 		Preconditions.checkBits8(data);
 		
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S1_START && address < AddressMap.REGS_S1_END) {
-			switch (address) {
-			case AddressMap.REG_NR14:
-				soundRegs.set(Reg.NR14, data);
-				if (soundRegs.testBit(Reg.NR14, NR14.INIT)) {
-					//Reset it
-				}
-				break;
-			default:
-				soundRegs.set(address - AddressMap.REGS_S1_START, data);
-			}
+			soundRegs.set(address - AddressMap.REGS_S1_START, data);
 		}
 	}
 }

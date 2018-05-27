@@ -15,12 +15,14 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
 
+import ch.epfl.extended.ImageViewRecorder;
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.CartridgeDisassembler;
 import ch.epfl.gameboj.GameBoy;
@@ -30,14 +32,13 @@ import ch.epfl.gameboj.component.Joypad.Key;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import javafx.animation.AnimationTimer;
+import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -66,11 +67,14 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class Main extends Application {
     private static GameBoy gameboj;
     boolean isPaused;
     boolean isSpeedButtonPressed;
+    boolean isScreenCapOn;
+    List<Image> screenCapFrames = new ArrayList<>();
     long start;
     long timeOnPause;
     long pauseTime;
@@ -96,8 +100,12 @@ public class Main extends Application {
         primaryStage.setTitle("gameboj: the GameBoy emulator");
 
         // Splash screen
-        Parent splashScreenRoot = FXMLLoader.load(getClass().getResource("Splash_Screen.fxml"));
-        Scene splashScreen = new Scene(splashScreenRoot, 200, 200);
+        ImageView splashView = new ImageView("file:EPFL-Logo.jpg");
+        BorderPane splashPane = new BorderPane();
+        splashPane.setCenter(splashView);
+        splashView.fitWidthProperty().bind(splashPane.widthProperty());
+        splashView.fitHeightProperty().bind(splashPane.heightProperty());
+        Scene splashScreen = new Scene(splashPane, 200, 200);
 
         ImageView emulationView = new ImageView();
 //        emulationView.setFitWidth(2 * LCD_WIDTH);
@@ -363,7 +371,19 @@ public class Main extends Application {
         saveButton.setOnAction(e -> {
         	gameboj.getCartridge().toFile("currentSave.gb");
         });
-        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, saveButton); 
+        Button toggleScreenCapButton = new Button("Start/stop screen capture");
+        ImageViewRecorder recorder = new ImageViewRecorder("screen_recording.avi", emulationView);
+        toggleScreenCapButton.setOnAction(e -> {
+        	if (isScreenCapOn) {
+        		isScreenCapOn = false;
+        		screenCapFrames = new ArrayList<>();
+        		recorder.stop();
+        	} else {
+        		isScreenCapOn = true;
+        		recorder.start();
+        	}
+        });
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, toggleScreenCapButton, saveButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
         
@@ -468,8 +488,21 @@ public class Main extends Application {
         	}
         });
 
+        FadeTransition splashFade = new FadeTransition();
+        splashFade.setNode(splashPane);
+        splashFade.setDelay(new Duration(1000));
+        splashFade.setDuration(new Duration(3000));
+        splashFade.setFromValue(1.0);
+        splashFade.setToValue(0.0);
+        splashFade.setOnFinished(e -> {
+        	primaryStage.setScene(loginScreen);
+        });
+        
+        //TODO USE TRANSITIONS FOR THE EMULATION VIEW
+        
         primaryStage.getIcons().add(new Image("file:gb_icon.png"));
-        primaryStage.setScene(loginScreen); // TODO set to splash screen
+        primaryStage.setScene(splashScreen);
+        splashFade.play();
         primaryStage.show();
 
         start = System.nanoTime();
@@ -486,8 +519,12 @@ public class Main extends Application {
                 Image screenImage = ImageConverter.convert(gameboj.getLcdController().currentImage());
                 emulationView.setImage(screenImage);
                 shearedGameboyView.setImage(screenImage);
+                
+//                screenCapFrames.add(screenImage); //TODO remove?
+//                
+//                recorder.write();
 
-                viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
+                viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX));
                 viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
                 backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
                 windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));

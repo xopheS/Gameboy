@@ -7,7 +7,7 @@ import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.component.Component;
 
-public final class Sound2 implements Component {
+public final class Sound2 extends SoundCircuit implements Component {
 	private enum Reg implements Register { NR21, NR22, NR23, NR24 }
 	
 	private enum NR21 implements Bit { S_LENGTH0, S_LENGTH1, S_LENGTH2, S_LENGTH3, S_LENGTH4, LENGTH5, DUTY0, DUTY1 }
@@ -21,6 +21,12 @@ public final class Sound2 implements Component {
 	private int index;
 	
 	private int[] wave = new int[32];
+	
+	private Envelope volume = new Envelope();
+	
+	public Envelope getVolume() {
+		return volume;
+	}
 	
 	public int[] getWave() {
 		int dutyLength = 0;
@@ -59,8 +65,13 @@ public final class Sound2 implements Component {
 		return soundRegs.asInt(Reg.NR21, NR21.DUTY0, NR21.DUTY1);
 	}
 	
-	public int getFrequency() {
-		return soundRegs.get(Reg.NR23);
+	public float getFrequency() {
+		int freqData = soundRegs.get(Reg.NR23) | soundRegs.asInt(Reg.NR24, NR24.HIGH_FREQ0, NR24.HIGH_FREQ1, NR24.HIGH_FREQ2);
+		return 4294304 / (8 * (2048 - freqData));
+	}
+	
+	public boolean isReset() {
+		return soundRegs.testBit(Reg.NR24, NR24.INIT);
 	}
 	
 	@Override

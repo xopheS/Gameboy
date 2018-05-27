@@ -4,12 +4,39 @@ import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
+import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.component.Component;
 
-public final class Sound4 implements Component {
+public final class Sound4 extends SoundCircuit implements Component {
 	private enum Reg implements Register { NR41, NR42, NR43, NR44 }
 	
+	private enum NR42 implements Bit { LENGTH0, LENGTH1, LENGTH2, ENVELOPE, ENV_DEF0, ENV_DEF1, ENV_DEF2, ENV_DEF3 }
+	
+	private enum NR43 implements Bit { DIV_SEL0, DIV_SEL1, DIV_SEL2, STEPS, SFREQ0, SFREQ1, SFREQ2, SFREQ3, SFREQ4 }
+	
+	private enum NR44 implements Bit { UNUSED0, UNUSED1, UNUSED2, UNUSED3, UNUSED4, UNUSED5, COUNTER, INIT }
+	
 	private RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
+	
+	private int index = 0;
+	
+	private int[] wave = new int[32];
+	
+	public int getIndex() {
+		return index;
+	}
+	
+	public void incIndex() {
+		index++;
+	}
+	
+	public boolean isReset() {
+		return soundRegs.testBit(Reg.NR44, NR44.INIT);
+	}
+	
+	public int[] getWave() {
+		return wave;
+	}
 
 	@Override
 	public int read(int address) {

@@ -12,7 +12,6 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
-import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
@@ -22,11 +21,11 @@ public final class SoundController implements Component, Clocked {
 	
 	private enum NR50 implements Bit { SO1_LEVEL0, SO1_LEVEL1, SO1_LEVEL2, SO1_POW, SO2_LEVEL0, SO2_LEVEL1, SO2_LEVEL2, SO2_POW }
 	
-	private enum NR51 implements Bit { SO1_1, SO1_2, SO1_3, SO1_4, SO2_1, SO2_2, SO2_3, SO2_4 }
+	private enum NR51 implements Bit { SO1_1, SO2_1, SO3_1, SO4_1, SO1_2, SO2_2, SO3_2, SO4_2 }
 	
 	private enum NR52 implements Bit { SOUND1, SOUND2, SOUND3, SOUND4, UNUSED4, UNUSED5, UNUSED6, POW }
 	
-	private static final int SAMPLE_RATE = 44100;
+	public static final int SAMPLE_RATE = 44100;
 	
 	private Bus bus;
 	
@@ -34,12 +33,13 @@ public final class SoundController implements Component, Clocked {
 	
 	private final RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
 	
-	private byte[][] soundBuffers; //TODO
+	private byte[][] soundBuffers;
 	private byte[] soundBuffer;
 	
 	int soundBufferIndex;
+
 	
-	private final Sound1 sound1 = new Sound1();
+	private final Sound1 sound1 = new Sound1(this);
 	private final Sound2 sound2 = new Sound2();
 	private final Sound3 sound3 = new Sound3();
 	private final Sound4 sound4 = new Sound4();
@@ -48,9 +48,14 @@ public final class SoundController implements Component, Clocked {
 		AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, SAMPLE_RATE, 8, 2, 2, SAMPLE_RATE, true);
 		DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
 		
+		soundRegs.setBit(Reg.NR52, NR52.SOUND1, true);
+		soundRegs.setBit(Reg.NR52, NR52.SOUND2, true);
+		soundRegs.setBit(Reg.NR52, NR52.SOUND3, true);
+		soundRegs.setBit(Reg.NR52, NR52.SOUND4, true);
+		
 		line = (SourceDataLine) AudioSystem.getLine(info);
 		
-		line.open(format);
+		line.open(format, 50000);
 		
 		soundBuffers = new byte[4][1500];
 		soundBuffer = new byte[line.getBufferSize()];
@@ -60,54 +65,155 @@ public final class SoundController implements Component, Clocked {
 	
 	@Override
 	public void cycle(long cycle) {
-		if (cycle % 100 == 0) {
-			reallyCycle();
+		if (cycle % 45 == 0 && isOn()) {
+			reallyCycle(cycle);
 		}
 	}
 	
-	private void reallyCycle() {
-		if (isOn()) {
-			if (soundRegs.testBit(Reg.NR52, NR52.SOUND1)) {
-				soundBuffers[0][soundBufferIndex] = (byte) sound1.getWave()[((sound1.getIndex() * sound1.getFrequency()) / SAMPLE_RATE) % 32];
-				
-				sound1.incIndex();
+	private void reallyCycle(long cycle) {
+		initSounds();
+		
+		if (soundRegs.testBit(Reg.NR52, NR52.SOUND1)) {
+			sound1.cycle(cycle);
+			if (sound1.isCounterActive() && sound1.getLength() > 0) {
+				sound1.decLength();
+				if (sound1.getLength() == 0) {
+					soundRegs.setBit(Reg.NR52, NR52.SOUND1, false);
+				}
 			}
 			
-			if (soundRegs.testBit(Reg.NR52, NR52.SOUND2)) {
-				soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[((sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32];
-				
-				sound2.incIndex();
+			sound1.getVolume().handleSweep();
+			
+			if (sound1.getSweepIndex() > 0 && sound1.getSweepLength() > 0) {
+				sound1.decSweepIndex();
+				if (sound1.getSweepIndex() == 0) {
+					sound1.setSweepIndex(sound1.getSweepLength());
+					sound1.setInternalFreq(sound1.getInternalFreq() + (sound1.getInternalFreq() >> sound1.getSweepShift()) * sound1.getSweepDirection());
+					if (sound1.getInternalFreq() > 2047) {
+						//turn off
+					} else {
+						
+					}
+				}
 			}
 			
-			soundBuffers[0][soundBufferIndex] = (byte) sound1.getWave()[((sound1.getIndex() * sound1.getFrequency()) / SAMPLE_RATE) % 32];
+			soundBuffers[0][soundBufferIndex] = (byte) (sound1.getWave()[(int) (((32 * sound1.getIndex() * sound1.getFrequency()) / SAMPLE_RATE) % 32)]);
 			
 			sound1.incIndex();
+		}
+		
+		if (soundRegs.testBit(Reg.NR52, NR52.SOUND2)) {
+			soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
 			
-			soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[((sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32];
+			sound2.getVolume().handleSweep();
 			
-			sound1.incIndex();
+			sound2.incIndex();
+		}
+		
+		if (soundRegs.testBit(Reg.NR52, NR52.SOUND3)) {			
+			soundBuffers[2][soundBufferIndex] = (byte) sound3.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
 			
-			if (soundRegs.testBit(Reg.NR52, NR52.SOUND3)) {
+			switch (sound3.getOutputLevel()) {
+			case 0:
 				soundBuffers[2][soundBufferIndex] = 0;
-			}
-
-			if (soundRegs.testBit(Reg.NR52, NR52.SOUND4)) {
-				soundBuffers[3][soundBufferIndex] = 0;
+				break;
+			case 1:
+				break;
+			case 2:
+				soundBuffers[2][soundBufferIndex] >>= 1;
+				break;
+			case 3:
+				soundBuffers[3][soundBufferIndex] >>= 2;
+				break;
 			}
 			
-			setSoundBufferByte(soundBufferIndex);
+			sound3.incIndex();
+		}
+		
+		if (soundRegs.testBit(Reg.NR52, NR52.SOUND4)) {
+			soundBuffers[3][soundBufferIndex] = (byte) sound4.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
 			
-			soundBufferIndex++;
-			
-			if (soundBufferIndex == soundBuffers.length / 2) {
-				line.write(soundBuffer, 0, 2 * Math.min(line.available(), soundBuffers.length));
-				soundBufferIndex = 0;
-			}
+			sound4.incIndex();
+		}
+		
+		setSoundBufferByte(soundBufferIndex);
+		
+		soundBufferIndex++;
+		
+		if (soundBufferIndex == soundBuffers.length / 2) {
+			line.write(soundBuffer, 0, 2 * Math.min(line.available(), soundBuffers.length));
+			soundBufferIndex = 0;
+		}
+	}
+	
+	private void initSounds() {
+		initSound1();
+		initSound2();
+		initSound3();
+		initSound4();
+	}
+	
+	private void initSound1() {
+		if (sound1.isReset()) {	
+			sound1.setInternalFreq(sound1.getDefaultInternalFrequency());
+			sound1.setLength();
+			soundRegs.setBit(Reg.NR52, NR52.SOUND1, true);
+			sound1.reset();
+		}
+	}
+	
+	private void initSound2() {
+		if (sound2.isReset()) {
+			System.out.println("Sound 2 on");
+			soundRegs.setBit(Reg.NR52, NR52.SOUND2, true);
+		}
+	}
+	
+	private void initSound3() {
+		if (sound3.isReset()) {
+			System.out.println("Sound 3 on");
+			soundRegs.setBit(Reg.NR52, NR52.SOUND3, true);
+		}
+	}
+	
+	private void initSound4() {
+		if (sound4.isReset()) {
+			System.out.println("Sound 4 on");
+			soundRegs.setBit(Reg.NR52, NR52.SOUND4, true);
 		}
 	}
 	
 	private void setSoundBufferByte(int byteIndex) {
 		int mono1 = 0, mono2 = 0;
+		
+		if (soundRegs.testBit(Reg.NR51, NR51.SO1_1)) {
+			mono1 += soundBuffers[0][soundBufferIndex];
+		}
+		if (soundRegs.testBit(Reg.NR51, NR51.SO2_1)) {
+			mono1 += soundBuffers[1][soundBufferIndex];
+		}
+		if (soundRegs.testBit(Reg.NR51, NR51.SO3_1)) {
+			mono1 += soundBuffers[2][soundBufferIndex];
+		}
+		if (soundRegs.testBit(Reg.NR51, NR51.SO4_1)) {
+			mono1 += soundBuffers[3][soundBufferIndex];
+		}
+		mono1 *= soundRegs.asInt(Reg.NR50, NR50.SO1_LEVEL0, NR50.SO1_LEVEL1, NR50.SO1_LEVEL2);
+		mono1 /= 4;
+		if (soundRegs.testBit(Reg.NR51, NR51.SO1_2)) {
+			mono2 += soundBuffers[0][soundBufferIndex];
+		}
+		if (soundRegs.testBit(Reg.NR51, NR51.SO2_2)) {
+			mono2 += soundBuffers[1][soundBufferIndex];
+		}
+		if (soundRegs.testBit(Reg.NR51, NR51.SO3_2)) {
+			mono2 += soundBuffers[2][soundBufferIndex];
+		}
+		if (soundRegs.testBit(Reg.NR51, NR51.SO4_2)) {
+			mono2 += soundBuffers[3][soundBufferIndex];
+		}
+		mono2 *= soundRegs.asInt(Reg.NR50, NR50.SO2_LEVEL0, NR50.SO2_LEVEL1, NR50.SO2_LEVEL2);
+		mono2 /= 4;
 		
 		soundBuffer[byteIndex * 2] = (byte) mono1;
 		soundBuffer[byteIndex * 2 + 1] = (byte) mono2;
@@ -139,24 +245,6 @@ public final class SoundController implements Component, Clocked {
 		
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_SC_START && address < AddressMap.REGS_SC_END) {
 			soundRegs.set(address - AddressMap.REGS_SC_START, data);
-			if (address == AddressMap.REG_NR52) {
-				System.out.println(Integer.toBinaryString(data));
-				if (Bits.test(data, NR52.POW)) {
-					System.out.println("Sound on");
-				}
-				if (Bits.test(data, NR52.SOUND1)) {
-					System.out.println("Sound 1 on");
-				}
-				if (Bits.test(data, NR52.SOUND2)) {
-					System.out.println("Sound 2 on");
-				}
-				if (Bits.test(data, NR52.SOUND3)) {
-					System.out.println("Sound 3 on");
-				}
-				if (Bits.test(data, NR52.SOUND4)) {
-					System.out.println("Sound 4 on");
-				}
-			}
 		}
 	}	
 }

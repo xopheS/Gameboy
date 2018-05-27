@@ -1,6 +1,5 @@
 package ch.epfl.gameboj;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -118,6 +117,7 @@ public final class GameBoy {
      */
     public void runUntil(long cycle) {
         Preconditions.checkArgument(currentCycle <= cycle);
+        final long cycleCopy = cycle;
         while (currentCycle < cycle) {
             timer.cycle(currentCycle);
             soundController.cycle(currentCycle);
@@ -145,6 +145,10 @@ public final class GameBoy {
 
     public LcdController getLcdController() {
         return lcdController;
+    }
+    
+    public SoundController getSoundController() {
+    	return soundController;
     }
 
     public Joypad getJoypad() {
