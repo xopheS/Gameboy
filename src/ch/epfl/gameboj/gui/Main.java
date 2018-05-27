@@ -7,12 +7,19 @@ import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
 
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -108,6 +115,51 @@ public class Main extends Application {
         		: new GameBoy(Cartridge.ofFile(new File(fileName)), saveFileName); // FIXME
         
         currentVolume.set(0);
+        
+		InetAddress locIP = InetAddress.getLocalHost();
+		System.out.println(locIP.getHostAddress());
+        
+        // TEST ---------
+        Button testServerButton = new Button("Test server");
+        testServerButton.setOnAction(e -> {
+        	try {		
+        		ServerSocket serverSocket = new ServerSocket(4444, 0, locIP);
+				if (serverSocket.isBound()) System.out.println("server ready");
+				Socket clientSocket = serverSocket.accept();
+				PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
+				BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+				System.out.println(in.readLine());
+				serverSocket.close();
+			} catch (UnknownHostException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        });
+        
+        Button testClientButton = new Button("Test client");
+        testClientButton.setOnAction(e -> {
+        	try {				
+				Socket clientSocket = new Socket(locIP, 4444);
+				if (clientSocket.isConnected()) {
+					System.out.println("Connected");
+				}
+				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+				BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+				out.write("it works!");
+				out.flush();
+				clientSocket.close();
+			} catch (UnknownHostException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        });
+        // TEST ---------
 
         // TODO replace gameboj with clever name
         primaryStage.setTitle("gameboj: the GameBoy emulator");
@@ -166,7 +218,15 @@ public class Main extends Application {
 			}
         });
         MenuItem exitMenuItem = new MenuItem(currentGuiBundle.getString("exit"));
-        exitMenuItem.setOnAction(e -> System.exit(0));
+        exitMenuItem.setOnAction(e -> {
+//        	try {
+//				serverSocket.close();
+//			} catch (IOException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+        	System.exit(0);
+        });
         fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem);
 
         Menu dumpMenu = new Menu("Dump"); // dumping related functionality
@@ -459,7 +519,8 @@ public class Main extends Application {
         		isMuted = true;
         	}
         });
-        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, toggleScreenCapButton, muteButton, saveButton); 
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, toggleScreenCapButton, muteButton, saveButton,
+        		testServerButton, testClientButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
         
