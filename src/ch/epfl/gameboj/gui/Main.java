@@ -278,12 +278,30 @@ public class Main extends Application {
     			break;
     		}
     	});
+    	ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Normal", "Fade"));
+		FadeTransition fadeEffectTransition = new FadeTransition();
+    	gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
+    		switch (n) {
+    		case "Normal":
+    			fadeEffectTransition.stop();
+    			break;
+    		case "Fade":
+    			fadeEffectTransition.setFromValue(1.0);
+    			fadeEffectTransition.setToValue(0.6);
+    			fadeEffectTransition.setAutoReverse(true);
+    			fadeEffectTransition.setNode(emulationView);
+    			fadeEffectTransition.setCycleCount(FadeTransition.INDEFINITE);
+    			fadeEffectTransition.playFromStart();
+    			break;
+    		}
+    	});
     	GridPane configPane = new GridPane();
     	configPane.add(volumeLabel, 0, 0);
     	configPane.add(volumeSlider, 0, 1);
     	configPane.add(themeLabel, 0, 2);
     	configPane.add(gbThemes, 0, 3);
-        	Scene gbConfigScene = new Scene(configPane, 130, 75);
+    	configPane.add(gbEffects, 4, 0);
+        Scene gbConfigScene = new Scene(configPane, 130, 75);
     	Stage gbConfigStage = new Stage();
         
         gameboyConfigurationMenuItem.setOnAction(e -> {
@@ -434,15 +452,22 @@ public class Main extends Application {
 				e1.printStackTrace();
 			}
         });
-        Button tbPauseButton = new Button("Pause");
+        Button tbPauseButton = new Button(currentGuiBundle.getString("pause"));
         tbPauseButton.setOnAction(e -> {
             if (isPaused) {
                 isPaused = false;
+    			fadeEffectTransition.stop();
                 animationTimer.start();
                 pauseTime += System.nanoTime() - timeOnPause;
             } else {
                 isPaused = true;
                 animationTimer.stop();
+                fadeEffectTransition.setFromValue(1.0);
+    			fadeEffectTransition.setToValue(0.7);
+    			fadeEffectTransition.setAutoReverse(true);
+    			fadeEffectTransition.setNode(emulationView);
+    			fadeEffectTransition.setCycleCount(FadeTransition.INDEFINITE);
+    			fadeEffectTransition.playFromStart();
                 timeOnPause = System.nanoTime();
             }
         });       
@@ -465,7 +490,7 @@ public class Main extends Application {
                 isSpeedButtonPressed = true;
             }
         });
-        Button saveButton = new Button("Save");
+        Button saveButton = new Button(currentGuiBundle.getString("save"));
         saveButton.setOnAction(e -> {
         	gameboj.getCartridge().toFile("currentSave.gb");
         });
@@ -546,23 +571,26 @@ public class Main extends Application {
         Text loginText = new Text("Please log in");
         loginPane.add(loginText, 0, 0, 2, 1);
         
-        Label usernameLabel = new Label("Username:");
+        Label usernameLabel = new Label(currentGuiBundle.getString("username"));
         loginPane.add(usernameLabel, 0, 1);
         TextField usernameField = new TextField();
         loginPane.add(usernameField, 1, 1);
         
-        Label passwordLabel = new Label("Password:");
+        Label passwordLabel = new Label(currentGuiBundle.getString("password"));
         loginPane.add(passwordLabel, 0, 2);
         PasswordField passwordField = new PasswordField();
         loginPane.add(passwordField, 1, 2);
+        
+        Button createAccountButton = new Button("Create a new account");
+        loginPane.add(createAccountButton, 1, 3);
+        
+        Button login = new Button("Log in");
+        Image icon = new Image("File:cartoon-gameboy-gameboy-sbstn723-on-deviantart.png", 150, 150, true, true, true);
         
         Button noAccountButton = new Button("Continue without login");
         noAccountButton.setOnAction(e -> {
         	primaryStage.setScene(modeChoiceScreen);
         });
-        
-        Button login = new Button("Log in");
-        Image icon = new Image("File:cartoon-gameboy-gameboy-sbstn723-on-deviantart.png", 150,150,true, true, true);
         
         loginPane.add(noAccountButton, 2, 5);
         loginPane.add(login, 1, 5);
@@ -581,7 +609,7 @@ public class Main extends Application {
         shearedGameboyView.setTranslateX(47);
         shearedGameboyView.setTranslateY(46);
         loginPane.add(new ImageView(icon), 2, 1, 1, 2);
-        loginPane.add(shearedGameboyView, 2, 1, 1, 2);       
+        loginPane.add(shearedGameboyView, 2, 1, 1, 2); 
         
         Scene loginScreen = new Scene(loginPane);
         loginScreen.setOnKeyPressed(e -> {
@@ -597,13 +625,47 @@ public class Main extends Application {
         				primaryStage.setScene(modeChoiceScreen);
         			} else {
         				Text loginResultText = new Text("Username/password wrong");
-        				loginPane.add(loginResultText, 0, 3);
+        				loginPane.add(loginResultText, 0, 7);
         			}
         		} catch (SQLException ex) {
         			ex.printStackTrace();
         		}
         	}
         });
+        
+        GridPane accountCreationPane = new GridPane();
+        Scene createAccountScene = new Scene(accountCreationPane);
+        Label nameLabel = new Label("What is your name?");
+        accountCreationPane.add(nameLabel, 0, 0);
+        TextField nameField = new TextField();
+        accountCreationPane.add(nameField, 0, 1);
+        Label createUsernameLabel = new Label("Pick a username:");
+        accountCreationPane.add(createUsernameLabel, 0, 2);
+        TextField usernameCreationField = new TextField();
+        accountCreationPane.add(usernameCreationField, 0, 3);
+        Label createPasswordLabel = new Label("Pick a password:");
+        accountCreationPane.add(createPasswordLabel, 0, 4);
+        PasswordField passwordCreationField = new PasswordField();
+        accountCreationPane.add(passwordCreationField, 0, 5);
+        Button accountDoneButton = new Button("Create your account");
+        accountDoneButton.setOnAction(e -> {
+        	try {
+				Connection connection = DriverManager.getConnection("jdbc:mysql://sql7.freemysqlhosting.net:3306/sql7239737", "sql7239737", "QTbGGaykPd");
+				PreparedStatement ps = connection.prepareStatement("INSERT INTO `Gameboj Users` VALUES (?, ?, ?)");
+				ps.setString(1, nameField.getText());
+				ps.setString(2, usernameCreationField.getText());
+				ps.setString(3, passwordCreationField.getText());
+				ps.execute();
+				primaryStage.setScene(loginScreen);
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        });
+        accountCreationPane.add(accountDoneButton, 0, 6);
+        createAccountButton.setOnAction(e -> {
+        	primaryStage.setScene(createAccountScene);
+        });      
 
         FadeTransition splashFade = new FadeTransition();
         splashFade.setNode(splashPane);
