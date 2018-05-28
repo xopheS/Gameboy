@@ -84,7 +84,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class Main extends Application {
-	private Locale currentLocale = new Locale("ro", "RO");
+	private Locale currentLocale = Locale.getDefault();
 	private ResourceBundle currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
     private static GameBoy gameboj;
     boolean isPaused;
@@ -124,16 +124,47 @@ public class Main extends Application {
         
 		InetAddress locIP = InetAddress.getLocalHost();
 		System.out.println(locIP.getHostAddress());
+		
+		Runnable r = new Runnable() {
+        	@Override
+			public void run() {
+        		try {	
+        			System.out.println("Bind ip server");
+            		serverSocket = new ServerSocket(4444, 0, locIP);
+        			if (serverSocket.isBound()) System.out.println("server ready");
+        			Socket clientSocket = serverSocket.accept();
+        			System.out.println("client accepted");
+        			serverOut = new PrintWriter(clientSocket.getOutputStream());
+        			System.out.println("outstream ");
+
+        			serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        			System.out.println("instream ");
+
+        			serverIn.readLine(); // READLINE CRASHES PROGRAM
+        			System.out.println("tried to read line");
+        			serverOut.write("Server answers");
+        			serverOut.flush();
+        		} catch (UnknownHostException e1) {
+        			// TODO Auto-generated catch block
+        			e1.printStackTrace();
+        		} catch (IOException e1) {
+        			// TODO Auto-generated catch block
+        			e1.printStackTrace();
+        		}
+        	}
+        };
         
         // TEST ---------
         Button testServerButton = new Button("Test server");
         testServerButton.setOnAction(e -> {
-        	initiateServer(locIP);
+            new Thread(r).start();
         });
         
         Button testClientButton = new Button("Test client");
         testClientButton.setOnAction(e -> {
         	initiateClient(locIP);
+			clientOut.write("Client asks");
+			clientOut.flush();
         });
         // TEST ---------
 
@@ -195,6 +226,18 @@ public class Main extends Application {
         });
         MenuItem exitMenuItem = new MenuItem(currentGuiBundle.getString("exit"));
         exitMenuItem.setOnAction(e -> {
+        	try {
+				serverSocket.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        	try {
+				clientSocket.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
         	System.exit(0);
         });
         fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem);
@@ -518,6 +561,7 @@ public class Main extends Application {
         Button terminateConnectionButton = new Button("Terminate");
         terminateConnectionButton.setOnAction(e -> {
 			try {
+				serverSocket.close();
 				clientSocket.close();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -778,34 +822,13 @@ public class Main extends Application {
         });
     }
     
-    public static void initiateServer(InetAddress locIP) {
-    	try {		
-    		serverSocket = new ServerSocket(4444, 0, locIP);
-			if (serverSocket.isBound()) System.out.println("server ready");
-			Socket clientSocket = serverSocket.accept();
-			serverOut = new PrintWriter(clientSocket.getOutputStream());
-			serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			System.out.println(serverIn.readLine());
-			serverOut.write("Server answers");
-			serverOut.flush();
-			serverSocket.close();
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    }
-    
     public static void initiateClient(InetAddress locIP) {
     	try {
-    		clientSocket = new Socket(locIP, 4444);
-			clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
-			BufferedReader clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			clientOut.write("Client asks");
-			clientOut.flush();
-			clientSocket.close();
+    		if (clientSocket == null) {
+        		clientSocket = new Socket(locIP, 4444);
+    			clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
+    			BufferedReader clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    		}
 		} catch (UnknownHostException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

@@ -8,6 +8,7 @@ import javax.sound.sampled.SourceDataLine;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
+import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
@@ -34,8 +35,8 @@ public final class SoundController implements Component, Clocked {
 	
 	private final RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
 	
-	private byte[][] soundBuffers;
-	private byte[] soundBuffer;
+	private byte[][] soundBuffers; 
+	private byte[] soundBuffer; // 2048
 	
 	int soundBufferIndex;
 
@@ -56,17 +57,17 @@ public final class SoundController implements Component, Clocked {
 		
 		line = (SourceDataLine) AudioSystem.getLine(info);
 		
-		line.open(format, 50000);
+		line.open(format, 15000);
 		
 		soundBuffers = new byte[4][1500];
-		soundBuffer = new byte[line.getBufferSize()];
+		soundBuffer = new byte[2048];
 		
 		line.start();
 	}
 	
 	@Override
 	public void cycle(long cycle) {
-		if (cycle % 40 == 0 && isOn()) {
+		if (cycle % (GameBoy.CYCLES_PER_SECOND / SAMPLE_RATE) == 0 && isOn()) {
 			reallyCycle(cycle);
 		}
 	}
@@ -124,7 +125,7 @@ public final class SoundController implements Component, Clocked {
 				soundBuffers[2][soundBufferIndex] >>= 1;
 				break;
 			case 3:
-				soundBuffers[3][soundBufferIndex] >>= 2;
+				soundBuffers[2][soundBufferIndex] >>= 2;
 				break;
 			}
 			
@@ -145,6 +146,16 @@ public final class SoundController implements Component, Clocked {
 			line.write(soundBuffer, 0, 2 * Math.min(line.available(), soundBuffers.length));
 			soundBufferIndex = 0;
 		}
+		
+//		if (soundBufferIndex == 749) {
+//			soundBufferIndex = 0;
+//		}
+//		
+//		if (line.available() >= soundBufferIndex) {
+//			line.write(soundBuffer, 0, 2 * soundBufferIndex);
+//		} else {
+//			soundBufferIndex %= soundBuffer.length;
+//		}
 	}
 	
 	private void initSounds() {
