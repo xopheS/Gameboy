@@ -1,6 +1,9 @@
 package ch.epfl.gameboj.component.sound;
 
-public abstract class SoundCircuit {
+import ch.epfl.gameboj.component.Clocked;
+import ch.epfl.gameboj.component.Component;
+
+public abstract class SoundCircuit implements Component, Clocked {
 	private float freq;
 	private int[] wave;
 	

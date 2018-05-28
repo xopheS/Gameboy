@@ -20,11 +20,6 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -43,15 +38,20 @@ import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Joypad.Key;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdImage;
+import ch.epfl.gameboj.gui.color.ColorTheme;
+import ch.epfl.gameboj.gui.screens.LoginScreen;
+import ch.epfl.gameboj.gui.screens.ModeChoiceScreen;
+import ch.epfl.gameboj.gui.screens.SimpleModeScreen;
+import ch.epfl.gameboj.gui.screens.SplashScreen;
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -60,13 +60,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
-import javafx.scene.effect.PerspectiveTransform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -78,16 +75,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 public class Main extends Application {
 	private Locale currentLocale = Locale.getDefault();
 	private ResourceBundle currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
     private static GameBoy gameboj;
-    boolean isPaused;
+    BooleanProperty isPaused = new SimpleBooleanProperty();
     boolean isSpeedButtonPressed;
     boolean isScreenCapOn;
     public static boolean isMuted;
@@ -139,11 +134,12 @@ public class Main extends Application {
 
         			serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         			System.out.println("instream ");
-
-        			serverIn.readLine(); // READLINE CRASHES PROGRAM
-        			System.out.println("tried to read line");
-        			serverOut.write("Server answers");
-        			serverOut.flush();
+        			
+        			while(serverIn.ready()) {
+        				System.out.println(serverIn.readLine());
+            			serverOut.write("Server answers");
+            			serverOut.flush();
+        			}
         		} catch (UnknownHostException e1) {
         			// TODO Auto-generated catch block
         			e1.printStackTrace();
@@ -163,7 +159,7 @@ public class Main extends Application {
         Button testClientButton = new Button("Test client");
         testClientButton.setOnAction(e -> {
         	initiateClient(locIP);
-			clientOut.write("Client asks");
+			clientOut.write("Client asks \n");
 			clientOut.flush();
         });
         // TEST ---------
@@ -172,29 +168,16 @@ public class Main extends Application {
         primaryStage.setTitle("gameboj: the GameBoy emulator");
 
         // Splash screen
-        ImageView splashView = new ImageView("file:EPFL-Logo.jpg");
-        BorderPane splashPane = new BorderPane();
-        splashPane.setCenter(splashView);
-        splashView.fitWidthProperty().bind(splashPane.widthProperty());
-        splashView.fitHeightProperty().bind(splashPane.heightProperty());
-        Scene splashScreen = new Scene(splashPane, 200, 200);
 
         ImageView emulationView = new ImageView();
-//        emulationView.setFitWidth(2 * LCD_WIDTH);
-//        emulationView.setFitHeight(2 * LCD_HEIGHT);
         emulationView.setFitWidth(1.1 * LCD_WIDTH);
         emulationView.setFitHeight(1.1 * LCD_HEIGHT);
-
-        BorderPane simpleBorderPane = new BorderPane(emulationView);
-
-        Scene simpleModeScreen = new Scene(simpleBorderPane);
+        
+        Scene simpleModeScreen = SimpleModeScreen.getSimpleModeScreen(emulationView);
 
         BorderPane extendedBorderPane = new BorderPane();
 
-        // extendedBorderPane.setTop(toolBar); TODO fix code duplication
-        extendedBorderPane.setCenter(emulationView); // Copy the emulation view actually or it doesn't work TODO
-
-        // TODO add gameboy overlay
+        extendedBorderPane.setCenter(emulationView);
 
         Scene extendedModeScreen = new Scene(extendedBorderPane);
 
@@ -210,7 +193,7 @@ public class Main extends Application {
         MenuItem loadCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("load"));
         loadCartridgeMenuItem.setOnAction(e -> {
             FileChooser gamePakChooser = new FileChooser();
-            gamePakChooser.setTitle("Choose Game Pak");
+            gamePakChooser.setTitle(currentGuiBundle.getString("chooseGamePak"));
             try {
                 gameboj = new GameBoy(Cartridge.ofFile(gamePakChooser.showOpenDialog(primaryStage)));
             } catch (FileNotFoundException e1) {
@@ -242,7 +225,7 @@ public class Main extends Application {
         });
         fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem);
 
-        Menu dumpMenu = new Menu("Dump"); // dumping related functionality
+        Menu dumpMenu = new Menu(currentGuiBundle.getString("dump")); // dumping related functionality
         MenuItem dumpTileSourceMenuItem = new MenuItem("Dump tile source");
         MenuItem dumpBackgroundMenuItem = new MenuItem("Dump background");
         MenuItem dumpWindowMenuItem = new MenuItem("Dump window");
@@ -251,10 +234,10 @@ public class Main extends Application {
                 dumpSpritesMenuItem);
 
         Menu debugMenu = new Menu(currentGuiBundle.getString("debug")); // debugging related functionality
-        MenuItem stepByStepMenuItem = new MenuItem("Step by step execution");
-        MenuItem decompileMenuItem = new MenuItem("Decompile");
-        MenuItem showStateMenuItem = new MenuItem("Show Gameboy state");
-        MenuItem disassembleBootMenuItem = new MenuItem("Dissassemble boot rom");
+        MenuItem stepByStepMenuItem = new MenuItem(currentGuiBundle.getString("stepByStepExecution"));
+        MenuItem decompileMenuItem = new MenuItem(currentGuiBundle.getString("disassembleCartridge"));
+        MenuItem showStateMenuItem = new MenuItem(currentGuiBundle.getString("showGameboyState"));
+        MenuItem disassembleBootMenuItem = new MenuItem(currentGuiBundle.getString("disassembleBootRom"));
         disassembleBootMenuItem.setOnAction(e -> {
         	try {
 				FileWriter writer = new FileWriter("bootrom.txt");
@@ -265,7 +248,7 @@ public class Main extends Application {
 				e1.printStackTrace();
 			}
         });
-        MenuItem disassembleHeaderMenuItem = new MenuItem("Disassemble cartridge header");
+        MenuItem disassembleHeaderMenuItem = new MenuItem(currentGuiBundle.getString("disassembleCartridgeHeader"));
         disassembleHeaderMenuItem.setOnAction(e -> {
         	try {
 				FileWriter writer = new FileWriter("Z80 Assembly " + fileName.concat("_header.txt"));
@@ -280,11 +263,11 @@ public class Main extends Application {
         		disassembleHeaderMenuItem, showStateMenuItem);
 
         Menu optionsMenu = new Menu(currentGuiBundle.getString("options")); // gameboy options
-        MenuItem changeSpeedMenuItem = new MenuItem("Change speed");
-        MenuItem gameboyConfigurationMenuItem = new MenuItem("Configuration");
+        MenuItem changeSpeedMenuItem = new MenuItem(currentGuiBundle.getString("changeSpeed"));
+        MenuItem gameboyConfigurationMenuItem = new MenuItem(currentGuiBundle.getString("configuration"));
         
-        Label volumeLabel = new Label("Global volume");
-    	Label themeLabel = new Label("Gameboy theme");
+        Label volumeLabel = new Label(currentGuiBundle.getString("globalVolume"));
+    	Label themeLabel = new Label(currentGuiBundle.getString("gameboyColorTheme"));
     	Slider volumeSlider = new Slider();
     	volumeSlider.setMin(0);
     	volumeSlider.setMax(100);
@@ -296,28 +279,16 @@ public class Main extends Application {
     	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
     		switch (n) {
         		case "Standard":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFFFFFFF);
-        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFD3D3D3);
-        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFFA9A9A9);
-        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF000000);
+        			ImageConverter.setColorTheme(ColorTheme.STANDARD_COLOR_THEME);
         			break;
         		case "Creepy":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFFA10684);
-        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFF00FF00);
-        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFFFF0921);
-        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFFB3B191);
+        			ImageConverter.setColorTheme(ColorTheme.CREEPY_COLOR_THEME);
     			break;
         		case "Beautiful Day":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF25FDE9);
-        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFFCDC12);
-        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFF3A9D23);
-        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF3F2204);
+        			ImageConverter.setColorTheme(ColorTheme.DESERT_COLOR_THEME);
     			break;
         		case "Night":
-        			ImageConverter.JavaFXColor.COLOR0.setARGB(0xFF1B019B);
-        			ImageConverter.JavaFXColor.COLOR1.setARGB(0xFFAFAFAF);
-        			ImageConverter.JavaFXColor.COLOR2.setARGB(0xFF303030);
-        			ImageConverter.JavaFXColor.COLOR3.setARGB(0xFF000000);
+        			ImageConverter.setColorTheme(ColorTheme.NIGHT_COLOR_THEME);
     			break;
     		}
     	});
@@ -326,15 +297,7 @@ public class Main extends Application {
     	gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
     		switch (n) {
     		case "Normal":
-    			fadeEffectTransition.stop();
-    			break;
-    		case "Fade":
-    			fadeEffectTransition.setFromValue(1.0);
-    			fadeEffectTransition.setToValue(0.6);
-    			fadeEffectTransition.setAutoReverse(true);
-    			fadeEffectTransition.setNode(emulationView);
-    			fadeEffectTransition.setCycleCount(FadeTransition.INDEFINITE);
-    			fadeEffectTransition.playFromStart();
+    			
     			break;
     		}
     	});
@@ -353,12 +316,12 @@ public class Main extends Application {
         });
         optionsMenu.getItems().addAll(changeSpeedMenuItem, gameboyConfigurationMenuItem);
 
-        Menu windowMenu = new Menu("Window"); // workspace visual control
-        Menu perspectiveMenu = new Menu("Perspective"); // switch to view layout presets
-        Menu showViewMenu = new Menu("Show view"); // show view in workspace
-        MenuItem setMaximized = new MenuItem("Maximize window");
+        Menu windowMenu = new Menu(currentGuiBundle.getString("window")); // workspace visual control
+        Menu perspectiveMenu = new Menu(currentGuiBundle.getString("perspective")); // switch to view layout presets
+        Menu showViewMenu = new Menu(currentGuiBundle.getString("showView")); // show view in workspace
+        MenuItem setMaximized = new MenuItem(currentGuiBundle.getString("maximizeWindow"));
         setMaximized.setOnAction(e -> primaryStage.setMaximized(true));
-        MenuItem setFullscreen = new MenuItem("Go fullscreen");
+        MenuItem setFullscreen = new MenuItem(currentGuiBundle.getString("goFullscreen"));
         setFullscreen.setOnAction(e -> primaryStage.setFullScreen(true));
         setFullscreen.setAccelerator(new KeyCodeCombination(KeyCode.F11));
 
@@ -367,26 +330,26 @@ public class Main extends Application {
         ImageView bgSpriteView = new ImageView();
         ImageView fgSpriteView = new ImageView();
 
-        MenuItem backgroundViewMenuItem = new MenuItem("Background");
+        MenuItem backgroundViewMenuItem = new MenuItem(currentGuiBundle.getString("background"));
         Rectangle viewportRectangle = new Rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT);
         viewportRectangle.setFill(Color.TRANSPARENT);
         viewportRectangle.setStroke(Color.DARKGREEN);
         Pane backgroundViewPane = new Pane(backgroundView);
         backgroundViewPane.getChildren().add(viewportRectangle);
         backgroundViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(backgroundViewPane));
-        MenuItem windowViewMenuItem = new MenuItem("Window");
+        MenuItem windowViewMenuItem = new MenuItem(currentGuiBundle.getString("window"));
         windowViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(windowView));
-        MenuItem bgSpritesViewMenuItem = new MenuItem("Background sprites");
+        MenuItem bgSpritesViewMenuItem = new MenuItem(currentGuiBundle.getString("backgroundSprites"));
         bgSpritesViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(bgSpriteView));
-        MenuItem fgSpritesViewMenuItem = new MenuItem("Foreground sprites");
+        MenuItem fgSpritesViewMenuItem = new MenuItem(currentGuiBundle.getString("foregroundSprites"));
         fgSpritesViewMenuItem.setOnAction(e -> leftViewPane.getChildren().add(fgSpriteView));
         showViewMenu.getItems().addAll(backgroundViewMenuItem, windowViewMenuItem, bgSpritesViewMenuItem, fgSpritesViewMenuItem);
         windowMenu.getItems().addAll(perspectiveMenu, showViewMenu, setMaximized, setFullscreen);
 
-        Menu preferencesMenu = new Menu("Preferences"); // program preferences
-        MenuItem themeMenuItem = new MenuItem("Theme");
-        MenuItem skinsMenuItem = new MenuItem("Skins");
-        MenuItem languageMenuItem = new MenuItem("Language");
+        Menu preferencesMenu = new Menu(currentGuiBundle.getString("preferences")); // program preferences
+        MenuItem themeMenuItem = new MenuItem(currentGuiBundle.getString("colorTheme"));
+        MenuItem skinsMenuItem = new MenuItem(currentGuiBundle.getString("skins"));
+        MenuItem languageMenuItem = new MenuItem(currentGuiBundle.getString("language"));
         GridPane languageSelectionPane = new GridPane();
     	ToggleGroup languageSelectionGroup = new ToggleGroup();
     	RadioButton englishButton = new RadioButton(Locale.ENGLISH.getDisplayName());
@@ -420,8 +383,8 @@ public class Main extends Application {
         });
         preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem, languageMenuItem);
 
-        Menu helpMenu = new Menu("Help"); // help functionality
-        MenuItem programmingManualMenuItem = new MenuItem("Nintendo programming manual");
+        Menu helpMenu = new Menu(currentGuiBundle.getString("help")); // help functionality
+        MenuItem programmingManualMenuItem = new MenuItem(currentGuiBundle.getString("nintendoProgrammingManual"));
         programmingManualMenuItem.setOnAction(e -> {
         	try {
 				Desktop.getDesktop().browse(new URI("http://chrisantonellis.com/files/gameboy/gb-programming-manual.pdf"));
@@ -433,7 +396,7 @@ public class Main extends Application {
 				e1.printStackTrace();
 			}
         });
-        MenuItem aboutMenuItem = new MenuItem("About");
+        MenuItem aboutMenuItem = new MenuItem(currentGuiBundle.getString("about"));
         aboutMenuItem.setOnAction(e -> {
         	try {
 				Desktop.getDesktop().browse(new URI("https://dave_and_chris.gitlab.io/gameboj/"));
@@ -452,7 +415,7 @@ public class Main extends Application {
                 helpMenu);
 
         // TODO add button graphics (btn.setGraphic())
-        Button tbResetButton = new Button("Reset");
+        Button tbResetButton = new Button(currentGuiBundle.getString("reset"));
         tbResetButton.setOnAction(e -> {
             try {
                 gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
@@ -497,16 +460,16 @@ public class Main extends Application {
         });
         Button tbPauseButton = new Button(currentGuiBundle.getString("pause"));
         tbPauseButton.setOnAction(e -> {
-            if (isPaused) {
-                isPaused = false;
+            if (isPaused.get()) {
+                isPaused.set(false);
     			fadeEffectTransition.stop();
                 animationTimer.start();
                 pauseTime += System.nanoTime() - timeOnPause;
             } else {
-                isPaused = true;
+                isPaused.set(true);
                 animationTimer.stop();
                 fadeEffectTransition.setFromValue(1.0);
-    			fadeEffectTransition.setToValue(0.7);
+    			fadeEffectTransition.setToValue(0.6);
     			fadeEffectTransition.setAutoReverse(true);
     			fadeEffectTransition.setNode(emulationView);
     			fadeEffectTransition.setCycleCount(FadeTransition.INDEFINITE);
@@ -514,7 +477,7 @@ public class Main extends Application {
                 timeOnPause = System.nanoTime();
             }
         });       
-        Button screenshotButton = new Button("Screen");
+        Button screenshotButton = new Button(currentGuiBundle.getString("screenshot"));
         screenshotButton.setOnAction(e -> {
 			try {
 				screenshot();
@@ -583,149 +546,17 @@ public class Main extends Application {
         developmentBorderPane.setLeft(leftViewPane);
 
         Scene developmentModeScreen = new Scene(developmentBorderPane);
-        setInput(emulationView, gameboj.getJoypad());
+        setInput(emulationView, gameboj.getJoypad());       
 
-        // Mode choice screen
-        Button simpleModeButton = new Button("Simple Mode");
-        simpleModeButton.setOnAction(e -> primaryStage.setScene(simpleModeScreen));
-        Button extendedModeButton = new Button("Extended Mode");
-        extendedModeButton.setOnAction(e -> primaryStage.setScene(extendedModeScreen));
-        Button developmentModeButton = new Button("Development Mode");
-        developmentModeButton.setOnAction(e -> {
-        	primaryStage.setScene(developmentModeScreen);
-        	primaryStage.setMaximized(true);
-        });
-        VBox modeButtonsBox = new VBox(10);
-
-        modeButtonsBox.getChildren().addAll(simpleModeButton, extendedModeButton, developmentModeButton);
-        modeButtonsBox.setAlignment(Pos.CENTER);
-        modeButtonsBox.setPadding(new Insets(25, 25, 25, 25));
-
-        BorderPane modeChoicePane = new BorderPane(modeButtonsBox);
-
-        Scene modeChoiceScreen = new Scene(modeChoicePane, 435, 275);
+        Scene modeChoiceScreen = new ModeChoiceScreen(primaryStage,
+        		List.of(simpleModeScreen, extendedModeScreen, developmentModeScreen), currentGuiBundle).getScreen();
         
-        // Login screen
-        GridPane loginPane = new GridPane();
-        loginPane.setAlignment(Pos.CENTER);
-        loginPane.setHgap(10);
-        loginPane.setVgap(10);
-        loginPane.setPadding(new Insets(25, 25, 25, 25));
+        Scene loginScreen = LoginScreen.getLoginScreen(primaryStage, modeChoiceScreen, currentGuiBundle);
         
-        Text loginText = new Text("Please log in");
-        loginPane.add(loginText, 0, 0, 2, 1);
-        
-        Label usernameLabel = new Label(currentGuiBundle.getString("username"));
-        loginPane.add(usernameLabel, 0, 1);
-        TextField usernameField = new TextField();
-        loginPane.add(usernameField, 1, 1);
-        
-        Label passwordLabel = new Label(currentGuiBundle.getString("password"));
-        loginPane.add(passwordLabel, 0, 2);
-        PasswordField passwordField = new PasswordField();
-        loginPane.add(passwordField, 1, 2);
-        
-        Button createAccountButton = new Button("Create a new account");
-        loginPane.add(createAccountButton, 1, 3);
-        
-        Button login = new Button("Log in");
-        Image icon = new Image("File:cartoon-gameboy-gameboy-sbstn723-on-deviantart.png", 150, 150, true, true, true);
-        
-        Button noAccountButton = new Button("Continue without login");
-        noAccountButton.setOnAction(e -> {
-        	primaryStage.setScene(modeChoiceScreen);
-        });
-        
-        loginPane.add(noAccountButton, 2, 5);
-        loginPane.add(login, 1, 5);
-        ImageView shearedGameboyView = new ImageView();
-        PerspectiveTransform shear = new PerspectiveTransform();
-        shear.setUlx(13);
-        shear.setUly(-2);
-        shear.setUrx(50);
-        shear.setUry(0);
-        shear.setLrx(37);
-        shear.setLry(28);
-        shear.setLlx(0);
-        shear.setLly(25);
-        shearedGameboyView.setEffect(shear);
-        shearedGameboyView.setRotate(21);
-        shearedGameboyView.setTranslateX(47);
-        shearedGameboyView.setTranslateY(46);
-        loginPane.add(new ImageView(icon), 2, 1, 1, 2);
-        loginPane.add(shearedGameboyView, 2, 1, 1, 2); 
-        
-        Scene loginScreen = new Scene(loginPane);
-        loginScreen.setOnKeyPressed(e -> {
-        	if (e.getCode() == KeyCode.ENTER) {
-        		try {
-        			Connection connection = DriverManager.getConnection("jdbc:mysql://sql7.freemysqlhosting.net:3306/sql7239737", "sql7239737", "QTbGGaykPd");
-        			PreparedStatement ps = 
-        					connection.prepareStatement("SELECT `Username`, `Password` FROM `Gameboj Users` WHERE `Username` = ? AND `Password` = ?");
-        			ps.setString(1, usernameField.getText());
-        			ps.setString(2, passwordField.getText());
-        			ResultSet result = ps.executeQuery();
-        			if (result.next()) {
-        				primaryStage.setScene(modeChoiceScreen);
-        			} else {
-        				Text loginResultText = new Text("Username/password wrong");
-        				loginPane.add(loginResultText, 0, 7);
-        			}
-        		} catch (SQLException ex) {
-        			ex.printStackTrace();
-        		}
-        	}
-        });
-        
-        GridPane accountCreationPane = new GridPane();
-        Scene createAccountScene = new Scene(accountCreationPane);
-        Label nameLabel = new Label("What is your name?");
-        accountCreationPane.add(nameLabel, 0, 0);
-        TextField nameField = new TextField();
-        accountCreationPane.add(nameField, 0, 1);
-        Label createUsernameLabel = new Label("Pick a username:");
-        accountCreationPane.add(createUsernameLabel, 0, 2);
-        TextField usernameCreationField = new TextField();
-        accountCreationPane.add(usernameCreationField, 0, 3);
-        Label createPasswordLabel = new Label("Pick a password:");
-        accountCreationPane.add(createPasswordLabel, 0, 4);
-        PasswordField passwordCreationField = new PasswordField();
-        accountCreationPane.add(passwordCreationField, 0, 5);
-        Button accountDoneButton = new Button("Create your account");
-        accountDoneButton.setOnAction(e -> {
-        	try {
-				Connection connection = DriverManager.getConnection("jdbc:mysql://sql7.freemysqlhosting.net:3306/sql7239737", "sql7239737", "QTbGGaykPd");
-				PreparedStatement ps = connection.prepareStatement("INSERT INTO `Gameboj Users` VALUES (?, ?, ?)");
-				ps.setString(1, nameField.getText());
-				ps.setString(2, usernameCreationField.getText());
-				ps.setString(3, passwordCreationField.getText());
-				ps.execute();
-				primaryStage.setScene(loginScreen);
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-        });
-        accountCreationPane.add(accountDoneButton, 0, 6);
-        createAccountButton.setOnAction(e -> {
-        	primaryStage.setScene(createAccountScene);
-        });      
-
-        FadeTransition splashFade = new FadeTransition();
-        splashFade.setNode(splashPane);
-        splashFade.setDelay(new Duration(1000));
-        splashFade.setDuration(new Duration(3000));
-        splashFade.setFromValue(1.0);
-        splashFade.setToValue(0.0);
-        splashFade.setOnFinished(e -> {
-        	primaryStage.setScene(loginScreen);
-        });
-        
-        //TODO USE TRANSITIONS FOR THE EMULATION VIEW
+        Scene splashScreen = SplashScreen.getSplashScreen(primaryStage, loginScreen);
         
         primaryStage.getIcons().add(new Image("file:gb_icon.png"));
         primaryStage.setScene(splashScreen);
-        splashFade.play();
         primaryStage.show();
 
         start = System.nanoTime();
@@ -741,7 +572,8 @@ public class Main extends Application {
                 emulationView.requestFocus();
                 Image screenImage = ImageConverter.convert(gameboj.getLcdController().currentImage());
                 emulationView.setImage(screenImage);
-                shearedGameboyView.setImage(screenImage);
+                
+                LoginScreen.setShearedGameboyView(screenImage);
                 
 //                screenCapFrames.add(screenImage); //TODO remove?
 //                
@@ -824,11 +656,9 @@ public class Main extends Application {
     
     public static void initiateClient(InetAddress locIP) {
     	try {
-    		if (clientSocket == null) {
-        		clientSocket = new Socket(locIP, 4444);
-    			clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
-    			BufferedReader clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-    		}
+    		clientSocket = new Socket(locIP, 4444);
+			clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
+			BufferedReader clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		} catch (UnknownHostException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -846,8 +676,3 @@ public class Main extends Application {
         ImageIO.write(SwingFXUtils.fromFXImage(ImageConverter.convert(screenshot), i), "png", new File("ScreenCaptures/" + date + ".png"));
     }
 }
-
-
-
-
-

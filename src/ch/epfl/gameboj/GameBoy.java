@@ -8,6 +8,7 @@ import java.util.Objects;
 import javax.sound.sampled.LineUnavailableException;
 
 import ch.epfl.gameboj.component.Joypad;
+import ch.epfl.gameboj.component.SerialIO;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.lcd.LcdController;
@@ -39,6 +40,7 @@ public final class GameBoy {
     private final LcdController lcdController = new LcdController(cpu);
     private final SoundController soundController;
     private final Joypad joypad = new Joypad(cpu);
+    private final SerialIO serialIO = new SerialIO();
 
     public static final long CYCLES_PER_SECOND = (long) Math.pow(2, 20);
     public static final double CYCLES_PER_NANOSECOND = CYCLES_PER_SECOND / 1e9;
@@ -64,6 +66,8 @@ public final class GameBoy {
         lcdController.attachTo(bus);
 
         joypad.attachTo(bus);
+        
+        serialIO.attachTo(bus);
     }
 
     /**
@@ -121,6 +125,7 @@ public final class GameBoy {
         final long cycleCopy = cycle;
         while (currentCycle < cycle) {
             timer.cycle(currentCycle);
+            serialIO.cycle(currentCycle);
             if (!Main.isMuted) { //FIXME
                 soundController.cycle(currentCycle);
             }

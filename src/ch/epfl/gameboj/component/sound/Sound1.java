@@ -7,10 +7,8 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
-import ch.epfl.gameboj.component.Clocked;
-import ch.epfl.gameboj.component.Component;
 
-public final class Sound1 extends SoundCircuit implements Component, Clocked {
+public final class Sound1 extends SoundCircuit {
 	private enum Reg implements Register { NR10, NR11, NR12, NR13, NR14 }
 	
 	private enum NR10 implements Bit { SWEEP_SHIFT0, SWEEP_SHIFT1, SWEEP_SHIFT2, SWEEP_INC, SWEEP_TIME0, SWEEP_TIME1, SWEEP_TIME2, UNUSED7 }
@@ -176,7 +174,27 @@ public final class Sound1 extends SoundCircuit implements Component, Clocked {
 	
 	@Override
 	public void cycle(long cycle) {
-		// TODO Auto-generated method stub
+		if (isCounterActive() && getLength() > 0) {
+			decLength();
+			if (getLength() == 0) {
+				controller.setSound1Pow(false);
+			}
+		}
+		
+		getVolume().handleSweep();
+		
+		if (getSweepIndex() > 0 && getSweepLength() > 0) {
+			decSweepIndex();
+			if (getSweepIndex() == 0) {
+				setSweepIndex(getSweepLength());
+				setInternalFreq(getInternalFreq() + (getInternalFreq() >> getSweepShift()) * getSweepDirection());
+				if (getInternalFreq() > 2047) {
+					//turn off
+				} else {
+					
+				}
+			}
+		}
 	}
 
 	@Override

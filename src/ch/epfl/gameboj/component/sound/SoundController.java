@@ -36,10 +36,9 @@ public final class SoundController implements Component, Clocked {
 	private final RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
 	
 	private byte[][] soundBuffers; 
-	private byte[] soundBuffer; // 2048
+	private byte[] soundBuffer;
 	
 	int soundBufferIndex;
-
 	
 	private final Sound1 sound1 = new Sound1(this);
 	private final Sound2 sound2 = new Sound2();
@@ -57,10 +56,10 @@ public final class SoundController implements Component, Clocked {
 		
 		line = (SourceDataLine) AudioSystem.getLine(info);
 		
-		line.open(format, 15000);
+		line.open(format, 60000);
 		
 		soundBuffers = new byte[4][1500];
-		soundBuffer = new byte[2048];
+		soundBuffer = new byte[line.getBufferSize()];
 		
 		line.start();
 	}
@@ -77,42 +76,23 @@ public final class SoundController implements Component, Clocked {
 		
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND1)) {
 			sound1.cycle(cycle);
-			if (sound1.isCounterActive() && sound1.getLength() > 0) {
-				sound1.decLength();
-				if (sound1.getLength() == 0) {
-					soundRegs.setBit(Reg.NR52, NR52.SOUND1, false);
-				}
-			}
-			
-			sound1.getVolume().handleSweep();
-			
-			if (sound1.getSweepIndex() > 0 && sound1.getSweepLength() > 0) {
-				sound1.decSweepIndex();
-				if (sound1.getSweepIndex() == 0) {
-					sound1.setSweepIndex(sound1.getSweepLength());
-					sound1.setInternalFreq(sound1.getInternalFreq() + (sound1.getInternalFreq() >> sound1.getSweepShift()) * sound1.getSweepDirection());
-					if (sound1.getInternalFreq() > 2047) {
-						//turn off
-					} else {
-						
-					}
-				}
-			}
-			
+
 			soundBuffers[0][soundBufferIndex] = (byte) (sound1.getWave()[(int) (((32 * sound1.getIndex() * sound1.getFrequency()) / SAMPLE_RATE) % 32)]);
 			
 			sound1.incIndex();
 		}
 		
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND2)) {
-			soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
+			sound2.cycle(cycle);
 			
-			sound2.getVolume().handleSweep();
+			soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
 			
 			sound2.incIndex();
 		}
 		
-		if (soundRegs.testBit(Reg.NR52, NR52.SOUND3)) {			
+		if (soundRegs.testBit(Reg.NR52, NR52.SOUND3)) {	
+			sound3.cycle(cycle);
+			
 			soundBuffers[2][soundBufferIndex] = (byte) sound3.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
 			
 			switch (sound3.getOutputLevel()) {
@@ -133,6 +113,8 @@ public final class SoundController implements Component, Clocked {
 		}
 		
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND4)) {
+			sound4.cycle(cycle);
+			
 			soundBuffers[3][soundBufferIndex] = (byte) sound4.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
 			
 			sound4.incIndex();
@@ -146,16 +128,22 @@ public final class SoundController implements Component, Clocked {
 			line.write(soundBuffer, 0, 2 * Math.min(line.available(), soundBuffers.length));
 			soundBufferIndex = 0;
 		}
-		
-//		if (soundBufferIndex == 749) {
-//			soundBufferIndex = 0;
-//		}
-//		
-//		if (line.available() >= soundBufferIndex) {
-//			line.write(soundBuffer, 0, 2 * soundBufferIndex);
-//		} else {
-//			soundBufferIndex %= soundBuffer.length;
-//		}
+	}
+	
+	public void setSound1Pow(boolean pow) {
+		soundRegs.setBit(Reg.NR52, NR52.SOUND1, pow);
+	}
+	
+	public void setSound2Pow(boolean pow) {
+		soundRegs.setBit(Reg.NR52, NR52.SOUND2, pow);
+	}
+	
+	public void setSound3Pow(boolean pow) {
+		soundRegs.setBit(Reg.NR52, NR52.SOUND3, pow);
+	}
+	
+	public void setSound4Pow(boolean pow) {
+		soundRegs.setBit(Reg.NR52, NR52.SOUND4, pow);
 	}
 	
 	private void initSounds() {
@@ -176,21 +164,18 @@ public final class SoundController implements Component, Clocked {
 	
 	private void initSound2() {
 		if (sound2.isReset()) {
-			System.out.println("Sound 2 on");
 			soundRegs.setBit(Reg.NR52, NR52.SOUND2, true);
 		}
 	}
 	
 	private void initSound3() {
 		if (sound3.isReset()) {
-			System.out.println("Sound 3 on");
 			soundRegs.setBit(Reg.NR52, NR52.SOUND3, true);
 		}
 	}
 	
 	private void initSound4() {
 		if (sound4.isReset()) {
-			System.out.println("Sound 4 on");
 			soundRegs.setBit(Reg.NR52, NR52.SOUND4, true);
 		}
 	}

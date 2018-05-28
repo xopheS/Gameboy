@@ -5,9 +5,8 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
-import ch.epfl.gameboj.component.Component;
 
-public final class Sound2 extends SoundCircuit implements Component {
+public final class Sound2 extends SoundCircuit {
 	private enum Reg implements Register { NR21, NR22, NR23, NR24 }
 	
 	private enum NR21 implements Bit { S_LENGTH0, S_LENGTH1, S_LENGTH2, S_LENGTH3, S_LENGTH4, LENGTH5, DUTY0, DUTY1 }
@@ -90,5 +89,10 @@ public final class Sound2 extends SoundCircuit implements Component {
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S2_START && address < AddressMap.REGS_S2_END) {
 			soundRegs.set(address - AddressMap.REGS_S2_START, data);
 		}
+	}
+
+	@Override
+	public void cycle(long cycle) {		
+		getVolume().handleSweep();
 	}
 }

@@ -5,9 +5,8 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
-import ch.epfl.gameboj.component.Component;
 
-public final class Sound3 extends SoundCircuit implements Component {
+public final class Sound3 extends SoundCircuit {
 	private enum Reg implements Register { NR30, NR31, NR32, NR33, NR34 }
 	
 	private enum NR30 implements Bit { UNUSED0, UNUSED1, UNUSED2, UNUSED3, UNUSED4, UNUSED5, UNUSED6, POWER }
@@ -58,5 +57,11 @@ public final class Sound3 extends SoundCircuit implements Component {
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S3_START && address < AddressMap.REGS_S3_END) {
 			soundRegs.set(address - AddressMap.REGS_S3_START, data);
 		}
+	}
+
+	@Override
+	public void cycle(long cycle) {
+		// TODO Auto-generated method stub
+		
 	}
 }
