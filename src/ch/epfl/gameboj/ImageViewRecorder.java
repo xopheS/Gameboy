@@ -1,4 +1,4 @@
-package ch.epfl.extended;
+package ch.epfl.gameboj;
 
 import javafx.scene.image.ImageView;
 
