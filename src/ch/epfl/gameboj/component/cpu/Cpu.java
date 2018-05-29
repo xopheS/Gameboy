@@ -12,6 +12,7 @@ import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Alu.Flag;
 import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 import ch.epfl.gameboj.component.memory.Ram;
+import ch.epfl.gameboj.gui.Main;
 
 /**
  * Cette classe modélise le processeur de la Gameboy.
@@ -71,6 +72,12 @@ public final class Cpu implements Component, Clocked {
     private final RegisterFile<Register> registers8 = new RegisterFile<>(Reg.values());
 
     private long nextNonIdleCycle;
+    
+    private Opcode currentOp;
+    
+    public Cpu() {
+    	highRam.write(0xffcc - AddressMap.HRAM_START, 1);
+    }
 
     private static Opcode[] buildOpcodeTable(Opcode.Kind opKind) {
         Opcode[] opcodeTable = new Opcode[256];
@@ -138,6 +145,7 @@ public final class Cpu implements Component, Clocked {
             int nextInstruction = bus.read(PC);
             Opcode nextOpcode = nextInstruction == OPCODE_PREFIX ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()]
                     : DIRECT_OPCODE_TABLE[nextInstruction];
+            currentOp = nextOpcode;
             dispatch(nextOpcode);
         }
     }
@@ -151,6 +159,11 @@ public final class Cpu implements Component, Clocked {
     private void dispatch(Opcode opcode) {
         int nextPC = PC + opcode.totalBytes;
         boolean instructionDone = false;
+        
+        if (Main.printCPU) {
+        	System.out.println("------");
+        	System.out.println(opcode.name());
+        }
 
         switch (opcode.family) {
         case NOP:
@@ -165,6 +178,10 @@ public final class Cpu implements Component, Clocked {
         }
             break;
         case LD_A_N8R: {
+        	if (Main.printCPU) {
+        		System.out.println("Load " + Integer.toHexString(read8(AddressMap.REGS_START + read8AfterOpcode())) 
+        		+ " from address " + Integer.toHexString(AddressMap.REGS_START + read8AfterOpcode()) + " into reg A");
+        	}
             registers8.set(Reg.A, read8(AddressMap.REGS_START + read8AfterOpcode()));
         }
             break;
@@ -357,6 +374,9 @@ public final class Cpu implements Component, Clocked {
         }
             break;
         case AND_A_R8: {
+        	if (Main.printCPU) {
+        		System.out.println("A and " + extractReg(opcode, 0).name());
+        	}
             setRegFlags(Reg.A, Alu.and(registers8.get(Reg.A), registers8.get(extractReg(opcode, 0))));
         }
             break;
@@ -535,8 +555,14 @@ public final class Cpu implements Component, Clocked {
         }
             break;
         case JR_CC_E8: {
+        	if (Main.printCPU) {
+            	System.out.println("jr condition " + testCondition(opcode));
+        	}
             if (testCondition(opcode)) {
                 nextPC += Bits.signExtend8(read8AfterOpcode());
+                if (Main.printCPU) {
+                	System.out.println("jump to " + Integer.toHexString(nextPC));
+                }
                 instructionDone = true;
             }
         }
@@ -627,6 +653,9 @@ public final class Cpu implements Component, Clocked {
     }
 
     private int read8(int address) {
+//    	if (address == 0xFF01 || address == 0xFF02) {
+//    		System.out.println("opcode " + currentOp.name() + " reads " + Integer.toHexString(address));
+//    	}
         return bus.read(address);
     }
 
@@ -649,6 +678,9 @@ public final class Cpu implements Component, Clocked {
     }
 
     private void write8(int address, int v) {
+//    	if (address == 0xFF01 || address == 0xFF02) {
+//    		System.out.println("opcode " + currentOp.name() + " writes " + Integer.toHexString(address));
+//    	}
         bus.write(address, v);
     }
 
@@ -860,6 +892,9 @@ public final class Cpu implements Component, Clocked {
         } else if (address == AddressMap.REG_IF) {
             IF = data;
         } else if (address >= AddressMap.HRAM_START && address < AddressMap.HRAM_END) {
+//        	if (address == 0xffcc) {
+//        		System.out.println("write " + data + " at ffcc");
+//        	}
             highRam.write(address - AddressMap.HRAM_START, data);
         }
     }

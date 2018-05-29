@@ -7,13 +7,12 @@ import static ch.epfl.gameboj.component.lcd.LcdController.LCD_WIDTH;
 
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -38,6 +37,7 @@ import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Joypad.Key;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdImage;
+import ch.epfl.gameboj.component.serial.SerialProtocol;
 import ch.epfl.gameboj.gui.color.ColorTheme;
 import ch.epfl.gameboj.gui.screens.LoginScreen;
 import ch.epfl.gameboj.gui.screens.ModeChoiceScreen;
@@ -83,6 +83,7 @@ public class Main extends Application {
 	private ResourceBundle currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
     private static GameBoy gameboj;
     BooleanProperty isPaused = new SimpleBooleanProperty();
+    BooleanProperty isSafeModeOn = new SimpleBooleanProperty();
     boolean isSpeedButtonPressed;
     boolean isScreenCapOn;
     public static boolean isMuted;
@@ -91,14 +92,12 @@ public class Main extends Application {
     long timeOnPause;
     long pauseTime;
     int cycleSpeed = 1;
-    AnimationTimer animationTimer;
+    private AnimationTimer animationTimer;
     public static DoubleProperty currentVolume = new SimpleDoubleProperty();
     private static ServerSocket serverSocket;
     private static Socket clientSocket;
-    private static PrintWriter serverOut;
-    private static BufferedReader serverIn;
-    private static PrintWriter clientOut;
-    private static BufferedReader clientIn;
+    public static boolean printCPU;
+    boolean clientInit;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -126,20 +125,12 @@ public class Main extends Application {
         		try {	
         			System.out.println("Bind ip server");
             		serverSocket = new ServerSocket(4444, 0, locIP);
-        			if (serverSocket.isBound()) System.out.println("server ready");
         			Socket clientSocket = serverSocket.accept();
-        			System.out.println("client accepted");
-        			serverOut = new PrintWriter(clientSocket.getOutputStream());
-        			System.out.println("outstream ");
-
-        			serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        			System.out.println("instream ");
         			
-        			while(serverIn.ready()) {
-        				System.out.println(serverIn.readLine());
-            			serverOut.write("Server answers");
-            			serverOut.flush();
-        			}
+        			SerialProtocol.setDataInput(new DataInputStream(clientSocket.getInputStream()));
+        			SerialProtocol.setDataOutput(new DataOutputStream(clientSocket.getOutputStream()));
+        			
+                	SerialProtocol.startProtocol(true);
         		} catch (UnknownHostException e1) {
         			// TODO Auto-generated catch block
         			e1.printStackTrace();
@@ -158,9 +149,10 @@ public class Main extends Application {
         
         Button testClientButton = new Button("Test client");
         testClientButton.setOnAction(e -> {
-        	initiateClient(locIP);
-			clientOut.write("Client asks \n");
-			clientOut.flush();
+        	if (!clientInit) {
+            	initiateClient(locIP);
+            	clientInit = true;
+        	}
         });
         // TEST ---------
 
@@ -211,11 +203,6 @@ public class Main extends Application {
         exitMenuItem.setOnAction(e -> {
         	try {
 				serverSocket.close();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-        	try {
 				clientSocket.close();
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -381,7 +368,21 @@ public class Main extends Application {
         	languageSelectionStage.setScene(languageSelectionScene);
         	languageSelectionStage.show();
         });
-        preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem, languageMenuItem);
+        MenuItem safeModeButton = new MenuItem("Enable/Disable safe mode");
+        Thread safeModeShutdownThread = new Thread() {
+			public void run() {
+				gameboj.getCartridge().toFile("currentSave.gb");
+			}
+        };
+        safeModeButton.setOnAction(e -> {
+        	isSafeModeOn.set(!isSafeModeOn.get());
+        	if (isSafeModeOn.get()) {
+        		Runtime.getRuntime().addShutdownHook(safeModeShutdownThread);
+        	} else {
+        		Runtime.getRuntime().removeShutdownHook(safeModeShutdownThread);
+        	}
+        });
+        preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem, languageMenuItem, safeModeButton);
 
         Menu helpMenu = new Menu(currentGuiBundle.getString("help")); // help functionality
         MenuItem programmingManualMenuItem = new MenuItem(currentGuiBundle.getString("nintendoProgrammingManual"));
@@ -488,13 +489,8 @@ public class Main extends Application {
 		});       
         Button speedTimes5Button = new Button("x3");
         speedTimes5Button.setOnAction(e -> {
-        	if (isSpeedButtonPressed) {
-                cycleSpeed = 1;
-                isSpeedButtonPressed = false;
-            } else {
-                cycleSpeed = 3;
-                isSpeedButtonPressed = true;
-            }
+        	cycleSpeed = isSpeedButtonPressed ? 3 : 1;      	
+        	isSpeedButtonPressed = !isSpeedButtonPressed;
         });
         Button saveButton = new Button(currentGuiBundle.getString("save"));
         saveButton.setOnAction(e -> {
@@ -514,11 +510,7 @@ public class Main extends Application {
         });
         Button muteButton = new Button("Mute/Unmute");
         muteButton.setOnAction(e -> {
-        	if (isMuted) {
-        		isMuted = false;
-        	} else {
-        		isMuted = true;
-        	}
+        	isMuted = !isMuted;
         });
         
         Button terminateConnectionButton = new Button("Terminate");
@@ -531,8 +523,13 @@ public class Main extends Application {
 				e1.printStackTrace();
 			}
         });
+        
+        Button startGameButton = new Button("Start");
+        startGameButton.setOnAction(e -> {
+            animationTimer.start();
+        });
         ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, toggleScreenCapButton, muteButton, saveButton,
-        		testServerButton, testClientButton, terminateConnectionButton); 
+        		testServerButton, testClientButton, terminateConnectionButton, startGameButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
         
@@ -589,8 +586,6 @@ public class Main extends Application {
                 fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
             }
         };
-        
-        animationTimer.start();
     }
 
     private static void setInput(Node node, Joypad jp) {
@@ -621,6 +616,9 @@ public class Main extends Application {
             case LEFT:
                 jp.keyPressed(Key.LEFT);
                 break;
+            case H:
+            	printCPU = !printCPU;
+            	break;
             }
         });
 
@@ -657,8 +655,11 @@ public class Main extends Application {
     public static void initiateClient(InetAddress locIP) {
     	try {
     		clientSocket = new Socket(locIP, 4444);
-			clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
-			BufferedReader clientIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    		
+    		SerialProtocol.setDataInput(new DataInputStream(clientSocket.getInputStream()));
+    		SerialProtocol.setDataOutput(new DataOutputStream(clientSocket.getOutputStream()));
+    		
+        	SerialProtocol.startProtocol(false);
 		} catch (UnknownHostException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

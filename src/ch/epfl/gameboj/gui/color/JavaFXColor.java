@@ -7,6 +7,19 @@ public class JavaFXColor {
 	public static final JavaFXColor STD_COLOR1 = new JavaFXColor(0xFF, 0xD3, 0xD3, 0xD3);
 	public static final JavaFXColor STD_COLOR2 = new JavaFXColor(0xFF, 0xA9, 0xA9, 0xA9);
 	public static final JavaFXColor STD_COLOR3 = new JavaFXColor(0xFF, 0x00, 0x00, 0x00);
+	
+	public static final JavaFXColor DARK_ORANGE = new JavaFXColor(0xFFFF8C00);
+	public static final JavaFXColor DARK_RED = new JavaFXColor(0xFF8B0000);
+	public static final JavaFXColor GREEN = new JavaFXColor(0xFF008000);
+	public static final JavaFXColor TEAL = new JavaFXColor(0xFF008080);
+	public static final JavaFXColor SADDLE_BROWN = new JavaFXColor(0xFF8B4513);
+	public static final JavaFXColor MIDNIGHT_BLUE = new JavaFXColor(0xFF191970);
+	public static final JavaFXColor LIGHT_STEEL_BLUE = new JavaFXColor(0xFFB0C4DE);
+	public static final JavaFXColor INDIGO = new JavaFXColor(0xFF4B0082);
+	public static final JavaFXColor IVORY = new JavaFXColor(0xFFFFFFF0);
+	public static final JavaFXColor GOLDEN_ROD = new JavaFXColor(0xFFDAA520);
+	public static final JavaFXColor FOREST_GREEN = new JavaFXColor(0xFF228B22);
+	public static final JavaFXColor NAVY = new JavaFXColor(0xFF000080);
 
     private int alpha, red, green, blue;
     
