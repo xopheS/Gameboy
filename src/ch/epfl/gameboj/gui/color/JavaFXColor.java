@@ -20,6 +20,16 @@ public class JavaFXColor {
 	public static final JavaFXColor GOLDEN_ROD = new JavaFXColor(0xFFDAA520);
 	public static final JavaFXColor FOREST_GREEN = new JavaFXColor(0xFF228B22);
 	public static final JavaFXColor NAVY = new JavaFXColor(0xFF000080);
+	public static final JavaFXColor OLIVE = new JavaFXColor(0xFF808000);
+	public static final JavaFXColor AQUAMARINE = new JavaFXColor(0xFF7FFFD4);
+	public static final JavaFXColor CHARTREUSE = new JavaFXColor(0xFF7FFF00);
+	public static final JavaFXColor CHOCOLATE = new JavaFXColor(0xFFD2691E);
+	public static final JavaFXColor CRIMSON = new JavaFXColor(0xFFDC143C);
+	public static final JavaFXColor DARK_KHAKI = new JavaFXColor(0xFFBDB76B);
+	public static final JavaFXColor LIME = new JavaFXColor(0xFFFF00FF);
+	public static final JavaFXColor PERU = new JavaFXColor(0xFFCD853F);
+	public static final JavaFXColor TOMATO = new JavaFXColor(0xFFFF6347);
+	public static final JavaFXColor SKY_BLUE = new JavaFXColor(0xFF87CEEB);
 
     private int alpha, red, green, blue;
     

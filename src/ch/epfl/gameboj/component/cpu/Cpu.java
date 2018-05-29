@@ -36,14 +36,29 @@ public final class Cpu implements Component, Clocked {
 
     // PC = program counter, stores the address of the next instruction
     private IntegerProperty PC = new SimpleIntegerProperty();
+    public IntegerProperty getPC() {
+    	return PC;
+    }
     // SP = stack pointer, stores the address of the top of the stack
     private IntegerProperty SP = new SimpleIntegerProperty();
+    public IntegerProperty getSP() {
+    	return SP;
+    }
     // IME = interrupt master enable, tells us if interrupts are enabled or not
     private BooleanProperty IME = new SimpleBooleanProperty();
+    public BooleanProperty getIME() {
+    	return IME;
+    }
     // IE = interrupt enable, tells us if corresponding interrupt is enabled
     private IntegerProperty IE = new SimpleIntegerProperty();
+    public IntegerProperty getIE() {
+    	return IE;
+    }
     // IF = interrupt flags, tells us if corresponding interrupt is happening
     private IntegerProperty IF = new SimpleIntegerProperty();
+    public IntegerProperty getIF() {
+    	return IF;
+    }
 
     private enum Reg implements Register {
         A, F, B, C, D, E, H, L
@@ -620,7 +635,8 @@ public final class Cpu implements Component, Clocked {
         }
             break;
         case STOP:
-            throw new Error("STOP is not implemented");
+        	//halt processor and screen, leave single black horizontal line
+            break;
         default:
             break;
         }

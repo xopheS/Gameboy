@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.LineUnavailableException;
@@ -62,10 +63,13 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
+import javafx.scene.effect.SepiaTone;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -94,12 +98,15 @@ public class Main extends Application {
     long timeOnPause;
     long pauseTime;
     int cycleSpeed = 1;
-    private AnimationTimer animationTimer;
+    private static AnimationTimer animationTimer;
     public static DoubleProperty currentVolume = new SimpleDoubleProperty();
     private static ServerSocket serverSocket;
     private static Socket clientSocket;
     public static boolean printCPU;
     boolean clientInit;
+    static boolean mustStart;
+    
+    Preferences loadedPreferences = Preferences.userNodeForPackage(this.getClass());
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -113,24 +120,48 @@ public class Main extends Application {
         String fileName = cmdArgs.get(0); // TODO change this
         String saveFileName = cmdArgs.size() == 2 ? cmdArgs.get(1) : null;
         
-        gameboj = saveFileName == null ? new GameBoy(Cartridge.ofFile(new File(fileName))) 
-        		: new GameBoy(Cartridge.ofFile(new File(fileName)), saveFileName); // FIXME
+        String preloadCartridgeName = loadedPreferences.get("PRELOAD_CARTRIDGE", null);
+        
+        if (preloadCartridgeName != null) {
+        	startEmulation(preloadCartridgeName);
+        } else {
+            gameboj = saveFileName == null ? new GameBoy(Cartridge.ofFile(new File(fileName))) 
+            		: new GameBoy(Cartridge.ofFile(new File(fileName)), saveFileName); // FIXME
+        }
         
         currentVolume.set(0);
         
 		InetAddress locIP = InetAddress.getLocalHost();
 		System.out.println(locIP.getHostAddress());
         
-        Button testServerButton = new Button("Test server");
+        Button testServerButton = new Button("Open link");
         testServerButton.setOnAction(e -> {
-            initiateServer(locIP);
+        	if (serverSocket == null) {
+                initiateServer(locIP);
+        	}
         });
         
-        Button testClientButton = new Button("Test client");
+        Button testClientButton = new Button("Connect to link");
         testClientButton.setOnAction(e -> {
-        	if (!clientInit) {
-            	initiateClient(locIP);
-            	clientInit = true;
+        	if (clientSocket == null) {
+        		Stage connectDataStage = new Stage();
+        		GridPane connectDataPane = new GridPane();
+        		Label ipLabel = new Label("Enter the host IP");
+        		TextField ipField = new TextField();
+        		connectDataPane.add(ipLabel, 0, 0);
+        		connectDataPane.add(ipField, 0, 1);
+        		Scene connectDataScene = new Scene(connectDataPane);
+        		connectDataScene.setOnKeyPressed(f -> {
+        			if (f.getCode() == KeyCode.ENTER) {
+                    	try {
+							initiateClient(InetAddress.getByName(ipField.getText()));
+						} catch (UnknownHostException e1) {
+							e1.printStackTrace();
+						}
+        			}
+        		});
+        		connectDataStage.setScene(connectDataScene);
+        		connectDataStage.show();
         	}
         });
 
@@ -154,14 +185,15 @@ public class Main extends Application {
         FlowPane leftViewPane = new FlowPane();
 
         VBox topBox = new VBox();
+        
+        FileChooser gamePakChooser = new FileChooser();
+        gamePakChooser.setTitle(currentGuiBundle.getString("chooseGamePak"));
 
         Menu fileMenu = new Menu(currentGuiBundle.getString("file")); // file related functionality
         MenuItem saveCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("save"));
         MenuItem saveAsCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("saveAs"));
         MenuItem loadCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("load"));
         loadCartridgeMenuItem.setOnAction(e -> {
-            FileChooser gamePakChooser = new FileChooser();
-            gamePakChooser.setTitle(currentGuiBundle.getString("chooseGamePak"));
             try {
                 gameboj = new GameBoy(Cartridge.ofFile(gamePakChooser.showOpenDialog(primaryStage)));
             } catch (FileNotFoundException e1) {
@@ -177,13 +209,6 @@ public class Main extends Application {
         });
         MenuItem exitMenuItem = new MenuItem(currentGuiBundle.getString("exit"));
         exitMenuItem.setOnAction(e -> {
-        	try {
-				serverSocket.close();
-				clientSocket.close();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
         	System.exit(0);
         });
         fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem);
@@ -202,6 +227,24 @@ public class Main extends Application {
         
         Stage gameboyStateStage = new Stage();
         GridPane gameboyStatePane = new GridPane();
+        Label A = new Label("A");
+        Label B = new Label("B");
+        Label C = new Label("C");
+        Label D = new Label("D");
+        Label E = new Label("E");
+        Label F = new Label("F");
+        Label H = new Label("H");
+        Label L = new Label("L");
+        Label PC = new Label("PC");
+        PC.setTooltip(new Tooltip("Program counter"));
+        Label SP = new Label("SP");
+        SP.setTooltip(new Tooltip("Stack pointer"));
+        Label IME = new Label("IME");
+        IME.setTooltip(new Tooltip("Interrupt master enable"));
+        Label IE = new Label("IE");
+        IE.setTooltip(new Tooltip("Interrupt enable"));
+        Label IF = new Label("IF");
+        IF.setTooltip(new Tooltip("Interrupt flags"));
         Scene gameboyStateScene = new Scene(gameboyStatePane);
         gameboyStateStage.setScene(gameboyStateScene);
         
@@ -272,18 +315,23 @@ public class Main extends Application {
         emulationPane.getChildren().add(emulationView);
         developmentBorderPane.setCenter(emulationPane);
     	
-    	ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Sepia", "Lighting")); //TODO check three other types of light
+    	ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Sepia", "Lighting", "SepiaAndLighting")); //TODO check three other types of light
     	Light.Distant distantLightSource = new Light.Distant();
     	distantLightSource.setAzimuth(20);
     	Lighting lightingEffect = new Lighting(distantLightSource);
+    	SepiaTone sepiaEffect = new SepiaTone();
 		FadeTransition fadeEffectTransition = new FadeTransition();
     	gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
     		switch (n) {
     		case "Sepia":
-    			
+    			emulationPane.setEffect(sepiaEffect);
     			break;
     		case "Lighting":
     			emulationPane.setEffect(lightingEffect);
+    			break;
+    		case "SepiaAndLighting":
+    			sepiaEffect.setInput(lightingEffect);
+    			emulationPane.setEffect(sepiaEffect);
     			break;
     		}
     	});
@@ -381,7 +429,11 @@ public class Main extends Application {
         		Runtime.getRuntime().removeShutdownHook(safeModeShutdownThread);
         	}
         });
-        preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem, languageMenuItem, safeModeButton);
+        MenuItem configurePreloadButton = new MenuItem("Preload preferences");
+        configurePreloadButton.setOnAction(e -> {
+        	loadedPreferences.put("PRELOAD_CARTRIDGE", gamePakChooser.showOpenDialog(primaryStage).getAbsolutePath());
+        });
+        preferencesMenu.getItems().addAll(themeMenuItem, skinsMenuItem, languageMenuItem, safeModeButton, configurePreloadButton);
 
         Menu helpMenu = new Menu(currentGuiBundle.getString("help")); // help functionality
         MenuItem programmingManualMenuItem = new MenuItem(currentGuiBundle.getString("nintendoProgrammingManual"));
@@ -509,7 +561,7 @@ public class Main extends Application {
         });
         Button muteButton = new Button("Mute/Unmute");
         muteButton.setOnAction(e -> {
-        	if (isMuted) {
+        	if (!isMuted) {
             	gameboj.getSoundController().getLine().stop();
         	} else {
         		gameboj.getSoundController().getLine().start();
@@ -569,10 +621,6 @@ public class Main extends Application {
                 emulationView.setImage(screenImage);
                 
                 LoginScreen.setShearedGameboyView(screenImage);
-                
-//                screenCapFrames.add(screenImage); //TODO remove?
-//                
-//                recorder.write();
 
                 viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX));
                 viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
@@ -584,6 +632,10 @@ public class Main extends Application {
                 fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
             }
         };
+        
+        if (mustStart) {
+        	animationTimer.start();
+        }
     }
 
     private static void setInput(Node node, Joypad jp) {
@@ -648,6 +700,19 @@ public class Main extends Application {
                 break;
             }
         });
+    }
+    
+    private static void startEmulation(String fileName) {
+    	try {
+			gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
+			mustStart = true;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (LineUnavailableException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
     
     private static void initiateClient(InetAddress locIP) {

@@ -39,7 +39,7 @@ public final class SerialIO implements Component, Clocked {
 	
 	@Override
 	public void cycle(long cycle) {
-		if (cycle % CYCLE_FREQ == 0) {
+		if (cycle % (Byte.SIZE * CYCLE_FREQ) == 0) {
 			reallyCycle();
 		}
 	}
