@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public final class SerialProtocol {
-	private static final LinkCable linkCable = new LinkCable();
+	private static final LinkCableSocket linkCable = new LinkCableSocket();
 	private static int receivedDataBuffer;
 	
 	public static void startProtocol(boolean b) {

@@ -13,6 +13,10 @@ import ch.epfl.gameboj.component.cpu.Alu.Flag;
 import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.gui.Main;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 
 /**
  * Cette classe modélise le processeur de la Gameboy.
@@ -31,15 +35,15 @@ public final class Cpu implements Component, Clocked {
     private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
 
     // PC = program counter, stores the address of the next instruction
-    private int PC;
+    private IntegerProperty PC = new SimpleIntegerProperty();
     // SP = stack pointer, stores the address of the top of the stack
-    private int SP;
+    private IntegerProperty SP = new SimpleIntegerProperty();
     // IME = interrupt master enable, tells us if interrupts are enabled or not
-    private boolean IME;
+    private BooleanProperty IME = new SimpleBooleanProperty();
     // IE = interrupt enable, tells us if corresponding interrupt is enabled
-    private int IE;
+    private IntegerProperty IE = new SimpleIntegerProperty();
     // IF = interrupt flags, tells us if corresponding interrupt is happening
-    private int IF;
+    private IntegerProperty IF = new SimpleIntegerProperty();
 
     private enum Reg implements Register {
         A, F, B, C, D, E, H, L
@@ -90,7 +94,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     private int pendingInterrupts() {
-        return IF & IE;
+        return IF.get() & IE.get();
     }
 
     private boolean isInterruptPending() {
@@ -103,10 +107,10 @@ public final class Cpu implements Component, Clocked {
 
     private void handleInterrupt() {
         int i = prioritaryInterruptIndex();
-        IF = Bits.set(IF, i, false);
-        IME = false;
-        push16(PC);
-        PC = AddressMap.INTERRUPTS[i];
+        IF.set( Bits.set(IF.get(), i, false));
+        IME.set(false);
+        push16(PC.get());
+        PC.set(AddressMap.INTERRUPTS[i]);
         nextNonIdleCycle += 5;
     }
 
@@ -139,10 +143,10 @@ public final class Cpu implements Component, Clocked {
      *
      */
     private void reallyCycle(boolean interruptPending) {
-        if (IME && interruptPending) {
+        if (IME.get() && interruptPending) {
             handleInterrupt();
         } else {
-            int nextInstruction = bus.read(PC);
+            int nextInstruction = bus.read(PC.get());
             Opcode nextOpcode = nextInstruction == OPCODE_PREFIX ? PREFIXED_OPCODE_TABLE[read8AfterOpcode()]
                     : DIRECT_OPCODE_TABLE[nextInstruction];
             currentOp = nextOpcode;
@@ -157,7 +161,7 @@ public final class Cpu implements Component, Clocked {
      *            L'opcode qui indique l'instruction à effectuer
      */
     private void dispatch(Opcode opcode) {
-        int nextPC = PC + opcode.totalBytes;
+        int nextPC = PC.get() + opcode.totalBytes;
         boolean instructionDone = false;
         
         if (Main.printCPU) {
@@ -247,7 +251,7 @@ public final class Cpu implements Component, Clocked {
         }
             break;
         case LD_N16R_SP: {
-            write16(read16AfterOpcode(), SP);
+            write16(read16AfterOpcode(), SP.get());
         }
             break;
         case LD_R8_R8: {
@@ -255,7 +259,7 @@ public final class Cpu implements Component, Clocked {
         }
             break;
         case LD_SP_HL: {
-            SP = reg16(Reg16.HL);
+            SP.set(reg16(Reg16.HL));
         }
             break;
         case PUSH_R16: {
@@ -294,24 +298,24 @@ public final class Cpu implements Component, Clocked {
             break;
         case INC_R16SP: {
             Reg16 r = extractReg16(opcode);
-            int regValue = r == Reg16.AF ? SP : reg16(r);
+            int regValue = r == Reg16.AF ? SP.get() : reg16(r);
             setReg16SP(r, Bits.clip(16, regValue + 1));
         }
             break;
         case ADD_HL_R16SP: {
             Reg16 r = extractReg16(opcode);
-            int regValue = r == Reg16.AF ? SP : reg16(r);
+            int regValue = r == Reg16.AF ? SP.get() : reg16(r);
             int sum = Alu.add16H(reg16(Reg16.HL), regValue);
             setReg16SP(Reg16.HL, Alu.unpackValue(sum));
             combineAluFlags(sum, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
         }
             break;
         case LD_HLSP_S8: {
-            int sum = Alu.add16L(SP, Bits.clip(16, Bits.signExtend8(read8AfterOpcode())));
+            int sum = Alu.add16L(SP.get(), Bits.clip(16, Bits.signExtend8(read8AfterOpcode())));
             if (Bits.test(opcode.encoding, 4)) {
                 setReg16(Reg16.HL, Alu.unpackValue(sum));
             } else {
-                SP = Alu.unpackValue(sum);
+                SP.set(Alu.unpackValue(sum));
             }
             setFlags(Alu.unpackFlags(sum));
         }
@@ -363,7 +367,7 @@ public final class Cpu implements Component, Clocked {
             break;
         case DEC_R16SP: {
             Reg16 r = extractReg16(opcode);
-            int regValue = r == Reg16.AF ? SP : reg16(r);
+            int regValue = r == Reg16.AF ? SP.get() : reg16(r);
             setReg16SP(r, Bits.clip(16, regValue - 1));
         }
             break;
@@ -601,11 +605,11 @@ public final class Cpu implements Component, Clocked {
 
         // Interrupts
         case EDI: {
-            IME = Bits.test(opcode.encoding, 3);
+            IME.set(Bits.test(opcode.encoding, 3));
         }
             break;
         case RETI: {
-            IME = true;
+            IME.set(true);
             nextPC = pop16();
         }
             break;
@@ -621,7 +625,7 @@ public final class Cpu implements Component, Clocked {
             break;
         }
 
-        PC = nextPC;
+        PC.set(nextPC);
         nextNonIdleCycle += opcode.cycles + (instructionDone ? opcode.additionalCycles : 0);
     }
 
@@ -649,7 +653,7 @@ public final class Cpu implements Component, Clocked {
      *            Le type de l'interruption à initier
      */
     public void requestInterrupt(Interrupt i) {
-        IF = Bits.set(IF, i.index(), true);
+        IF.set(Bits.set(IF.get(), i.index(), true));
     }
 
     private int read8(int address) {
@@ -664,8 +668,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     private int read8AfterOpcode() {
-        assert PC < 0xFFFF : "Valeur invalide pour PC superieure a 16 bits";
-        return read8(PC + 1);
+        return read8(PC.get() + 1);
     }
 
     private int read16(int address) {
@@ -674,7 +677,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     private int read16AfterOpcode() {
-        return read16(PC + 1);
+        return read16(PC.get() + 1);
     }
 
     private void write8(int address, int v) {
@@ -694,13 +697,13 @@ public final class Cpu implements Component, Clocked {
     }
 
     private void push16(int v) {
-        SP = Bits.clip(16, SP - 2);
-        write16(SP, v);
+        SP.set(Bits.clip(16, SP.get() - 2));
+        write16(SP.get(), v);
     }
 
     private int pop16() {
-        int poppedInt = read16(SP);
-        SP = Bits.clip(16, SP + 2);
+        int poppedInt = read16(SP.get());
+        SP.set(Bits.clip(16, SP.get() + 2));
         return poppedInt;
     }
 
@@ -718,7 +721,7 @@ public final class Cpu implements Component, Clocked {
 
     private void setReg16SP(Reg16 r, int newV) {
         if (r == Reg16.AF) {
-            SP = newV;
+            SP.set(newV);
         } else {
             setReg16(r, newV);
         }
@@ -859,9 +862,9 @@ public final class Cpu implements Component, Clocked {
     public int read(int address) {
         // TODO refactor with switch and default case
         if (Preconditions.checkBits16(address) == AddressMap.REG_IE) {
-            return IE;
+            return IE.get();
         } else if (address == AddressMap.REG_IF) {
-            return IF;
+            return IF.get();
         } else if (address >= AddressMap.HRAM_START && address < AddressMap.HRAM_END) {
             return highRam.read(address - AddressMap.HRAM_START);
         }
@@ -888,13 +891,10 @@ public final class Cpu implements Component, Clocked {
         Preconditions.checkBits8(data);
 
         if (Preconditions.checkBits16(address) == AddressMap.REG_IE) {
-            IE = data;
+            IE.set(data);
         } else if (address == AddressMap.REG_IF) {
-            IF = data;
+            IF.set(data);
         } else if (address >= AddressMap.HRAM_START && address < AddressMap.HRAM_END) {
-//        	if (address == 0xffcc) {
-//        		System.out.println("write " + data + " at ffcc");
-//        	}
             highRam.write(address - AddressMap.HRAM_START, data);
         }
     }
@@ -905,7 +905,7 @@ public final class Cpu implements Component, Clocked {
      * @return un tableau contenant les valeurs des registres
      */
     public int[] _testGetPcSpAFBCDEHL() {
-        return new int[] { PC, SP, registers8.get(Reg.A), registers8.get(Reg.F), registers8.get(Reg.B),
+        return new int[] { PC.get(), SP.get(), registers8.get(Reg.A), registers8.get(Reg.F), registers8.get(Reg.B),
                 registers8.get(Reg.C), registers8.get(Reg.D), registers8.get(Reg.E), registers8.get(Reg.H),
                 registers8.get(Reg.L) };
     }

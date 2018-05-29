@@ -17,7 +17,6 @@ import ch.epfl.gameboj.component.memory.RamController;
 import ch.epfl.gameboj.component.serial.SerialIO;
 import ch.epfl.gameboj.component.sound.SoundController;
 import ch.epfl.gameboj.component.time.Timer;
-import ch.epfl.gameboj.gui.Main;
 
 /**
  * Cette classe modélise la Gameboy en entier, avec tous ses composants
@@ -125,9 +124,7 @@ public final class GameBoy {
         while (currentCycle < cycle) {
             timer.cycle(currentCycle);
             serialIO.cycle(currentCycle);
-            if (!Main.isMuted) { //FIXME
-                //soundController.cycle(currentCycle);
-            }
+            soundController.cycle(currentCycle);
             lcdController.cycle(currentCycle);
             cpu.cycle(currentCycle);
             currentCycle++;

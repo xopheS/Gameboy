@@ -64,6 +64,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
+import javafx.scene.effect.Light;
+import javafx.scene.effect.Lighting;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -118,33 +120,10 @@ public class Main extends Application {
         
 		InetAddress locIP = InetAddress.getLocalHost();
 		System.out.println(locIP.getHostAddress());
-		
-		Runnable r = new Runnable() {
-        	@Override
-			public void run() {
-        		try {	
-        			System.out.println("Bind ip server");
-            		serverSocket = new ServerSocket(4444, 0, locIP);
-        			Socket clientSocket = serverSocket.accept();
-        			
-        			SerialProtocol.setDataInput(new DataInputStream(clientSocket.getInputStream()));
-        			SerialProtocol.setDataOutput(new DataOutputStream(clientSocket.getOutputStream()));
-        			
-                	SerialProtocol.startProtocol(true);
-        		} catch (UnknownHostException e1) {
-        			// TODO Auto-generated catch block
-        			e1.printStackTrace();
-        		} catch (IOException e1) {
-        			// TODO Auto-generated catch block
-        			e1.printStackTrace();
-        		}
-        	}
-        };
         
-        // TEST ---------
         Button testServerButton = new Button("Test server");
         testServerButton.setOnAction(e -> {
-            new Thread(r).start();
+            initiateServer(locIP);
         });
         
         Button testClientButton = new Button("Test client");
@@ -154,12 +133,9 @@ public class Main extends Application {
             	clientInit = true;
         	}
         });
-        // TEST ---------
 
         // TODO replace gameboj with clever name
         primaryStage.setTitle("gameboj: the GameBoy emulator");
-
-        // Splash screen
 
         ImageView emulationView = new ImageView();
         emulationView.setFitWidth(1.1 * LCD_WIDTH);
@@ -223,7 +199,16 @@ public class Main extends Application {
         Menu debugMenu = new Menu(currentGuiBundle.getString("debug")); // debugging related functionality
         MenuItem stepByStepMenuItem = new MenuItem(currentGuiBundle.getString("stepByStepExecution"));
         MenuItem decompileMenuItem = new MenuItem(currentGuiBundle.getString("disassembleCartridge"));
+        
+        Stage gameboyStateStage = new Stage();
+        GridPane gameboyStatePane = new GridPane();
+        Scene gameboyStateScene = new Scene(gameboyStatePane);
+        gameboyStateStage.setScene(gameboyStateScene);
+        
         MenuItem showStateMenuItem = new MenuItem(currentGuiBundle.getString("showGameboyState"));
+        showStateMenuItem.setOnAction(e -> {
+        	gameboyStateStage.show();
+        });
         MenuItem disassembleBootMenuItem = new MenuItem(currentGuiBundle.getString("disassembleBootRom"));
         disassembleBootMenuItem.setOnAction(e -> {
         	try {
@@ -279,12 +264,26 @@ public class Main extends Application {
     			break;
     		}
     	});
-    	ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Normal", "Fade"));
+    	
+        ImageView gameboySkin = new ImageView(new Image("file:game-boy-vector-free-download-cartoon-gameboy.jpg"));
+        Pane emulationPane = new Pane(gameboySkin);
+        emulationView.setTranslateX(130);
+        emulationView.setTranslateY(70);
+        emulationPane.getChildren().add(emulationView);
+        developmentBorderPane.setCenter(emulationPane);
+    	
+    	ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Sepia", "Lighting")); //TODO check three other types of light
+    	Light.Distant distantLightSource = new Light.Distant();
+    	distantLightSource.setAzimuth(20);
+    	Lighting lightingEffect = new Lighting(distantLightSource);
 		FadeTransition fadeEffectTransition = new FadeTransition();
     	gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
     		switch (n) {
-    		case "Normal":
+    		case "Sepia":
     			
+    			break;
+    		case "Lighting":
+    			emulationPane.setEffect(lightingEffect);
     			break;
     		}
     	});
@@ -510,6 +509,11 @@ public class Main extends Application {
         });
         Button muteButton = new Button("Mute/Unmute");
         muteButton.setOnAction(e -> {
+        	if (isMuted) {
+            	gameboj.getSoundController().getLine().stop();
+        	} else {
+        		gameboj.getSoundController().getLine().start();
+        	}
         	isMuted = !isMuted;
         });
         
@@ -534,12 +538,6 @@ public class Main extends Application {
         topBox.getChildren().addAll(mainMenuBar, toolBar);
         
         developmentBorderPane.setTop(topBox);
-        ImageView gameboySkin = new ImageView(new Image("file:game-boy-vector-free-download-cartoon-gameboy.jpg"));
-        Pane emulationPane = new Pane(gameboySkin);
-        emulationView.setTranslateX(130);
-        emulationView.setTranslateY(70);
-        emulationPane.getChildren().add(emulationView);
-        developmentBorderPane.setCenter(emulationPane);
         developmentBorderPane.setLeft(leftViewPane);
 
         Scene developmentModeScreen = new Scene(developmentBorderPane);
@@ -652,7 +650,7 @@ public class Main extends Application {
         });
     }
     
-    public static void initiateClient(InetAddress locIP) {
+    private static void initiateClient(InetAddress locIP) {
     	try {
     		clientSocket = new Socket(locIP, 4444);
     		
@@ -667,6 +665,31 @@ public class Main extends Application {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+    }
+    
+    private static void initiateServer(InetAddress locIP) {
+    	Runnable r = new Runnable() {
+        	@Override
+			public void run() {
+        		try {	
+            		serverSocket = new ServerSocket(4444, 0, locIP);
+        			Socket clientSocket = serverSocket.accept();
+        			
+        			SerialProtocol.setDataInput(new DataInputStream(clientSocket.getInputStream()));
+        			SerialProtocol.setDataOutput(new DataOutputStream(clientSocket.getOutputStream()));
+        			
+                	SerialProtocol.startProtocol(true);
+        		} catch (UnknownHostException e1) {
+        			// TODO Auto-generated catch block
+        			e1.printStackTrace();
+        		} catch (IOException e1) {
+        			// TODO Auto-generated catch block
+        			e1.printStackTrace();
+        		}
+        	}
+        };
+        
+        new Thread(r).start();
     }
 
     private void screenshot() throws IOException {

@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public final class LinkCable {
+public final class LinkCableSocket {
 	private DataOutputStream dataOut;
 	private DataInputStream dataIn;
 	private int currentInput;

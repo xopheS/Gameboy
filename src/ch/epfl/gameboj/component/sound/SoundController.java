@@ -61,7 +61,12 @@ public final class SoundController implements Component, Clocked {
 		soundBuffers = new byte[4][1500];
 		soundBuffer = new byte[line.getBufferSize()];
 		
-		//line.start();
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				line.start();
+			}
+		}).start();
 	}
 	
 	@Override
@@ -218,6 +223,10 @@ public final class SoundController implements Component, Clocked {
 	
 	private boolean isOn() {
 		return soundRegs.testBit(Reg.NR52, NR52.POW);
+	}
+	
+	public SourceDataLine getLine() {
+		return line;
 	}
 	
 	@Override
