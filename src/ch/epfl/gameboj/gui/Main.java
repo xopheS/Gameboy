@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,12 +30,10 @@ import javax.sound.sampled.LineUnavailableException;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.CartridgeDisassembler;
-import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.ImageViewRecorder;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Joypad.Key;
-import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdImage;
 import ch.epfl.gameboj.component.serial.SerialProtocol;
 import ch.epfl.gameboj.gui.color.ColorTheme;
@@ -44,6 +41,9 @@ import ch.epfl.gameboj.gui.screens.LoginScreen;
 import ch.epfl.gameboj.gui.screens.ModeChoiceScreen;
 import ch.epfl.gameboj.gui.screens.SimpleModeScreen;
 import ch.epfl.gameboj.gui.screens.SplashScreen;
+import ch.epfl.gameboj.mvc.Controller;
+import ch.epfl.gameboj.mvc.Model;
+import ch.epfl.gameboj.mvc.View;
 import javafx.animation.AnimationTimer;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -87,7 +87,6 @@ import javafx.stage.Stage;
 public class Main extends Application {
 	private Locale currentLocale = Locale.getDefault();
 	private ResourceBundle currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
-    private static GameBoy gameboj;
     BooleanProperty isPaused = new SimpleBooleanProperty();
     BooleanProperty isSafeModeOn = new SimpleBooleanProperty();
     boolean isSpeedButtonPressed;
@@ -106,6 +105,10 @@ public class Main extends Application {
     boolean clientInit;
     static boolean mustStart;
     
+    private static final Model model = Model.getModel();
+    private static final View view = View.getView();
+    private static final Controller controller = Controller.getController();
+    
     Preferences loadedPreferences = Preferences.userNodeForPackage(this.getClass());
 
     public static void main(String[] args) {
@@ -114,6 +117,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException, LineUnavailableException, InterruptedException {
+    	controller.setModel(model);
+    	model.setView(view);
+    	
         List<String> cmdArgs = getParameters().getRaw();
         Preconditions.checkArgument(cmdArgs.size() <= 2, () -> System.exit(1));
 
@@ -125,8 +131,11 @@ public class Main extends Application {
         if (preloadCartridgeName != null) {
         	startEmulation(preloadCartridgeName);
         } else {
-            gameboj = saveFileName == null ? new GameBoy(Cartridge.ofFile(new File(fileName))) 
-            		: new GameBoy(Cartridge.ofFile(new File(fileName)), saveFileName); // FIXME
+        	if (saveFileName == null) {
+        		controller.startModelGameboy(fileName);
+        	} else {
+        		controller.startModelGameboy(fileName, saveFileName);
+        	}
         }
         
         currentVolume.set(0);
@@ -194,18 +203,7 @@ public class Main extends Application {
         MenuItem saveAsCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("saveAs"));
         MenuItem loadCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("load"));
         loadCartridgeMenuItem.setOnAction(e -> {
-            try {
-                gameboj = new GameBoy(Cartridge.ofFile(gamePakChooser.showOpenDialog(primaryStage)));
-            } catch (FileNotFoundException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (LineUnavailableException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+        	controller.startModelGameboy(gamePakChooser.showOpenDialog(primaryStage)); 
         });
         MenuItem exitMenuItem = new MenuItem(currentGuiBundle.getString("exit"));
         exitMenuItem.setOnAction(e -> {
@@ -239,23 +237,23 @@ public class Main extends Application {
         Label pcLabel = new Label("PC");
         pcLabel.setTooltip(new Tooltip("Program counter"));
         Label pcValueLabel = new Label("0");
-        pcValueLabel.textProperty().bind(gameboj.getCpu().getPC().asString());
+        pcValueLabel.textProperty().bind(model.getGameboj().getCpu().getPC().asString());
         Label spLabel = new Label("SP");
         spLabel.setTooltip(new Tooltip("Stack pointer"));
         Label spValueLabel = new Label("0");
-        spValueLabel.textProperty().bind(gameboj.getCpu().getSP().asString());
+        spValueLabel.textProperty().bind(model.getGameboj().getCpu().getSP().asString());
         Label imeLabel = new Label("IME");
         imeLabel.setTooltip(new Tooltip("Interrupt master enable"));
         Label imeValueLabel = new Label("0");
-        imeValueLabel.textProperty().bind(gameboj.getCpu().getIME().asString());
+        imeValueLabel.textProperty().bind(model.getGameboj().getCpu().getIME().asString());
         Label ieLabel = new Label("IE");
         ieLabel.setTooltip(new Tooltip("Interrupt enable"));
         Label ieValueLabel = new Label("0");
-        ieValueLabel.textProperty().bind(gameboj.getCpu().getIE().asString());
+        ieValueLabel.textProperty().bind(model.getGameboj().getCpu().getIE().asString());
         Label ifLabel = new Label("IF");
         ifLabel.setTooltip(new Tooltip("Interrupt flags"));
         Label ifValueLabel = new Label("0");
-        ifValueLabel.textProperty().bind(gameboj.getCpu().getIF().asString());
+        ifValueLabel.textProperty().bind(model.getGameboj().getCpu().getIF().asString());
         gameboyStatePane.addRow(0, aLabel, bLabel, cLabel, dLabel, eLabel, fLabel, hLabel, lLabel);
         gameboyStatePane.addRow(1, pcLabel, spLabel, imeLabel, ieLabel, ifLabel);
         gameboyStatePane.addRow(2, pcValueLabel, spValueLabel, imeValueLabel, ieValueLabel, ifValueLabel);
@@ -432,7 +430,7 @@ public class Main extends Application {
         MenuItem safeModeButton = new MenuItem("Enable/Disable safe mode");
         Thread safeModeShutdownThread = new Thread() {
 			public void run() {
-				gameboj.getCartridge().toFile("currentSave.gb");
+				model.getGameboj().getCartridge().toFile("currentSave.gb");
 			}
         };
         safeModeButton.setOnAction(e -> {
@@ -483,46 +481,35 @@ public class Main extends Application {
         // TODO add button graphics (btn.setGraphic())
         Button tbResetButton = new Button(currentGuiBundle.getString("reset"));
         tbResetButton.setOnAction(e -> {
-            try {
-                gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
-                
-                animationTimer.stop();
-                
-                start = System.nanoTime();
-                
-                animationTimer = new AnimationTimer() {
-                    @Override
-                    public void handle(long now) {
-                        long elapsed = now - start - pauseTime;
-                        long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
+        	controller.startModelGameboy(fileName);
+            
+            animationTimer.stop();
+            
+            start = System.nanoTime();
+            
+            animationTimer = new AnimationTimer() {
+                @Override
+                public void handle(long now) {
+                    long elapsed = now - start - pauseTime;
+                    long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
 
-                        gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
+                    model.getGameboj().runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + model.getGameboj().getCycles());
 
-                        emulationView.requestFocus();
-                        emulationView.setImage(ImageConverter.convert(gameboj.getLcdController().currentImage()));
+                    emulationView.requestFocus();
+                    emulationView.setImage(ImageConverter.convert(model.getGameboj().getLcdController().currentImage()));
 
-                        viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
-                        viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
-                        backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
-                        windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));
-                        
-                        LcdImage[] spriteLayerImages = gameboj.getLcdController().getSprites();
-                        bgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[0]));
-                        fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
-                    }
-                };
-                
-                animationTimer.start();
-            } catch (FileNotFoundException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (LineUnavailableException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+                    viewportRectangle.setTranslateX(model.getGameboj().getBus().read(AddressMap.REG_SCX)); // FIXME
+                    viewportRectangle.setTranslateY(model.getGameboj().getBus().read(AddressMap.REG_SCY));
+                    backgroundView.setImage(ImageConverter.convert(model.getGameboj().getLcdController().getBackground()));
+                    windowView.setImage(ImageConverter.convert(model.getGameboj().getLcdController().getWindow()));
+                    
+                    LcdImage[] spriteLayerImages = model.getGameboj().getLcdController().getSprites();
+                    bgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[0]));
+                    fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
+                }
+            };
+            
+            animationTimer.start();
         });
         Button tbPauseButton = new Button(currentGuiBundle.getString("pause"));
         tbPauseButton.setOnAction(e -> {
@@ -559,7 +546,7 @@ public class Main extends Application {
         });
         Button saveButton = new Button(currentGuiBundle.getString("save"));
         saveButton.setOnAction(e -> {
-        	gameboj.getCartridge().toFile("currentSave.gb");
+        	model.getGameboj().getCartridge().toFile("currentSave.gb");
         });
         Button toggleScreenCapButton = new Button("Start/stop screen capture");
         ImageViewRecorder recorder = new ImageViewRecorder("screen_recording.avi", emulationView);
@@ -576,9 +563,9 @@ public class Main extends Application {
         Button muteButton = new Button("Mute/Unmute");
         muteButton.setOnAction(e -> {
         	if (!isMuted) {
-            	gameboj.getSoundController().getLine().stop();
+            	model.getGameboj().getSoundController().getLine().stop();
         	} else {
-        		gameboj.getSoundController().getLine().start();
+        		model.getGameboj().getSoundController().getLine().start();
         	}
         	isMuted = !isMuted;
         });
@@ -607,7 +594,7 @@ public class Main extends Application {
         developmentBorderPane.setLeft(leftViewPane);
 
         Scene developmentModeScreen = new Scene(developmentBorderPane);
-        setInput(emulationView, gameboj.getJoypad());       
+        setInput(emulationView, model.getGameboj().getJoypad());       
 
         Scene modeChoiceScreen = new ModeChoiceScreen(primaryStage,
         		List.of(simpleModeScreen, extendedModeScreen, developmentModeScreen), currentGuiBundle).getScreen();
@@ -628,20 +615,20 @@ public class Main extends Application {
                 long elapsed = now - start - pauseTime;
                 long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
 
-                gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
+                model.getGameboj().runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + model.getGameboj().getCycles());
 
                 emulationView.requestFocus();
-                Image screenImage = ImageConverter.convert(gameboj.getLcdController().currentImage());
+                Image screenImage = ImageConverter.convert(model.getGameboj().getLcdController().currentImage());
                 emulationView.setImage(screenImage);
                 
                 LoginScreen.setShearedGameboyView(screenImage);
 
-                viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX));
-                viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
-                backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
-                windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));
+                viewportRectangle.setTranslateX(model.getGameboj().getBus().read(AddressMap.REG_SCX));
+                viewportRectangle.setTranslateY(model.getGameboj().getBus().read(AddressMap.REG_SCY));
+                backgroundView.setImage(ImageConverter.convert(model.getGameboj().getLcdController().getBackground()));
+                windowView.setImage(ImageConverter.convert(model.getGameboj().getLcdController().getWindow()));
                 
-                LcdImage[] spriteLayerImages = gameboj.getLcdController().getSprites();
+                LcdImage[] spriteLayerImages = model.getGameboj().getLcdController().getSprites();
                 bgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[0]));
                 fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
             }
@@ -717,16 +704,8 @@ public class Main extends Application {
     }
     
     private static void startEmulation(String fileName) {
-    	try {
-			gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
-			mustStart = true;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (LineUnavailableException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+    	controller.startModelGameboy(fileName);
+		mustStart = true;
     }
     
     private static void initiateClient(InetAddress locIP) {
@@ -759,10 +738,8 @@ public class Main extends Application {
         			
                 	SerialProtocol.startProtocol(true);
         		} catch (UnknownHostException e1) {
-        			// TODO Auto-generated catch block
         			e1.printStackTrace();
         		} catch (IOException e1) {
-        			// TODO Auto-generated catch block
         			e1.printStackTrace();
         		}
         	}
@@ -772,7 +749,7 @@ public class Main extends Application {
     }
 
     private void screenshot() throws IOException {
-        LcdImage screenshot = gameboj.getLcdController().currentImage();
+        LcdImage screenshot = model.getGameboj().getLcdController().currentImage();
         Date d = new Date();
         String date = Long.toString(d.getTime());
         BufferedImage i = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
