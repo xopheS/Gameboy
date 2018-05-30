@@ -212,6 +212,8 @@ public class Main extends Application {
         	System.exit(0);
         });
         fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem);
+        
+        Menu accountMenu = new Menu(currentGuiBundle.getString("account"));
 
         Menu dumpMenu = new Menu(currentGuiBundle.getString("dump")); // dumping related functionality
         MenuItem dumpTileSourceMenuItem = new MenuItem("Dump tile source");
@@ -477,7 +479,7 @@ public class Main extends Application {
         helpMenu.getItems().addAll(programmingManualMenuItem, aboutMenuItem);
 
         MenuBar mainMenuBar = new MenuBar();
-        mainMenuBar.getMenus().addAll(fileMenu, dumpMenu, debugMenu, optionsMenu, windowMenu, preferencesMenu,
+        mainMenuBar.getMenus().addAll(fileMenu, accountMenu, dumpMenu, debugMenu, optionsMenu, windowMenu, preferencesMenu,
                 helpMenu);
 
         // TODO add button graphics (btn.setGraphic())

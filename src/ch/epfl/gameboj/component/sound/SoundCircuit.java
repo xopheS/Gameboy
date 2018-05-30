@@ -4,18 +4,19 @@ import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 
 public abstract class SoundCircuit implements Component, Clocked {
-	private float freq;
-	private int[] wave;
+	private static final int NUMBER_OF_STEPS = 32;
+	
+	protected int[] wave = new int[NUMBER_OF_STEPS];
 	
 	public int[] getWave() {
 		return wave;
 	}
 	
-	public float getFreq() {
-		return freq;
-	}
+	public abstract boolean isCounterActive();
 	
-	public void setFreq(float freq) {
-		this.freq = freq;
-	}
+	public abstract float getFreq();
+	
+	protected abstract int getDefaultInternalFreq();
+	
+	protected abstract void reset();
 }

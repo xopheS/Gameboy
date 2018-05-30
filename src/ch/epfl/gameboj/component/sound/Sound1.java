@@ -21,7 +21,7 @@ public final class Sound1 extends SoundCircuit {
 	
 	private final RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
 	
-	private final SoundController controller;
+	private final SoundController soundController;
 	
 	private int index;
 	private int length;
@@ -34,10 +34,8 @@ public final class Sound1 extends SoundCircuit {
 	private int sweepDirection;
 	private int sweepShift;
 	
-	private int[] wave = new int[32];
-	
 	public Sound1(SoundController controller) {
-		this.controller = controller;
+		this.soundController = controller;
 	}
 	
 	public Envelope getVolume() {
@@ -142,20 +140,13 @@ public final class Sound1 extends SoundCircuit {
 		return soundRegs.asInt(Reg.NR11, NR11.DUTY0, NR11.DUTY1);
 	}
 	
-	public void setInternalFreq(int internalFreq) {
-		this.internalFreq = internalFreq;
-	}
-	
-	public int getInternalFreq() {
-		return internalFreq;
-	}
-	
-	public int getDefaultInternalFrequency() {
+	@Override
+	public int getDefaultInternalFreq() {
 		int freqData = soundRegs.get(Reg.NR13) | (soundRegs.asInt(Reg.NR14, NR14.HIGH_FREQ0, NR14.HIGH_FREQ1, NR14.HIGH_FREQ2) << Byte.SIZE); 
 		return freqData;
 	}
 	
-	public float getFrequency() {
+	public float getFreq() {
 		return (4194304 / (8 * (2048 - internalFreq)));
 	}
 	
@@ -165,6 +156,8 @@ public final class Sound1 extends SoundCircuit {
 	
 	public void reset() {
 		index = 0;
+		setLength();
+		internalFreq = getDefaultInternalFreq();
 		volume.setBase(getDefaultBase());
 		volume.setDirection(soundRegs.testBit(Reg.NR12, NR12.ENVELOPE) ? 1 : 0);
 		volume.setStepLength(soundRegs.asInt(Reg.NR12, NR12.ENV_LENGTH0, NR12.ENV_LENGTH1, NR12.ENV_LENGTH2));
@@ -174,24 +167,24 @@ public final class Sound1 extends SoundCircuit {
 	
 	@Override
 	public void cycle(long cycle) {
-		if (isCounterActive() && getLength() > 0) {
-			decLength();
-			if (getLength() == 0) {
-				controller.setSound1Pow(false);
+		if (isCounterActive() && length > 0) {
+			length--;
+			if (length == 0) {
+				soundController.setSound1Pow(false);
 			}
 		}
 		
 		getVolume().handleSweep();
 		
-		if (getSweepIndex() > 0 && getSweepLength() > 0) {
-			decSweepIndex();
-			if (getSweepIndex() == 0) {
-				setSweepIndex(getSweepLength());
-				setInternalFreq(getInternalFreq() + (getInternalFreq() >> getSweepShift()) * getSweepDirection());
-				if (getInternalFreq() > 2047) {
+		if (sweepIndex > 0 && sweepLength > 0) {
+			sweepIndex--;
+			if (sweepIndex == 0) {
+				sweepIndex = sweepLength;
+				internalFreq = (internalFreq + (internalFreq >> getSweepShift()) * getSweepDirection());
+				if (internalFreq > 2047) {
 					//turn off
 				} else {
-					
+					internalFreq = getDefaultInternalFreq();
 				}
 			}
 		}

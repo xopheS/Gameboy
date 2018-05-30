@@ -28,4 +28,8 @@ public final class SerialProtocol {
 	public static int getReceivedDataBuffer() {
 		return receivedDataBuffer;
 	}
+	
+	public static boolean isActive() {
+		return linkCable.isOpen();
+	}
 }

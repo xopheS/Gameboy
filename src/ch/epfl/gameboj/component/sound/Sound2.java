@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.component.sound;
 
+import static ch.epfl.gameboj.component.sound.SoundController.SAMPLE_RATE;
+
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
@@ -9,19 +11,26 @@ import ch.epfl.gameboj.bits.Bit;
 public final class Sound2 extends SoundCircuit {
 	private enum Reg implements Register { NR21, NR22, NR23, NR24 }
 	
-	private enum NR21 implements Bit { S_LENGTH0, S_LENGTH1, S_LENGTH2, S_LENGTH3, S_LENGTH4, LENGTH5, DUTY0, DUTY1 }
+	private enum NR21 implements Bit { S_LENGTH0, S_LENGTH1, S_LENGTH2, S_LENGTH3, S_LENGTH4, S_LENGTH5, DUTY0, DUTY1 }
 	
-	private enum NR22 implements Bit { ENV_LENGTH0, ENV_LENGTH1, ENV_LENGTH3, ENVELOPE, ENV_DEF0, ENV_DEF1, ENV_DEF2, ENV_DEF3 }
+	private enum NR22 implements Bit { ENV_LENGTH0, ENV_LENGTH1, ENV_LENGTH2, ENVELOPE, ENV_DEF0, ENV_DEF1, ENV_DEF2, ENV_DEF3 }
 	
 	private enum NR24 implements Bit { HIGH_FREQ0, HIGH_FREQ1, HIGH_FREQ2, UNUSED3, UNUSED4, UNUSED5, COUNTER, INIT }
 	
 	private RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
 	
-	private int index;
+	private final SoundController soundController;
 	
-	private int[] wave = new int[32];
+	private int index;
+	private int length;
+	
+	private int internalFreq;
 	
 	private Envelope volume = new Envelope();
+	
+	public Sound2(SoundController soundController) {
+		this.soundController = soundController;
+	}
 	
 	public Envelope getVolume() {
 		return volume;
@@ -64,9 +73,9 @@ public final class Sound2 extends SoundCircuit {
 		return soundRegs.asInt(Reg.NR21, NR21.DUTY0, NR21.DUTY1);
 	}
 	
-	public float getFrequency() {
-		int freqData = soundRegs.get(Reg.NR23) | soundRegs.asInt(Reg.NR24, NR24.HIGH_FREQ0, NR24.HIGH_FREQ1, NR24.HIGH_FREQ2);
-		return 4294304 / (8 * (2048 - freqData));
+	@Override
+	public float getFreq() {
+		return 4294304 / (8 * (2048 - internalFreq));
 	}
 	
 	public boolean isReset() {
@@ -90,9 +99,53 @@ public final class Sound2 extends SoundCircuit {
 			soundRegs.set(address - AddressMap.REGS_S2_START, data);
 		}
 	}
+	
+	public void setLength() {
+		length =  ((64 - soundRegs.asInt(Reg.NR21, NR21.S_LENGTH0, NR21.S_LENGTH1, NR21.S_LENGTH2, NR21.S_LENGTH3, NR21.S_LENGTH4, NR21.S_LENGTH5))
+				* SAMPLE_RATE) / 256;
+	}
+	
+	public int getLength() {
+		return length;
+	}
+	
+	public void decLength() {
+		length--;
+	}
 
 	@Override
-	public void cycle(long cycle) {		
+	public void cycle(long cycle) {	
+		if (isCounterActive() && getLength() > 0) {
+			decLength();
+			if (getLength() == 0) {
+				soundController.setSound1Pow(false);
+			}
+		}
+		
 		getVolume().handleSweep();
+	}
+
+	@Override
+	protected int getDefaultInternalFreq() {
+		return soundRegs.get(Reg.NR23) | soundRegs.asInt(Reg.NR24, NR24.HIGH_FREQ0, NR24.HIGH_FREQ1, NR24.HIGH_FREQ2);
+	}
+	
+	private int getDefaultBase() {
+		return soundRegs.asInt(Reg.NR22, NR22.ENV_DEF0, NR22.ENV_DEF1, NR22.ENV_DEF2, NR22.ENV_DEF3);
+	}
+
+	@Override
+	protected void reset() {
+		setLength();
+		volume.setBase(getDefaultBase());
+		volume.setDirection(soundRegs.testBit(Reg.NR22, NR22.ENVELOPE) ? 1 : 0);
+		volume.setStepLength(soundRegs.asInt(Reg.NR22, NR22.ENV_LENGTH0, NR22.ENV_LENGTH1, NR22.ENV_LENGTH2));
+		volume.setIndex(volume.getStepLength());
+		internalFreq = getDefaultInternalFreq();
+	}
+
+	@Override
+	public boolean isCounterActive() {
+		return soundRegs.testBit(Reg.NR24, NR24.COUNTER);
 	}
 }

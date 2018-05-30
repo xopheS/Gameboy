@@ -41,9 +41,9 @@ public final class SoundController implements Component, Clocked {
 	int soundBufferIndex;
 	
 	private final Sound1 sound1 = new Sound1(this);
-	private final Sound2 sound2 = new Sound2();
-	private final Sound3 sound3 = new Sound3();
-	private final Sound4 sound4 = new Sound4();
+	private final Sound2 sound2 = new Sound2(this);
+	private final Sound3 sound3 = new Sound3(this);
+	private final Sound4 sound4 = new Sound4(this);
 	
 	public SoundController(Cpu cpu) throws LineUnavailableException {
 		AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, SAMPLE_RATE, 8, 2, 2, SAMPLE_RATE, true);
@@ -77,7 +77,7 @@ public final class SoundController implements Component, Clocked {
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND1)) {
 			sound1.cycle(cycle);
 
-			soundBuffers[0][soundBufferIndex] = (byte) (sound1.getWave()[(int) (((32 * sound1.getIndex() * sound1.getFrequency()) / SAMPLE_RATE) % 32)]);
+			soundBuffers[0][soundBufferIndex] = (byte) (sound1.getWave()[(int) (((32 * sound1.getIndex() * sound1.getFreq()) / SAMPLE_RATE) % 32)]);
 			
 			sound1.incIndex();
 		}
@@ -85,7 +85,8 @@ public final class SoundController implements Component, Clocked {
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND2)) {
 			sound2.cycle(cycle);
 			
-			soundBuffers[1][soundBufferIndex] = (byte) sound2.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
+			soundBuffers[1][soundBufferIndex] = (byte) (sound2.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFreq()) / SAMPLE_RATE) % 32)] * 
+					sound2.getVolume().getBase());
 			
 			sound2.incIndex();
 		}
@@ -93,7 +94,7 @@ public final class SoundController implements Component, Clocked {
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND3)) {	
 			sound3.cycle(cycle);
 			
-			soundBuffers[2][soundBufferIndex] = (byte) sound3.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
+			soundBuffers[2][soundBufferIndex] = (byte) sound3.getWave()[(int) (((32 * sound3.getIndex() * sound3.getFreq()) / SAMPLE_RATE) % 32)];
 			
 			switch (sound3.getOutputLevel()) {
 			case 0:
@@ -115,7 +116,8 @@ public final class SoundController implements Component, Clocked {
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND4)) {
 			sound4.cycle(cycle);
 			
-			soundBuffers[3][soundBufferIndex] = (byte) sound4.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFrequency()) / SAMPLE_RATE) % 32)];
+			soundBuffers[3][soundBufferIndex] = (byte) (sound4.getWave()[(int) (((32 * sound4.getIndex() * sound4.getFreq()) / SAMPLE_RATE) % 32)] * 
+					sound4.getVolume().getBase());
 			
 			sound4.incIndex();
 		}
@@ -155,8 +157,6 @@ public final class SoundController implements Component, Clocked {
 	
 	private void initSound1() {
 		if (sound1.isReset()) {	
-			sound1.setInternalFreq(sound1.getDefaultInternalFrequency());
-			sound1.setLength();
 			soundRegs.setBit(Reg.NR52, NR52.SOUND1, true);
 			sound1.reset();
 		}
@@ -165,18 +165,21 @@ public final class SoundController implements Component, Clocked {
 	private void initSound2() {
 		if (sound2.isReset()) {
 			soundRegs.setBit(Reg.NR52, NR52.SOUND2, true);
+			sound2.reset();
 		}
 	}
 	
 	private void initSound3() {
 		if (sound3.isReset()) {
 			soundRegs.setBit(Reg.NR52, NR52.SOUND3, true);
+			sound3.reset();
 		}
 	}
 	
 	private void initSound4() {
 		if (sound4.isReset()) {
 			soundRegs.setBit(Reg.NR52, NR52.SOUND4, true);
+			sound4.reset();
 		}
 	}
 	

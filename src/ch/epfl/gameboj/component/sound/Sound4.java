@@ -18,8 +18,15 @@ public final class Sound4 extends SoundCircuit {
 	private RegisterFile<Register> soundRegs = new RegisterFile<>(Reg.values());
 	
 	private int index = 0;
+	private int length;
 	
 	private int[] wave = new int[32];
+	
+	private final SoundController soundController;
+	
+	public Sound4(SoundController soundController) {
+		this.soundController = soundController;
+	}
 	
 	public int getIndex() {
 		return index;
@@ -35,6 +42,10 @@ public final class Sound4 extends SoundCircuit {
 	
 	public int[] getWave() {
 		return wave;
+	}
+	
+	public float getFrequency() {
+		return 10;
 	}
 
 	@Override
@@ -57,7 +68,36 @@ public final class Sound4 extends SoundCircuit {
 
 	@Override
 	public void cycle(long cycle) {
+		if (isCounterActive() && length > 0) {
+			length--;
+			if (length == 0) {
+				soundController.setSound1Pow(false);
+			}
+		}
+	}
+	
+	public Envelope getVolume() {
+		return new Envelope();
+	}
+
+	@Override
+	public float getFreq() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected int getDefaultInternalFreq() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void reset() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean isCounterActive() {
+		return soundRegs.testBit(Reg.NR44, NR44.COUNTER);
 	}
 }

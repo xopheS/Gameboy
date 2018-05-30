@@ -9,6 +9,7 @@ public final class LinkCableSocket {
 	private DataInputStream dataIn;
 	private int currentInput;
 	private int currentOutput;
+	private boolean isOpen;
 	
 	public void start(boolean isMasterEnd) {
 		System.out.println("Start " + isMasterEnd + " cable ");
@@ -45,6 +46,8 @@ public final class LinkCableSocket {
 		}
         
         new Thread(transferThreadRunnable).start();
+        
+        isOpen = true;
 	}
 	
 	public void setDataOutputStream(DataOutputStream s) {
@@ -61,5 +64,9 @@ public final class LinkCableSocket {
 	
 	public void writeByte(int byteToWrite) throws IOException {
 		currentOutput = byteToWrite;
+	}
+	
+	public boolean isOpen() {
+		return isOpen;
 	}
 }
