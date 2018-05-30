@@ -32,7 +32,6 @@ import javax.sound.sampled.LineUnavailableException;
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.CartridgeDisassembler;
 import ch.epfl.gameboj.GameBoy;
-import ch.epfl.gameboj.ImageViewRecorder;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Joypad.Key;
@@ -53,6 +52,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -67,6 +67,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.Glow;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
 import javafx.scene.effect.SepiaTone;
@@ -74,7 +75,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
@@ -105,7 +109,7 @@ public class Main extends Application {
     public static boolean printCPU;
     boolean clientInit;
     static boolean mustStart;
-        
+    
     Preferences loadedPreferences = Preferences.userNodeForPackage(this.getClass());
 
     public static void main(String[] args) {
@@ -120,7 +124,7 @@ public class Main extends Application {
         String fileName = cmdArgs.get(0); // TODO change this
         String saveFileName = cmdArgs.size() == 2 ? cmdArgs.get(1) : null;
         
-        String preloadCartridgeName = loadedPreferences.get("PRELOAD_CARTRIDGE", "ROM files/sml.gb");
+        String preloadCartridgeName = loadedPreferences.get("PRELOAD_CARTRIDGE", "ROM files/loz_awakening.gb");
         
         if (preloadCartridgeName != null) {
         	startEmulation(preloadCartridgeName);
@@ -136,6 +140,15 @@ public class Main extends Application {
         
         Button testServerButton = new Button("Open link");
         testServerButton.setOnAction(e -> {
+        	Label ip = new Label(locIP.getHostAddress());
+        	BorderPane b = new BorderPane();
+        	b.setCenter(ip);
+        	Scene s = new Scene(b);
+        	Stage stage = new Stage();
+        	stage.setScene(s);
+        	stage.setWidth(150);
+        	stage.setHeight(75);
+        	stage.show();
         	if (serverSocket == null) {
                 initiateServer(locIP);
         	}
@@ -171,6 +184,10 @@ public class Main extends Application {
         ImageView emulationView = new ImageView();
         emulationView.setFitWidth(1.1 * LCD_WIDTH);
         emulationView.setFitHeight(1.1 * LCD_HEIGHT);
+        
+        ImageView simpleEmulationView = new ImageView();
+        simpleEmulationView.setFitWidth(2 * LCD_WIDTH);
+        simpleEmulationView.setFitHeight(2 * LCD_HEIGHT);
         
         Scene simpleModeScreen = SimpleModeScreen.getSimpleModeScreen(emulationView);
 
@@ -418,27 +435,35 @@ public class Main extends Application {
 		developmentBorderPane.setCenter(emulationPane);
 		/////////////////////////////////////
 		
-		
-		ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Standard", "Sepia", "Lighting", "SepiaAndLighting")); //TODO check three other types of light
+		//////////////////////////////////EFFECTS//////////////////////////////////
+		ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Standard", "Sepia", "Lighting", "SepiaAndLighting", "BackLighting")); //TODO check three other types of light
 		Light.Distant distantLightSource = new Light.Distant();
 		distantLightSource.setAzimuth(20);
 		Lighting lightingEffect = new Lighting(distantLightSource);
 		SepiaTone sepiaEffect = new SepiaTone();
+		Glow glowEffect = new Glow();
 		FadeTransition fadeEffectTransition = new FadeTransition();
 		gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
 			switch (n) {
 			case "Standard":
 				emulationPane.setEffect(null);
+				emulationView.setEffect(null);
 				break;
 			case "Sepia":
 				emulationPane.setEffect(sepiaEffect);
+				emulationView.setEffect(null);
 				break;
 			case "Lighting":
 				emulationPane.setEffect(lightingEffect);
+				emulationView.setEffect(null);
 				break;
 			case "SepiaAndLighting":
 				sepiaEffect.setInput(lightingEffect);
 				emulationPane.setEffect(sepiaEffect);
+				emulationView.setEffect(null);
+				break;
+			case "BackLighting":
+				emulationView.setEffect(glowEffect);
 				break;
 			}
 		});
@@ -493,7 +518,51 @@ public class Main extends Application {
         windowMenu.getItems().addAll(perspectiveMenu, showViewMenu, setMaximized, setFullscreen);
 
         Menu preferencesMenu = new Menu(currentGuiBundle.getString("preferences")); // program preferences
+        
+        ////////////////////////////COLOR THEME////////////////////////////////////////////////////
         MenuItem themeMenuItem = new MenuItem(currentGuiBundle.getString("colorTheme"));
+		Label colorThemeLabel = new Label(currentGuiBundle.getString("colorTheme"));
+		ChoiceBox<String> gbColorThemes = new ChoiceBox<>(
+				FXCollections.observableArrayList("Standard", "Blue Violet", "Khaki", "Gray", "Dark Gray", "Dark Blue"));
+
+        gbColorThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
+			switch (n) {
+			case "Standard":
+				developmentBorderPane.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, CornerRadii.EMPTY, Insets.EMPTY)));
+			break;	
+			case "Dark Blue":
+				developmentBorderPane.setBackground(new Background(new BackgroundFill(Color.DARKBLUE, CornerRadii.EMPTY, Insets.EMPTY)));
+				break;
+			case "Dark Gray":
+				developmentBorderPane.setBackground(new Background(new BackgroundFill(Color.DARKSLATEGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+				break;
+			case "Gray":
+				developmentBorderPane.setBackground(new Background(new BackgroundFill(Color.SLATEGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+				break;
+			case "Blue Violet":
+				developmentBorderPane.setBackground(new Background(new BackgroundFill(Color.BLUEVIOLET, CornerRadii.EMPTY, Insets.EMPTY)));
+				break;
+			case "Khaki":
+				developmentBorderPane.setBackground(new Background(new BackgroundFill(Color.KHAKI, CornerRadii.EMPTY, Insets.EMPTY)));
+				break;
+			}
+		});
+        
+		BorderPane colorsPane = new BorderPane();
+		colorsPane.setCenter(gbColorThemes);
+		colorsPane.setTop(colorThemeLabel);
+		Scene colorsScene = new Scene(colorsPane);
+		Stage colorsStage = new Stage();
+		colorsStage.setWidth(150);
+		colorsStage.setHeight(100);
+		colorsStage.setX(60);
+		colorsStage.setY(100);
+		themeMenuItem.setOnAction(e -> {
+			colorsStage.setScene(colorsScene);
+			colorsStage.show();
+		});
+		
+        ///////////////////////////////////////////////////////////////////////////////////////////
         MenuItem languageMenuItem = new MenuItem(currentGuiBundle.getString("language"));
         GridPane languageSelectionPane = new GridPane();
     	ToggleGroup languageSelectionGroup = new ToggleGroup();
@@ -579,48 +648,50 @@ public class Main extends Application {
 
         // TODO add button graphics (btn.setGraphic())
         Button tbResetButton = new Button(currentGuiBundle.getString("reset"));
-        tbResetButton.setOnAction(e -> {
-            try {
-                gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
-                
-                animationTimer.stop();
-                
-                start = System.nanoTime();
-                
-                animationTimer = new AnimationTimer() {
-                    @Override
-                    public void handle(long now) {
-                        long elapsed = now - start - pauseTime;
-                        long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
+		tbResetButton.setOnAction(e -> {
+			try {
+				animationTimer.stop();
 
-                        gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
+				gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
+				
+				setInput(emulationView, gameboj.getJoypad());
 
-                        emulationView.requestFocus();
-                        emulationView.setImage(ImageConverter.convert(gameboj.getLcdController().currentImage()));
+				start = System.nanoTime();
 
-                        viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
-                        viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
-                        backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
-                        windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));
-                        
-                        LcdImage[] spriteLayerImages = gameboj.getLcdController().getSprites();
-                        bgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[0]));
-                        fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
-                    }
-                };
-                
-                animationTimer.start();
-            } catch (FileNotFoundException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (LineUnavailableException e1) {
+				animationTimer = new AnimationTimer() {
+					@Override
+					public void handle(long now) {
+						long elapsed = now - start;
+						long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
+
+						gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
+
+						emulationView.requestFocus();
+						emulationView.setImage(ImageConverter.convert(gameboj.getLcdController().currentImage()));
+
+						viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
+						viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
+						backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
+						windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));
+
+						LcdImage[] spriteLayerImages = gameboj.getLcdController().getSprites();
+						bgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[0]));
+						fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
+					}
+				};
+
+				animationTimer.start();
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (LineUnavailableException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-        });
+		});
         Button tbPauseButton = new Button(currentGuiBundle.getString("pause"));
         tbPauseButton.setOnAction(e -> {
             if (isPaused.get()) {
@@ -658,18 +729,6 @@ public class Main extends Application {
         saveButton.setOnAction(e -> {
         	gameboj.getCartridge().toFile("currentSave.gb");
         });
-        Button toggleScreenCapButton = new Button("Start/stop screen capture");
-        ImageViewRecorder recorder = new ImageViewRecorder("screen_recording.avi", emulationView);
-        toggleScreenCapButton.setOnAction(e -> {
-        	if (isScreenCapOn) {
-        		isScreenCapOn = false;
-        		screenCapFrames = new ArrayList<>();
-        		recorder.stop();
-        	} else {
-        		isScreenCapOn = true;
-        		recorder.start();
-        	}
-        });
         Button muteButton = new Button("Mute/Unmute");
         muteButton.setOnAction(e -> {
         	if (!isMuted) {
@@ -695,7 +754,7 @@ public class Main extends Application {
         startGameButton.setOnAction(e -> {
             animationTimer.start();
         });
-        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes3Button, screenshotButton, toggleScreenCapButton, muteButton, saveButton,
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes3Button, screenshotButton, muteButton, saveButton,
         		testServerButton, testClientButton, terminateConnectionButton, startGameButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
@@ -704,10 +763,16 @@ public class Main extends Application {
         developmentBorderPane.setLeft(leftViewPane);
 
         Scene developmentModeScreen = new Scene(developmentBorderPane);
-        setInput(emulationView, gameboj.getJoypad());       
-
+             
+        setInput(emulationView, gameboj.getJoypad()); 
+        
+        ///////SIMPLE MODE///////
+        BorderPane simpleBorderPane = new BorderPane();
+        simpleBorderPane.setCenter(simpleEmulationView);
+        Scene test = new Scene(simpleBorderPane);
+        
         Scene modeChoiceScreen = new ModeChoiceScreen(primaryStage,
-        		List.of(simpleModeScreen, extendedModeScreen, developmentModeScreen), currentGuiBundle).getScreen();
+        		List.of(test, extendedModeScreen, developmentModeScreen), currentGuiBundle).getScreen();
         
         Scene loginScreen = LoginScreen.getLoginScreen(primaryStage, modeChoiceScreen, currentGuiBundle);
         
@@ -730,6 +795,8 @@ public class Main extends Application {
                 emulationView.requestFocus();
                 Image screenImage = ImageConverter.convert(gameboj.getLcdController().currentImage());
                 emulationView.setImage(screenImage);
+                
+                simpleEmulationView.setImage(screenImage);
                 
                 LoginScreen.setShearedGameboyView(screenImage);
 

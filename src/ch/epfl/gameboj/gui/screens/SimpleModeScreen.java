@@ -6,7 +6,9 @@ import javafx.scene.layout.BorderPane;
 
 public final class SimpleModeScreen {
 	public static Scene getSimpleModeScreen(ImageView emulationView) {
-        BorderPane simpleBorderPane = new BorderPane(emulationView);
+        BorderPane simpleBorderPane = new BorderPane();
+        
+        simpleBorderPane.setCenter(emulationView);
 
         return new Scene(simpleBorderPane);
 	}
