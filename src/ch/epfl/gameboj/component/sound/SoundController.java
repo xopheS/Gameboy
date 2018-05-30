@@ -16,7 +16,7 @@ import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
-import ch.epfl.gameboj.mvc.View;
+import ch.epfl.gameboj.gui.Main;
 
 public final class SoundController implements Component, Clocked {
 	private enum Reg implements Register { NR50, NR51, NR52 }
@@ -44,8 +44,6 @@ public final class SoundController implements Component, Clocked {
 	private final Sound2 sound2 = new Sound2();
 	private final Sound3 sound3 = new Sound3();
 	private final Sound4 sound4 = new Sound4();
-	
-	View view = View.getView();
 	
 	public SoundController(Cpu cpu) throws LineUnavailableException {
 		AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, SAMPLE_RATE, 8, 2, 2, SAMPLE_RATE, true);
@@ -203,7 +201,7 @@ public final class SoundController implements Component, Clocked {
 			mono1 += soundBuffers[3][soundBufferIndex];
 		}
 		mono1 *= soundRegs.asInt(Reg.NR50, NR50.SO1_LEVEL0, NR50.SO1_LEVEL1, NR50.SO1_LEVEL2);
-		mono1 *= view.getCurrentVolume().get() * 0.005;
+		mono1 *= Main.currentVolume.get() * 0.005;
 		if (soundRegs.testBit(Reg.NR51, NR51.SO1_2)) {
 			mono2 += soundBuffers[0][soundBufferIndex];
 		}
@@ -217,7 +215,7 @@ public final class SoundController implements Component, Clocked {
 			mono2 += soundBuffers[3][soundBufferIndex];
 		}
 		mono2 *= soundRegs.asInt(Reg.NR50, NR50.SO2_LEVEL0, NR50.SO2_LEVEL1, NR50.SO2_LEVEL2);
-		mono2 *= view.getCurrentVolume().get() * 0.005;
+		mono2 *= Main.currentVolume.get() * 0.005;
 		
 		soundBuffer[byteIndex * 2] = (byte) mono1;
 		soundBuffer[byteIndex * 2 + 1] = (byte) mono2;
