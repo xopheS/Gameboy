@@ -296,8 +296,8 @@ public class Main extends Application {
 				e1.printStackTrace();
 			}
         });
-        MenuItem disassembleHeaderMenuItem = new MenuItem(currentGuiBundle.getString("disassembleCartridgeHeader"));
-        disassembleHeaderMenuItem.setOnAction(e -> {
+        MenuItem disassembleEntryPointMenuItem = new MenuItem(currentGuiBundle.getString("disassembleEntryPoint"));
+        disassembleEntryPointMenuItem.setOnAction(e -> {
         	try {
 				FileWriter writer = new FileWriter("Z80 Assembly " + fileName.concat("_header.txt"));
 				writer.write(CartridgeDisassembler.decompileHeader(fileName));
@@ -308,7 +308,7 @@ public class Main extends Application {
 			}
         });
         debugMenu.getItems().addAll(stepByStepMenuItem, decompileMenuItem, disassembleBootMenuItem,
-        		disassembleHeaderMenuItem, showStateMenuItem);
+        		disassembleEntryPointMenuItem, showStateMenuItem);
 
         
         Menu optionsMenu = new Menu(currentGuiBundle.getString("options")); // gameboy options
