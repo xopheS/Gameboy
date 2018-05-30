@@ -33,6 +33,6 @@ public final class ModeChoiceScreen extends GuiScreen {
 
         BorderPane modeChoicePane = new BorderPane(modeButtonsBox);
         
-        screen = new Scene(modeChoicePane);
+        screen = new Scene(modeChoicePane, 433, 300);
 	}
 }

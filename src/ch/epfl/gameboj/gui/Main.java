@@ -105,7 +105,7 @@ public class Main extends Application {
     public static boolean printCPU;
     boolean clientInit;
     static boolean mustStart;
-    
+        
     Preferences loadedPreferences = Preferences.userNodeForPackage(this.getClass());
 
     public static void main(String[] args) {
@@ -293,79 +293,175 @@ public class Main extends Application {
         debugMenu.getItems().addAll(stepByStepMenuItem, decompileMenuItem, disassembleBootMenuItem,
         		disassembleHeaderMenuItem, showStateMenuItem);
 
+        
         Menu optionsMenu = new Menu(currentGuiBundle.getString("options")); // gameboy options
+        
+        //////////////////////////////////////SPEED CHANGE////////////////////////////////
         MenuItem changeSpeedMenuItem = new MenuItem(currentGuiBundle.getString("changeSpeed"));
-        MenuItem gameboyConfigurationMenuItem = new MenuItem(currentGuiBundle.getString("configuration"));
         
-        Label volumeLabel = new Label(currentGuiBundle.getString("globalVolume"));
-    	Label themeLabel = new Label(currentGuiBundle.getString("gameboyColorTheme"));
-    	Slider volumeSlider = new Slider();
-    	volumeSlider.setMin(0);
-    	volumeSlider.setMax(100);
-    	volumeSlider.setValue(50);
-    	currentVolume.bind(volumeSlider.valueProperty());
-    	ChoiceBox<String> gbThemes = new ChoiceBox<>(FXCollections.observableArrayList(
-            	    "Standard", "Creepy", "Beautiful Day", "Night")
-        );
-    	gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
-    		switch (n) {
-        		case "Standard":
-        			ImageConverter.setColorTheme(ColorTheme.STANDARD_COLOR_THEME);
-        			break;
-        		case "Creepy":
-        			ImageConverter.setColorTheme(ColorTheme.CREEPY_COLOR_THEME);
-    			break;
-        		case "Beautiful Day":
-        			ImageConverter.setColorTheme(ColorTheme.DESERT_COLOR_THEME);
-    			break;
-        		case "Night":
-        			ImageConverter.setColorTheme(ColorTheme.NIGHT_COLOR_THEME);
-    			break;
-    		}
-    	});
-    	
-        ImageView gameboySkin = new ImageView(new Image("file:game-boy-vector-free-download-cartoon-gameboy.jpg"));
-        Pane emulationPane = new Pane(gameboySkin);
-        emulationView.setTranslateX(130);
-        emulationView.setTranslateY(70);
-        emulationPane.getChildren().add(emulationView);
-        developmentBorderPane.setCenter(emulationPane);
-    	
-    	ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Sepia", "Lighting", "SepiaAndLighting")); //TODO check three other types of light
-    	Light.Distant distantLightSource = new Light.Distant();
-    	distantLightSource.setAzimuth(20);
-    	Lighting lightingEffect = new Lighting(distantLightSource);
-    	SepiaTone sepiaEffect = new SepiaTone();
-		FadeTransition fadeEffectTransition = new FadeTransition();
-    	gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
-    		switch (n) {
-    		case "Sepia":
-    			emulationPane.setEffect(sepiaEffect);
-    			break;
-    		case "Lighting":
-    			emulationPane.setEffect(lightingEffect);
-    			break;
-    		case "SepiaAndLighting":
-    			sepiaEffect.setInput(lightingEffect);
-    			emulationPane.setEffect(sepiaEffect);
-    			break;
-    		}
-    	});
-    	GridPane configPane = new GridPane();
-    	configPane.add(volumeLabel, 0, 0);
-    	configPane.add(volumeSlider, 0, 1);
-    	configPane.add(themeLabel, 0, 2);
-    	configPane.add(gbThemes, 0, 3);
-    	configPane.add(gbEffects, 4, 0);
-        Scene gbConfigScene = new Scene(configPane, 130, 75);
-    	Stage gbConfigStage = new Stage();
-        
-        gameboyConfigurationMenuItem.setOnAction(e -> {
-        	gbConfigStage.setScene(gbConfigScene);
-        	gbConfigStage.show();
+        Button x3 = new Button("x3");
+        x3.setOnAction(e -> {
+        	cycleSpeed = isSpeedButtonPressed ? 3 : 1;      	
+        	isSpeedButtonPressed = !isSpeedButtonPressed;
         });
-        optionsMenu.getItems().addAll(changeSpeedMenuItem, gameboyConfigurationMenuItem);
+        Button x5 = new Button("x5");
+        x5.setOnAction(e -> {
+        	cycleSpeed = isSpeedButtonPressed ? 5 : 1;      	
+        	isSpeedButtonPressed = !isSpeedButtonPressed;
+        });
+        Button x8 = new Button("x8");
+        x8.setOnAction(e -> {
+        	cycleSpeed = isSpeedButtonPressed ? 8 : 1;      	
+        	isSpeedButtonPressed = !isSpeedButtonPressed;
+        });
+        Button x10 = new Button("x10");
+        x10.setOnAction(e -> {
+        	cycleSpeed = isSpeedButtonPressed ? 10 : 1;      	
+        	isSpeedButtonPressed = !isSpeedButtonPressed;
+        });        
+        
+        GridPane speedPane = new GridPane();
+        speedPane.setHgap(20);
+        speedPane.setVgap(20);
+        speedPane.add(x3, 1, 1);
+        speedPane.add(x5, 2, 1);
+        speedPane.add(x8, 1, 2);
+        speedPane.add(x10, 2, 2);
+        Scene gbSpeedScene = new Scene(speedPane, 120, 110);
+    	Stage gbSpeedStage = new Stage();
+        gbSpeedStage.setX(60);
+        gbSpeedStage.setY(100);
 
+        changeSpeedMenuItem.setOnAction(e -> {
+        	gbSpeedStage.setScene(gbSpeedScene);
+        	gbSpeedStage.show();
+        });
+        
+        //////////////////////////////////////////////////////////////////////////////////
+        
+        
+		////////////////////////////////////// CONFIGURATION MENU/////////////////////////
+		MenuItem gameboyConfigurationMenuItem = new MenuItem(currentGuiBundle.getString("configuration"));
+		Label volumeLabel = new Label(currentGuiBundle.getString("globalVolume"));
+		Label effectsLabel = new Label(currentGuiBundle.getString("effects"));
+		Label themeLabel = new Label(currentGuiBundle.getString("gameboyColorTheme"));
+		Slider volumeSlider = new Slider();
+		volumeSlider.setMin(0);
+		volumeSlider.setMax(100);
+		volumeSlider.setValue(50);
+		currentVolume.bind(volumeSlider.valueProperty());
+		ChoiceBox<String> gbThemes = new ChoiceBox<>(
+				FXCollections.observableArrayList("Standard", "Creepy", "Beautiful Day", "Night"));
+		gbThemes.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
+			switch (n) {
+			case "Standard":
+				ImageConverter.setColorTheme(ColorTheme.STANDARD_COLOR_THEME);
+				break;
+			case "Creepy":
+				ImageConverter.setColorTheme(ColorTheme.CREEPY_COLOR_THEME);
+				break;
+			case "Beautiful Day":
+				ImageConverter.setColorTheme(ColorTheme.DESERT_COLOR_THEME);
+				break;
+			case "Night":
+				ImageConverter.setColorTheme(ColorTheme.NIGHT_COLOR_THEME);
+				break;
+			}
+		});
+
+		///////////////////SKIN///////////////
+		MenuItem skinsMenuItem = new MenuItem(currentGuiBundle.getString("skins"));
+		Label skinLabel = new Label(currentGuiBundle.getString("skins"));
+		ChoiceBox<String> gbSkins = new ChoiceBox<>(
+				FXCollections.observableArrayList("Standard", "Blue", "Orange", "Green", "Pink", "Black"));
+		ImageView gameboySkin = new ImageView(new Image("file:game-boy-vector-free-download-cartoon-gameboy.jpg"));
+		gbSkins.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
+			switch (n) {
+			case "Standard":
+				gameboySkin.setImage(new Image("file:game-boy-vector-free-download-cartoon-gameboy.jpg"));
+				break;
+			case "Blue":
+				gameboySkin.setImage(new Image("file:skin5.jpg"));
+				break;
+			case "Orange":
+				gameboySkin.setImage(new Image("file:skin1.jpg"));
+				break;
+			case "Green":
+				gameboySkin.setImage(new Image("file:skin4.jpg"));
+				break;
+			case "Pink":
+				gameboySkin.setImage(new Image("file:skin3.jpg"));
+				break;
+			case "Black":
+				gameboySkin.setImage(new Image("file:skin2.jpg"));
+				break;
+			}
+		});
+		BorderPane skinPane= new BorderPane();
+		skinPane.setCenter(gbSkins);
+		skinPane.setTop(skinLabel);
+		Scene skinScene = new Scene(skinPane);
+		Stage skinStage = new Stage();
+		skinStage.setWidth(150);
+		skinStage.setHeight(100);
+		skinStage.setX(60);
+		skinStage.setY(100);
+		skinsMenuItem.setOnAction(e -> {
+			skinStage.setScene(skinScene);
+			skinStage.show();
+		});
+		
+		Pane emulationPane = new Pane(gameboySkin);
+		emulationView.setTranslateX(130);
+		emulationView.setTranslateY(70);
+		emulationPane.getChildren().add(emulationView);
+		developmentBorderPane.setCenter(emulationPane);
+		/////////////////////////////////////
+		
+		
+		ChoiceBox<String> gbEffects = new ChoiceBox<>(FXCollections.observableArrayList("Standard", "Sepia", "Lighting", "SepiaAndLighting")); //TODO check three other types of light
+		Light.Distant distantLightSource = new Light.Distant();
+		distantLightSource.setAzimuth(20);
+		Lighting lightingEffect = new Lighting(distantLightSource);
+		SepiaTone sepiaEffect = new SepiaTone();
+		FadeTransition fadeEffectTransition = new FadeTransition();
+		gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
+			switch (n) {
+			case "Standard":
+				emulationPane.setEffect(null);
+				break;
+			case "Sepia":
+				emulationPane.setEffect(sepiaEffect);
+				break;
+			case "Lighting":
+				emulationPane.setEffect(lightingEffect);
+				break;
+			case "SepiaAndLighting":
+				sepiaEffect.setInput(lightingEffect);
+				emulationPane.setEffect(sepiaEffect);
+				break;
+			}
+		});
+		GridPane configPane = new GridPane();
+		configPane.add(volumeLabel, 0, 0);
+		configPane.add(volumeSlider, 0, 1);
+		configPane.add(themeLabel, 0, 2);
+		configPane.add(gbThemes, 0, 3);
+		configPane.add(effectsLabel, 1, 0);
+		configPane.add(gbEffects, 4, 1);
+		Scene gbConfigScene = new Scene(configPane, 330, 90);
+		Stage gbConfigStage = new Stage();
+		gbConfigStage.setX(60);
+		gbConfigStage.setY(100);
+		
+		gameboyConfigurationMenuItem.setOnAction(e -> {
+			gbConfigStage.setScene(gbConfigScene);
+			gbConfigStage.show();
+		});
+		optionsMenu.getItems().addAll(changeSpeedMenuItem, gameboyConfigurationMenuItem);
+		/////////////////////////////////////////////////////////////////////////////////////
+
+		
         Menu windowMenu = new Menu(currentGuiBundle.getString("window")); // workspace visual control
         Menu perspectiveMenu = new Menu(currentGuiBundle.getString("perspective")); // switch to view layout presets
         Menu showViewMenu = new Menu(currentGuiBundle.getString("showView")); // show view in workspace
@@ -398,7 +494,6 @@ public class Main extends Application {
 
         Menu preferencesMenu = new Menu(currentGuiBundle.getString("preferences")); // program preferences
         MenuItem themeMenuItem = new MenuItem(currentGuiBundle.getString("colorTheme"));
-        MenuItem skinsMenuItem = new MenuItem(currentGuiBundle.getString("skins"));
         MenuItem languageMenuItem = new MenuItem(currentGuiBundle.getString("language"));
         GridPane languageSelectionPane = new GridPane();
     	ToggleGroup languageSelectionGroup = new ToggleGroup();
@@ -554,8 +649,8 @@ public class Main extends Application {
 				e1.printStackTrace();
 			}
 		});       
-        Button speedTimes5Button = new Button("x3");
-        speedTimes5Button.setOnAction(e -> {
+        Button speedTimes3Button = new Button("x3");
+        speedTimes3Button.setOnAction(e -> {
         	cycleSpeed = isSpeedButtonPressed ? 3 : 1;      	
         	isSpeedButtonPressed = !isSpeedButtonPressed;
         });
@@ -600,7 +695,7 @@ public class Main extends Application {
         startGameButton.setOnAction(e -> {
             animationTimer.start();
         });
-        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes5Button, screenshotButton, toggleScreenCapButton, muteButton, saveButton,
+        ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes3Button, screenshotButton, toggleScreenCapButton, muteButton, saveButton,
         		testServerButton, testClientButton, terminateConnectionButton, startGameButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);

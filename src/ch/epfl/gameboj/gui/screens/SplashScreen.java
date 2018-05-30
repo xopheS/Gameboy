@@ -26,6 +26,6 @@ public final class SplashScreen {
         });
         splashFade.play();
         
-		return new Scene(splashPane, 200, 200);
+		return new Scene(splashPane, 433, 300);
 	}
 }
