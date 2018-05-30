@@ -61,12 +61,7 @@ public final class SoundController implements Component, Clocked {
 		soundBuffers = new byte[4][1500];
 		soundBuffer = new byte[line.getBufferSize()];
 		
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				line.start();
-			}
-		}).start();
+		line.start();
 	}
 	
 	@Override

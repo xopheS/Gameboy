@@ -120,7 +120,7 @@ public class Main extends Application {
         String fileName = cmdArgs.get(0); // TODO change this
         String saveFileName = cmdArgs.size() == 2 ? cmdArgs.get(1) : null;
         
-        String preloadCartridgeName = loadedPreferences.get("PRELOAD_CARTRIDGE", null);
+        String preloadCartridgeName = loadedPreferences.get("PRELOAD_CARTRIDGE", "ROM files/sml.gb");
         
         if (preloadCartridgeName != null) {
         	startEmulation(preloadCartridgeName);
