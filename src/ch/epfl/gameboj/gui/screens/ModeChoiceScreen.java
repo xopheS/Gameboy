@@ -17,7 +17,9 @@ public final class ModeChoiceScreen extends GuiScreen {
 		super(owner, linkedScreens, guiBundle);
 		
 		Button simpleModeButton = new Button("Simple Mode");
-        simpleModeButton.setOnAction(e -> owner.setScene(linkedScreens.get(0)));
+        simpleModeButton.setOnAction(e -> { 
+        	owner.setScene(linkedScreens.get(0));
+        });
         Button extendedModeButton = new Button("Extended Mode");
         extendedModeButton.setOnAction(e -> owner.setScene(linkedScreens.get(1)));
         Button developmentModeButton = new Button("Development Mode");
