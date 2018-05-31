@@ -4,7 +4,7 @@ import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 
 public abstract class SoundCircuit implements Component, Clocked {
-	private static final int NUMBER_OF_STEPS = 32;
+	public static final int NUMBER_OF_STEPS = 32;
 	
 	protected int[] wave = new int[NUMBER_OF_STEPS];
 	

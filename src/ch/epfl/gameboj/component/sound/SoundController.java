@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.component.sound;
 
+import static ch.epfl.gameboj.component.sound.SoundCircuit.NUMBER_OF_STEPS;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
@@ -75,24 +77,22 @@ public final class SoundController implements Component, Clocked {
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND1)) {
 			sound1.cycle(cycle);
 
-			soundBuffers[0][soundBufferIndex] = (byte) (sound1.getWave()[(int) (((32 * sound1.getIndex() * sound1.getFreq()) / SAMPLE_RATE) % 32)]);
-			
-			sound1.incIndex();
+			soundBuffers[0][soundBufferIndex] = (byte) (sound1.getWave()[(int) (((NUMBER_OF_STEPS 
+					* sound1.getIndex() * sound1.getFreq()) / SAMPLE_RATE) % NUMBER_OF_STEPS)] * sound1.getVolume().getBase());
 		}
 		
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND2)) {
 			sound2.cycle(cycle);
 			
-			soundBuffers[1][soundBufferIndex] = (byte) (sound2.getWave()[(int) (((32 * sound2.getIndex() * sound2.getFreq()) / SAMPLE_RATE) % 32)] * 
-					sound2.getVolume().getBase());
-			
-			sound2.incIndex();
+			soundBuffers[1][soundBufferIndex] = (byte) (sound2.getWave()[(int) (((NUMBER_OF_STEPS 
+					* sound2.getIndex() * sound2.getFreq()) / SAMPLE_RATE) % NUMBER_OF_STEPS)] * sound2.getVolume().getBase());
 		}
 		
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND3)) {	
 			sound3.cycle(cycle);
 			
-			soundBuffers[2][soundBufferIndex] = (byte) sound3.getWave()[(int) (((32 * sound3.getIndex() * sound3.getFreq()) / SAMPLE_RATE) % 32)];
+			soundBuffers[2][soundBufferIndex] = (byte) sound3.getWave()[(int) (((NUMBER_OF_STEPS
+					* sound3.getIndex() * sound3.getFreq()) / SAMPLE_RATE) % NUMBER_OF_STEPS)];
 			
 			switch (sound3.getOutputLevel()) {
 			case 0:
@@ -107,8 +107,6 @@ public final class SoundController implements Component, Clocked {
 				soundBuffers[2][soundBufferIndex] >>= 2;
 				break;
 			}
-			
-			sound3.incIndex();
 		}
 		
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND4)) {
@@ -116,8 +114,6 @@ public final class SoundController implements Component, Clocked {
 			
 			soundBuffers[3][soundBufferIndex] = (byte) (sound4.getWave()[(int) (((32 * sound4.getIndex() * sound4.getFreq()) / SAMPLE_RATE) % 32)] * 
 					sound4.getVolume().getBase());
-			
-			sound4.incIndex();
 		}
 		
 		setSoundBufferByte(soundBufferIndex);
@@ -195,6 +191,9 @@ public final class SoundController implements Component, Clocked {
 		this.bus = bus;
 		bus.attach(this);
 		bus.attach(sound1);
+		bus.attach(sound2);
+		bus.attach(sound3);
+		bus.attach(sound4);
 	}
 
 	@Override

@@ -24,6 +24,8 @@ public final class Sound4 extends SoundCircuit {
 	
 	private final SoundController soundController;
 	
+	private Envelope volume = new Envelope();
+	
 	public Sound4(SoundController soundController) {
 		this.soundController = soundController;
 	}
@@ -32,16 +34,24 @@ public final class Sound4 extends SoundCircuit {
 		return index;
 	}
 	
-	public void incIndex() {
-		index++;
-	}
-	
 	public int[] getWave() {
 		return wave;
 	}
 	
 	public float getFrequency() {
 		return 10;
+	}
+	
+	@Override
+	public void cycle(long cycle) {
+		if (isCounterActive() && length > 0) {
+			length--;
+			if (length == 0) {
+				soundController.setSound1Pow(false);
+			}
+		}
+		
+		index++;
 	}
 
 	@Override
@@ -57,7 +67,7 @@ public final class Sound4 extends SoundCircuit {
 	public void write(int address, int data) {
 		Preconditions.checkBits8(data);
 		
-		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S3_START && address < AddressMap.REGS_S3_END) {
+		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S4_START && address < AddressMap.REGS_S4_END) {
 			switch (address) {
 			case AddressMap.REG_NR44:
 				soundRegs.set(Reg.NR44, data);
@@ -72,16 +82,6 @@ public final class Sound4 extends SoundCircuit {
 			}
 		}
 	}
-
-	@Override
-	public void cycle(long cycle) {
-		if (isCounterActive() && length > 0) {
-			length--;
-			if (length == 0) {
-				soundController.setSound1Pow(false);
-			}
-		}
-	}
 	
 	public Envelope getVolume() {
 		return new Envelope();
@@ -89,7 +89,7 @@ public final class Sound4 extends SoundCircuit {
 
 	@Override
 	public float getFreq() {
-		throw new UnsupportedOperationException();
+		return 0;
 	}
 
 	@Override

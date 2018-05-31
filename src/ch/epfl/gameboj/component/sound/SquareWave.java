@@ -1,7 +1,7 @@
 package ch.epfl.gameboj.component.sound;
 
-public final class SquareWave {
-	public static int[] getSquareWave(int waveDuty) {
+public abstract class SquareWave extends SoundCircuit {
+	protected int[] getSquareWave(int waveDuty) {
 		int[] squareWave = new int[32];
 		int dutyLength = 0;
 		

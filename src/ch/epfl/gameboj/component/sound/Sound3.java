@@ -7,6 +7,7 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
+import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.memory.Ram;
 
 public final class Sound3 extends SoundCircuit {
@@ -39,21 +40,17 @@ public final class Sound3 extends SoundCircuit {
 		return index;
 	}
 	
-	public void incIndex() {
-		index++;
-	}
-	
 	public int[] getWave() {
-		for (int i = 0x30; i < 0x40; ++i) {
-			wave[(i - 0x30) * 2] = waveRam.read(i - AddressMap.WAVE_RAM_START);
-			wave[(i - 0x30) * 2] = waveRam.read(i - AddressMap.WAVE_RAM_START);
+		for (int i = AddressMap.WAVE_RAM_START; i < AddressMap.WAVE_RAM_END; ++i) {
+			int j = i - AddressMap.WAVE_RAM_START;
+			wave[j] = j % 2 == 0 ? Bits.extract(waveRam.read(j), 4, 4) : Bits.clip(4, waveRam.read(j));
 		}
 		
 		return wave;
 	}
 	
 	public int getDefaultInternalFreq() {
-		return soundRegs.get(Reg.NR33) | soundRegs.asInt(Reg.NR34, NR34.FREQ0, NR34.FREQ1, NR34.FREQ2);
+		return soundRegs.get(Reg.NR33) | (soundRegs.asInt(Reg.NR34, NR34.FREQ0, NR34.FREQ1, NR34.FREQ2) << Byte.SIZE);
 	}
 	
 	public float getFreq() {
@@ -62,6 +59,18 @@ public final class Sound3 extends SoundCircuit {
 	
 	public int getOutputLevel() {
 		return soundRegs.asInt(Reg.NR32, NR32.LEVEL0, NR32.LEVEL1);
+	}
+	
+	@Override
+	public void cycle(long cycle) {
+		if (isCounterActive() && length > 0) {
+			length--;
+			if (length == 0) {
+				soundController.setSound1Pow(false);
+			}
+		}
+		
+		index++;
 	}
 	
 	@Override
@@ -102,17 +111,8 @@ public final class Sound3 extends SoundCircuit {
 	}
 
 	@Override
-	public void cycle(long cycle) {
-		if (isCounterActive() && length > 0) {
-			length--;
-			if (length == 0) {
-				soundController.setSound1Pow(false);
-			}
-		}
-	}
-
-	@Override
 	protected void reset() {
+		index = 0;
 		setLength();
 		internalFreq = getDefaultInternalFreq();
 	}

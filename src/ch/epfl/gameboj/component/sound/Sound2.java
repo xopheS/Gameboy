@@ -8,7 +8,7 @@ import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
 
-public final class Sound2 extends SoundCircuit {
+public final class Sound2 extends SquareWave {
 	private enum Reg implements Register { NR21, NR22, NR23, NR24 }
 	
 	private enum NR21 implements Bit { S_LENGTH0, S_LENGTH1, S_LENGTH2, S_LENGTH3, S_LENGTH4, S_LENGTH5, DUTY0, DUTY1 }
@@ -37,7 +37,7 @@ public final class Sound2 extends SoundCircuit {
 	}
 	
 	public int[] getWave() {
-		return SquareWave.getSquareWave(getWaveDuty());
+		return getSquareWave(getWaveDuty());
 	}
 	
 	public int getIndex() {
@@ -55,6 +55,20 @@ public final class Sound2 extends SoundCircuit {
 	@Override
 	public float getFreq() {
 		return 4294304 / (8 * (2048 - internalFreq));
+	}
+	
+	@Override
+	public void cycle(long cycle) {	
+		if (isCounterActive() && length > 0) {
+			length--;
+			if (length == 0) {
+				soundController.setSound1Pow(false);
+			}
+		}
+		
+		getVolume().handleSweep();
+		
+		index++;
 	}
 	
 	@Override
@@ -90,44 +104,26 @@ public final class Sound2 extends SoundCircuit {
 		length =  ((64 - soundRegs.asInt(Reg.NR21, NR21.S_LENGTH0, NR21.S_LENGTH1, NR21.S_LENGTH2, NR21.S_LENGTH3, NR21.S_LENGTH4, NR21.S_LENGTH5))
 				* SAMPLE_RATE) / 256;
 	}
-	
-	public int getLength() {
-		return length;
-	}
-	
-	public void decLength() {
-		length--;
-	}
-
-	@Override
-	public void cycle(long cycle) {	
-		if (isCounterActive() && getLength() > 0) {
-			decLength();
-			if (getLength() == 0) {
-				soundController.setSound1Pow(false);
-			}
-		}
-		
-		getVolume().handleSweep();
-	}
 
 	@Override
 	protected int getDefaultInternalFreq() {
-		return soundRegs.get(Reg.NR23) | soundRegs.asInt(Reg.NR24, NR24.HIGH_FREQ0, NR24.HIGH_FREQ1, NR24.HIGH_FREQ2);
+		return soundRegs.get(Reg.NR23) | (soundRegs.asInt(Reg.NR24, NR24.HIGH_FREQ0, NR24.HIGH_FREQ1, NR24.HIGH_FREQ2) << Byte.SIZE);
 	}
 	
-	private int getDefaultBase() {
+	private int getDefaultEnvelope() {
 		return soundRegs.asInt(Reg.NR22, NR22.ENV_DEF0, NR22.ENV_DEF1, NR22.ENV_DEF2, NR22.ENV_DEF3);
 	}
 
 	@Override
 	protected void reset() {
+		index = 0;
 		setLength();
-		volume.setBase(getDefaultBase());
+		internalFreq = getDefaultInternalFreq();
+		volume.setBase(getDefaultEnvelope());
 		volume.setDirection(soundRegs.testBit(Reg.NR22, NR22.ENVELOPE) ? 1 : 0);
 		volume.setStepLength(soundRegs.asInt(Reg.NR22, NR22.ENV_LENGTH0, NR22.ENV_LENGTH1, NR22.ENV_LENGTH2));
 		volume.setIndex(volume.getStepLength());
-		internalFreq = getDefaultInternalFreq();
+		soundRegs.setBit(Reg.NR24, NR24.INIT, false);
 	}
 
 	@Override

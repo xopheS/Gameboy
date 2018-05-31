@@ -8,7 +8,7 @@ import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
 
-public final class Sound1 extends SoundCircuit {
+public final class Sound1 extends SquareWave {
 	private enum Reg implements Register { NR10, NR11, NR12, NR13, NR14 }
 	
 	private enum NR10 implements Bit { SWEEP_SHIFT0, SWEEP_SHIFT1, SWEEP_SHIFT2, SWEEP_INC, SWEEP_TIME0, SWEEP_TIME1, SWEEP_TIME2, UNUSED7 }
@@ -83,7 +83,7 @@ public final class Sound1 extends SoundCircuit {
 	}
 	
 	public int[] getWave() {
-		return SquareWave.getSquareWave(getWaveDuty());
+		return getSquareWave(getWaveDuty());
 	}
 	
 	public boolean isCounterActive() {
@@ -107,11 +107,7 @@ public final class Sound1 extends SoundCircuit {
 		return index;
 	}
 	
-	public void incIndex() {
-		index++;
-	}
-	
-	public int getDefaultBase() {
+	public int getDefaultEnvelope() {
 		return soundRegs.asInt(Reg.NR12, NR12.ENV_DEF0, NR12.ENV_DEF1, NR12.ENV_DEF2, NR12.ENV_DEF3);
 	}
 	
@@ -121,8 +117,7 @@ public final class Sound1 extends SoundCircuit {
 	
 	@Override
 	public int getDefaultInternalFreq() {
-		int freqData = soundRegs.get(Reg.NR13) | (soundRegs.asInt(Reg.NR14, NR14.HIGH_FREQ0, NR14.HIGH_FREQ1, NR14.HIGH_FREQ2) << Byte.SIZE); 
-		return freqData;
+		return soundRegs.get(Reg.NR13) | (soundRegs.asInt(Reg.NR14, NR14.HIGH_FREQ0, NR14.HIGH_FREQ1, NR14.HIGH_FREQ2) << Byte.SIZE); 
 	}
 	
 	public float getFreq() {
@@ -133,7 +128,7 @@ public final class Sound1 extends SoundCircuit {
 		index = 0;
 		setLength();
 		internalFreq = getDefaultInternalFreq();
-		volume.setBase(getDefaultBase());
+		volume.setBase(getDefaultEnvelope());
 		volume.setDirection(soundRegs.testBit(Reg.NR12, NR12.ENVELOPE) ? 1 : 0);
 		volume.setStepLength(soundRegs.asInt(Reg.NR12, NR12.ENV_LENGTH0, NR12.ENV_LENGTH1, NR12.ENV_LENGTH2));
 		volume.setIndex(volume.getStepLength());
@@ -163,6 +158,8 @@ public final class Sound1 extends SoundCircuit {
 				}
 			}
 		}
+		
+		index++;
 	}
 
 	@Override
