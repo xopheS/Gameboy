@@ -71,9 +71,7 @@ public final class SoundController implements Component, Clocked {
 		}
 	}
 	
-	private void reallyCycle(long cycle) {
-		initSounds();
-		
+	private void reallyCycle(long cycle) {		
 		if (soundRegs.testBit(Reg.NR52, NR52.SOUND1)) {
 			sound1.cycle(cycle);
 
@@ -146,41 +144,6 @@ public final class SoundController implements Component, Clocked {
 	
 	public void setSound4Pow(boolean pow) {
 		soundRegs.setBit(Reg.NR52, NR52.SOUND4, pow);
-	}
-	
-	private void initSounds() {
-		initSound1();
-		initSound2();
-		initSound3();
-		initSound4();
-	}
-	
-	private void initSound1() {
-		if (sound1.isReset()) {	
-			soundRegs.setBit(Reg.NR52, NR52.SOUND1, true);
-			sound1.reset();
-		}
-	}
-	
-	private void initSound2() {
-		if (sound2.isReset()) {
-			soundRegs.setBit(Reg.NR52, NR52.SOUND2, true);
-			sound2.reset();
-		}
-	}
-	
-	private void initSound3() {
-		if (sound3.isReset()) {
-			soundRegs.setBit(Reg.NR52, NR52.SOUND3, true);
-			sound3.reset();
-		}
-	}
-	
-	private void initSound4() {
-		if (sound4.isReset()) {
-			soundRegs.setBit(Reg.NR52, NR52.SOUND4, true);
-			sound4.reset();
-		}
 	}
 	
 	private void setSoundBufferByte(int byteIndex) {

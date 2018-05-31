@@ -37,28 +37,7 @@ public final class Sound2 extends SoundCircuit {
 	}
 	
 	public int[] getWave() {
-		int dutyLength = 0;
-		
-		switch (getWaveDuty()) {
-		case 0:
-			dutyLength = 4; //12.5%
-			break;
-		case 1:
-			dutyLength = 8; //25%
-			break;
-		case 2:
-			dutyLength = 16; //50%
-			break;
-		case 3:
-			dutyLength = 24; //75%
-			break;
-		}
-		
-		for (int i = 0; i < wave.length; ++i) {
-			wave[i] = (i < dutyLength) ? 1 : -1;
-		}
-		
-		return wave;
+		return SquareWave.getSquareWave(getWaveDuty());
 	}
 	
 	public int getIndex() {
@@ -78,10 +57,6 @@ public final class Sound2 extends SoundCircuit {
 		return 4294304 / (8 * (2048 - internalFreq));
 	}
 	
-	public boolean isReset() {
-		return soundRegs.testBit(Reg.NR24, NR24.INIT);
-	}
-	
 	@Override
 	public int read(int address) {
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S2_START && address < AddressMap.REGS_S2_END) {
@@ -96,7 +71,18 @@ public final class Sound2 extends SoundCircuit {
 		Preconditions.checkBits8(data);
 		
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S2_START && address < AddressMap.REGS_S2_END) {
-			soundRegs.set(address - AddressMap.REGS_S2_START, data);
+			switch (address) {
+			case AddressMap.REG_NR24:
+				soundRegs.set(Reg.NR24, data);
+				if (soundRegs.testBit(Reg.NR24, NR24.INIT)) {
+					soundController.setSound2Pow(true);
+					reset();
+				}
+				break;
+			default:
+				soundRegs.set(address - AddressMap.REGS_S2_START, data);
+				break;
+			}
 		}
 	}
 	

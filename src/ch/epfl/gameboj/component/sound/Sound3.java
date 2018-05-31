@@ -42,10 +42,6 @@ public final class Sound3 extends SoundCircuit {
 	public void incIndex() {
 		index++;
 	}
-
-	public boolean isReset() {
-		return soundRegs.testBit(Reg.NR34, NR34.INIT);
-	}
 	
 	public int[] getWave() {
 		for (int i = 0x30; i < 0x40; ++i) {
@@ -84,7 +80,18 @@ public final class Sound3 extends SoundCircuit {
 		Preconditions.checkBits8(data);
 		
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S3_START && address < AddressMap.REGS_S3_END) {
-			soundRegs.set(address - AddressMap.REGS_S3_START, data);
+			switch (address) {
+			case AddressMap.REG_NR34:
+				soundRegs.set(Reg.NR34, data);
+				if (soundRegs.testBit(Reg.NR34, NR34.INIT) && soundRegs.testBit(Reg.NR30, NR30.POWER)) {
+					soundController.setSound3Pow(true);
+					reset();
+				}
+				break;
+			default:
+				soundRegs.set(address - AddressMap.REGS_S3_START, data);
+				break;
+			}
 		} else if (address >= AddressMap.WAVE_RAM_START && address < AddressMap.WAVE_RAM_END) {
 			waveRam.write(address - AddressMap.WAVE_RAM_START, data);
 		}

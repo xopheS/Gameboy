@@ -32,7 +32,6 @@ import javax.sound.sampled.LineUnavailableException;
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.CartridgeDisassembler;
 import ch.epfl.gameboj.GameBoy;
-import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.Joypad.Key;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
@@ -129,20 +128,14 @@ public class Main extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException, LineUnavailableException, InterruptedException {
-        List<String> cmdArgs = getParameters().getRaw();
-        Preconditions.checkArgument(cmdArgs.size() <= 2, () -> System.exit(1));
-
-        String fileName = cmdArgs.get(0); // TODO change this
-        String saveFileName = cmdArgs.size() == 2 ? cmdArgs.get(1) : null;
+    public void start(Stage primaryStage) throws IOException, LineUnavailableException, InterruptedException {       
+        String fileName = loadedPreferences.get("PRELOAD_CARTRIDGE", "ROM files/loz_awakening.gb");
+        String saveName = loadedPreferences.get("PRELOAD_SAVE", null);
         
-        String preloadCartridgeName = loadedPreferences.get("PRELOAD_CARTRIDGE", "ROM files/loz_awakening.gb");
-        
-        if (preloadCartridgeName != null) {
-        	startEmulation(preloadCartridgeName);
+        if (saveName == null) {
+        	startEmulation(new File(fileName));
         } else {
-            gameboj = saveFileName == null ? new GameBoy(Cartridge.ofFile(new File(fileName))) 
-            		: new GameBoy(Cartridge.ofFile(new File(fileName)), saveFileName); // FIXME
+            startEmulation(new File(fileName), new File(saveName));
         }
         
         currentVolume.set(0);
@@ -190,7 +183,6 @@ public class Main extends Application {
         	}
         });
 
-        // TODO replace gameboj with clever name
         primaryStage.setTitle("gamebojjj: the GameBoy emulator");
 
         emulationView.setFitWidth(1.1 * LCD_WIDTH);
@@ -221,7 +213,12 @@ public class Main extends Application {
         MenuItem saveCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("save"));
         MenuItem saveAsCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("saveAs"));
         MenuItem loadCartridgeMenuItem = new MenuItem(currentGuiBundle.getString("load"));
+        MenuItem loadSaveMenuItem = new MenuItem("Load save");
+        loadSaveMenuItem.setOnAction(e -> {
+        	startEmulation(new File(fileName), gamePakChooser.showOpenDialog(primaryStage));
+        });
         loadCartridgeMenuItem.setOnAction(e -> {
+        	startEmulation(gamePakChooser.showOpenDialog(primaryStage));
             try {
                 gameboj = new GameBoy(Cartridge.ofFile(gamePakChooser.showOpenDialog(primaryStage)));
             } catch (FileNotFoundException e1) {
@@ -239,7 +236,7 @@ public class Main extends Application {
         exitMenuItem.setOnAction(e -> {
         	System.exit(0);
         });
-        fileMenu.getItems().addAll(exitMenuItem, saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem);
+        fileMenu.getItems().addAll(saveCartridgeMenuItem, saveAsCartridgeMenuItem, loadCartridgeMenuItem, loadSaveMenuItem, exitMenuItem);
         
         Menu accountMenu = new Menu(currentGuiBundle.getString("account"));
 
@@ -656,7 +653,7 @@ public class Main extends Application {
         // TODO add button graphics (btn.setGraphic())
         Button tbResetButton = new Button(currentGuiBundle.getString("reset"));
 		tbResetButton.setOnAction(e -> {
-			startEmulation(fileName);
+			startEmulation(new File(fileName));
 		});
         Button tbPauseButton = new Button(currentGuiBundle.getString("pause"));
         tbPauseButton.setOnAction(e -> {
@@ -760,7 +757,7 @@ public class Main extends Application {
         primaryStage.setScene(splashScreen);
         primaryStage.show();
 
-        startEmulation(fileName);
+        startEmulation(new File(fileName));
     }
 
     private static void setInput(Node node, Joypad jp) {
@@ -832,13 +829,63 @@ public class Main extends Application {
         });
     }
     
-    private void startEmulation(String fileName) {
+    private void startEmulation(File file) {
     	if (animationTimer != null) {
         	animationTimer.stop();
     	}
 
 		try {
-			gameboj = new GameBoy(Cartridge.ofFile(new File(fileName)));
+			gameboj = new GameBoy(Cartridge.ofFile(file));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (LineUnavailableException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		setInput(emulationView, gameboj.getJoypad());
+		setInput(simpleEmulationView, gameboj.getJoypad());
+
+		start = System.nanoTime();
+
+		animationTimer = new AnimationTimer() {
+			@Override
+			public void handle(long now) {
+				long elapsed = now - start;
+				long elapsedCycles = (long) (elapsed * CYCLES_PER_NANOSECOND);
+
+				gameboj.runUntil(cycleSpeed * IMAGE_CYCLE_DURATION + gameboj.getCycles());
+
+				emulationView.requestFocus();
+				Image screenImage = ImageConverter.convert(gameboj.getLcdController().currentImage());
+				emulationView.setImage(screenImage);
+				
+                simpleEmulationView.setImage(screenImage);
+                
+                LoginScreen.setShearedGameboyView(screenImage);
+
+				viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
+				viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
+				backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
+				windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));
+
+				LcdImage[] spriteLayerImages = gameboj.getLcdController().getSprites();
+				bgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[0]));
+				fgSpriteView.setImage(ImageConverter.convert(spriteLayerImages[1]));
+			}
+		};
+
+		animationTimer.start();
+    }
+    
+    private void startEmulation(File file, File saveFile) {
+    	if (animationTimer != null) {
+        	animationTimer.stop();
+    	}
+
+		try {
+			gameboj = new GameBoy(Cartridge.ofFile(file), saveFile);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (LineUnavailableException e) {

@@ -36,10 +36,6 @@ public final class Sound4 extends SoundCircuit {
 		index++;
 	}
 	
-	public boolean isReset() {
-		return soundRegs.testBit(Reg.NR44, NR44.INIT);
-	}
-	
 	public int[] getWave() {
 		return wave;
 	}
@@ -62,7 +58,18 @@ public final class Sound4 extends SoundCircuit {
 		Preconditions.checkBits8(data);
 		
 		if (Preconditions.checkBits16(address) >= AddressMap.REGS_S3_START && address < AddressMap.REGS_S3_END) {
-			soundRegs.set(address - AddressMap.REGS_S3_START, data);
+			switch (address) {
+			case AddressMap.REG_NR44:
+				soundRegs.set(Reg.NR44, data);
+				if (soundRegs.testBit(Reg.NR44, NR44.INIT)) {
+					soundController.setSound4Pow(true);
+					reset();
+				}
+				break;
+			default:
+				soundRegs.set(address - AddressMap.REGS_S4_START, data);
+				break;
+			}
 		}
 	}
 

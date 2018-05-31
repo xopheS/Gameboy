@@ -1,5 +1,6 @@
 package ch.epfl.gameboj;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -79,11 +80,11 @@ public final class GameBoy {
      * @throws NullPointerException
      *             si la cartouche est null
      */
-    public GameBoy(Cartridge cartridge, String saveFileName) throws LineUnavailableException {
+    public GameBoy(Cartridge cartridge, File saveFile) throws LineUnavailableException {
     	loadedCartridge = cartridge;
     	
         bootRomController = new BootRomController(Objects.requireNonNull(cartridge));
-        try (FileInputStream fis = new FileInputStream(saveFileName)) {
+        try (FileInputStream fis = new FileInputStream(saveFile)) {
 			bootRomController.setCartridgeRam(fis.readAllBytes());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
