@@ -183,6 +183,10 @@ public final class Cpu implements Component, Clocked {
         	System.out.println("------");
         	System.out.println(opcode.name());
         }
+        
+        if (Main.isStepByStep()) {
+        	Main.getCpuInstructionText().textProperty().set("Opcode: " + opcode.name());
+        }
 
         switch (opcode.family) {
         case NOP:
@@ -643,6 +647,10 @@ public final class Cpu implements Component, Clocked {
 
         PC.set(nextPC);
         nextNonIdleCycle += opcode.cycles + (instructionDone ? opcode.additionalCycles : 0);
+        
+        if (Main.isStepByStep()) {
+        	Main.stopAnimationTimer();
+        }
     }
 
     private boolean isOn() {

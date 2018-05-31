@@ -85,11 +85,15 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-	private Locale currentLocale = Locale.getDefault();
+    Preferences loadedPreferences = Preferences.userNodeForPackage(this.getClass());
+	
+	private String currentLocaleTag = loadedPreferences.get("LOCALE_TAG", Locale.getDefault().toLanguageTag());
+	private Locale currentLocale = Locale.forLanguageTag(currentLocaleTag);
 	private ResourceBundle currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
     private static GameBoy gameboj;
     BooleanProperty isPaused = new SimpleBooleanProperty();
@@ -108,6 +112,7 @@ public class Main extends Application {
     private static Socket clientSocket;
     public static boolean printCPU;
     boolean clientInit;
+    static Text cpuInstructionText = new Text("Opcode: ");
     ImageView emulationView = new ImageView();
     ImageView simpleEmulationView = new ImageView();
     Rectangle viewportRectangle = new Rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT);
@@ -117,7 +122,7 @@ public class Main extends Application {
     ImageView bgSpriteView = new ImageView();
     ImageView fgSpriteView = new ImageView();
     
-    Preferences loadedPreferences = Preferences.userNodeForPackage(this.getClass());
+    private static boolean isStepByStep;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -570,7 +575,7 @@ public class Main extends Application {
     	englishButton.setOnAction(e -> {
     		currentLocale = Locale.ENGLISH;
     		currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
-    		
+    		loadedPreferences.put("LOCALE_TAG", currentLocale.toLanguageTag());
     	});
     	englishButton.setSelected(true);
     	englishButton.setToggleGroup(languageSelectionGroup);
@@ -578,12 +583,14 @@ public class Main extends Application {
     	frenchButton.setOnAction(e -> {
     		currentLocale = Locale.FRANCE;
     		currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
+    		loadedPreferences.put("LOCALE_TAG", currentLocale.toLanguageTag());
     	});
     	frenchButton.setToggleGroup(languageSelectionGroup);
     	RadioButton romanianButton = new RadioButton(new Locale("ro", "RO").getDisplayName());
     	romanianButton.setOnAction(e -> {
-    		currentLocale = Locale.forLanguageTag("ro_RO");
+    		currentLocale = new Locale("ro", "RO");
     		currentGuiBundle = ResourceBundle.getBundle("GUIBundle", currentLocale);
+    		loadedPreferences.put("LOCALE_TAG", currentLocale.toLanguageTag());
     	});
     	romanianButton.setToggleGroup(languageSelectionGroup);
     	languageSelectionPane.add(englishButton, 0, 0);
@@ -669,7 +676,7 @@ public class Main extends Application {
     			fadeEffectTransition.playFromStart();
                 timeOnPause = System.nanoTime();
             }
-        });       
+        });
         Button screenshotButton = new Button(currentGuiBundle.getString("screenshot"));
         screenshotButton.setOnAction(e -> {
 			try {
@@ -713,8 +720,22 @@ public class Main extends Application {
         startGameButton.setOnAction(e -> {
             animationTimer.start();
         });
+        
+        Stage cpuInstructionStage = new Stage();
+        GridPane cpuInstructionPane = new GridPane();
+        cpuInstructionPane.add(cpuInstructionText, 0, 0);
+        Scene cpuInstructionScene = new Scene(cpuInstructionPane, 200, 50);
+        cpuInstructionStage.setScene(cpuInstructionScene);
+        Button toggleStepByStepButton = new Button("Step-by-step");
+        toggleStepByStepButton.setOnAction(e -> {
+        	isStepByStep = !isStepByStep;
+        	if (isStepByStep) {
+            	cpuInstructionStage.show();
+        	}
+        });
+        
         ToolBar toolBar = new ToolBar(tbResetButton, tbPauseButton, speedTimes3Button, screenshotButton, muteButton, saveButton,
-        		testServerButton, testClientButton, terminateConnectionButton, startGameButton); 
+        		testServerButton, testClientButton, terminateConnectionButton, startGameButton, toggleStepByStepButton); 
 
         topBox.getChildren().addAll(mainMenuBar, toolBar);
         
@@ -772,6 +793,11 @@ public class Main extends Application {
                 break;
             case H:
             	printCPU = !printCPU;
+            	break;
+            case T:
+            	if (isStepByStep) {
+            		animationTimer.start();
+            	}
             	break;
             }
         });
@@ -904,5 +930,17 @@ public class Main extends Application {
         String date = Long.toString(d.getTime());
         BufferedImage i = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
         ImageIO.write(SwingFXUtils.fromFXImage(ImageConverter.convert(screenshot), i), "png", new File("ScreenCaptures/" + date + ".png"));
+    }
+    
+    public static boolean isStepByStep() {
+    	return isStepByStep;
+    }
+    
+    public static void stopAnimationTimer() {
+    	animationTimer.stop();
+    }
+    
+    public static Text getCpuInstructionText() {
+    	return cpuInstructionText;
     }
 }
