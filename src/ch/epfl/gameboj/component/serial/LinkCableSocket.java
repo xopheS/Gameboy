@@ -11,41 +11,37 @@ public final class LinkCableSocket {
 	private int currentOutput;
 	private boolean isOpen;
 	
-	public void start(boolean isMasterEnd) {
-		System.out.println("Start " + isMasterEnd + " cable ");
-		Runnable transferThreadRunnable;
+	public void start() {
+		System.out.println("Start cable ");
 		
-		if (isMasterEnd) {
-			transferThreadRunnable = new Runnable() {
-				@Override
-				public void run() {
-	        		try {
-	        			while (true) {
-							dataOut.writeByte(currentInput);
-							currentInput = dataIn.read();
-	        			}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-	        	}
-			};
-		} else {
-			transferThreadRunnable = new Runnable() {
-				@Override
-				public void run() {
-	        		try {
-	        			while (true) {
-							currentInput = dataIn.read();
-							dataOut.writeByte(currentOutput);
-	        			}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-	        	}
-			};
-		}
+		Runnable writeRunnable = new Runnable() {
+			@Override
+			public void run() {
+        		try {
+        			while (true) {
+						dataOut.writeByte(currentOutput);
+        			}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+        	}
+		};
+		
+		Runnable readRunnable = new Runnable() {
+			@Override
+			public void run() {
+        		try {
+        			while (true) {
+						currentInput = dataIn.read();
+        			}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+        	}
+		};
         
-        new Thread(transferThreadRunnable).start();
+        new Thread(writeRunnable).start();
+        new Thread(readRunnable).start();
         
         isOpen = true;
 	}

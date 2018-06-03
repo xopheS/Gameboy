@@ -8,8 +8,8 @@ public final class SerialProtocol {
 	private static final LinkCableSocket linkCable = new LinkCableSocket();
 	private static int receivedDataBuffer;
 	
-	public static void startProtocol(boolean b) {
-		linkCable.start(b);
+	public static void startProtocol() {
+		linkCable.start();
 	}
 	
 	public static void setDataOutput(DataOutputStream dataOut) {

@@ -38,10 +38,6 @@ public final class Sound4 extends SoundCircuit {
 		return wave;
 	}
 	
-	public float getFrequency() {
-		return 10;
-	}
-	
 	@Override
 	public void cycle(long cycle) {
 		if (isCounterActive() && length > 0) {

@@ -54,7 +54,7 @@ public final class Sound2 extends SquareWave {
 	
 	@Override
 	public float getFreq() {
-		return 4294304 / (8 * (2048 - internalFreq));
+		return toFreq.apply(getDefaultInternalFreq());
 	}
 	
 	@Override

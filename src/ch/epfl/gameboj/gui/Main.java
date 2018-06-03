@@ -87,6 +87,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class Main extends Application {
     Preferences loadedPreferences = Preferences.userNodeForPackage(this.getClass());
@@ -120,6 +121,8 @@ public class Main extends Application {
     ImageView windowView = new ImageView();
     ImageView bgSpriteView = new ImageView();
     ImageView fgSpriteView = new ImageView();
+    
+	FadeTransition fadeEffectTransition = new FadeTransition();
     
     private static boolean isStepByStep;
 
@@ -155,6 +158,7 @@ public class Main extends Application {
         	stage.setHeight(75);
         	stage.show();
         	if (serverSocket == null) {
+            	pauseEmulation();
                 initiateServer(locIP);
         	}
         });
@@ -162,6 +166,7 @@ public class Main extends Application {
         Button testClientButton = new Button("Connect to link");
         testClientButton.setOnAction(e -> {
         	if (clientSocket == null) {
+        		pauseEmulation();
         		Stage connectDataStage = new Stage();
         		GridPane connectDataPane = new GridPane();
         		Label ipLabel = new Label("Enter the host IP");
@@ -450,7 +455,6 @@ public class Main extends Application {
 		Lighting lightingEffect = new Lighting(distantLightSource);
 		SepiaTone sepiaEffect = new SepiaTone();
 		Glow glowEffect = new Glow();
-		FadeTransition fadeEffectTransition = new FadeTransition();
 		gbEffects.getSelectionModel().selectedItemProperty().addListener((f, o, n) -> {
 			switch (n) {
 			case "Standard":
@@ -659,19 +663,10 @@ public class Main extends Application {
         tbPauseButton.setOnAction(e -> {
             if (isPaused.get()) {
                 isPaused.set(false);
-    			fadeEffectTransition.stop();
-                animationTimer.start();
-                pauseTime += System.nanoTime() - timeOnPause;
+                resumeEmulation();
             } else {
                 isPaused.set(true);
-                animationTimer.stop();
-                fadeEffectTransition.setFromValue(1.0);
-    			fadeEffectTransition.setToValue(0.6);
-    			fadeEffectTransition.setAutoReverse(true);
-    			fadeEffectTransition.setNode(emulationView);
-    			fadeEffectTransition.setCycleCount(FadeTransition.INDEFINITE);
-    			fadeEffectTransition.playFromStart();
-                timeOnPause = System.nanoTime();
+                pauseEmulation();
             }
         });
         Button screenshotButton = new Button(currentGuiBundle.getString("screenshot"));
@@ -829,6 +824,24 @@ public class Main extends Application {
         });
     }
     
+    private void pauseEmulation() {
+        animationTimer.stop();
+        fadeEffectTransition.setFromValue(1.0);
+		fadeEffectTransition.setToValue(0.6);
+		fadeEffectTransition.setAutoReverse(true);
+		fadeEffectTransition.setNode(emulationView);
+		fadeEffectTransition.setCycleCount(FadeTransition.INDEFINITE);
+		fadeEffectTransition.playFromStart();
+        timeOnPause = System.nanoTime();
+    }
+    
+    private void resumeEmulation() {
+    	fadeEffectTransition.jumpTo(Duration.ZERO);
+		fadeEffectTransition.stop();
+        animationTimer.start();
+        pauseTime += System.nanoTime() - timeOnPause;
+    }
+    
     private void startEmulation(File file) {
     	if (animationTimer != null) {
         	animationTimer.stop();
@@ -865,7 +878,7 @@ public class Main extends Application {
                 
                 LoginScreen.setShearedGameboyView(screenImage);
 
-				viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX)); // FIXME
+				viewportRectangle.setTranslateX(gameboj.getBus().read(AddressMap.REG_SCX));
 				viewportRectangle.setTranslateY(gameboj.getBus().read(AddressMap.REG_SCY));
 				backgroundView.setImage(ImageConverter.convert(gameboj.getLcdController().getBackground()));
 				windowView.setImage(ImageConverter.convert(gameboj.getLcdController().getWindow()));
@@ -929,24 +942,24 @@ public class Main extends Application {
 		animationTimer.start();
     }
     
-    private static void initiateClient(InetAddress locIP) {
+    private void initiateClient(InetAddress locIP) {   	
     	try {
     		clientSocket = new Socket(locIP, 4444);
     		
     		SerialProtocol.setDataInput(new DataInputStream(clientSocket.getInputStream()));
     		SerialProtocol.setDataOutput(new DataOutputStream(clientSocket.getOutputStream()));
     		
-        	SerialProtocol.startProtocol(false);
+        	SerialProtocol.startProtocol();
+        	
+            resumeEmulation();
 		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
     }
     
-    private static void initiateServer(InetAddress locIP) {
+    private void initiateServer(InetAddress locIP) {    	
     	Runnable r = new Runnable() {
         	@Override
 			public void run() {
@@ -957,12 +970,12 @@ public class Main extends Application {
         			SerialProtocol.setDataInput(new DataInputStream(clientSocket.getInputStream()));
         			SerialProtocol.setDataOutput(new DataOutputStream(clientSocket.getOutputStream()));
         			
-                	SerialProtocol.startProtocol(true);
+                	SerialProtocol.startProtocol();
+                	
+                    resumeEmulation();
         		} catch (UnknownHostException e1) {
-        			// TODO Auto-generated catch block
         			e1.printStackTrace();
         		} catch (IOException e1) {
-        			// TODO Auto-generated catch block
         			e1.printStackTrace();
         		}
         	}

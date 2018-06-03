@@ -99,10 +99,6 @@ public final class Sound1 extends SquareWave {
 		return length;
 	}
 	
-	public void decLength() {
-		length--;
-	}
-	
 	public int getIndex() {
 		return index;
 	}
@@ -121,7 +117,7 @@ public final class Sound1 extends SquareWave {
 	}
 	
 	public float getFreq() {
-		return (4194304 / (8 * (2048 - internalFreq)));
+		return toFreq.apply(getDefaultInternalFreq());
 	}
 	
 	public void reset() {

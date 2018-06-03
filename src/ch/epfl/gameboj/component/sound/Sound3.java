@@ -54,7 +54,7 @@ public final class Sound3 extends SoundCircuit {
 	}
 	
 	public float getFreq() {
-		return 4194304 / (8 * (2048 - internalFreq));
+		return toFreq.apply(getDefaultInternalFreq());
 	}
 	
 	public int getOutputLevel() {
